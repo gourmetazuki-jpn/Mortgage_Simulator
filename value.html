@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>バリュー投資判定ツール無料｜PBR・PER・配当利回り・自己資本比率で割安株を評価 | azuki-plus</title>
+  <meta name="description" content="PBR・PER・配当利回り・自己資本比率など6指標を入力するだけでバリュー投資の観点から銘柄を判定する無料ツール。ウォーレン・バフェット流の4要素チェックも搭載。">
+  <meta name="keywords" content="バリュー投資,PBR,PER,配当利回り,自己資本比率,割安株,銘柄判定,無料,バフェット">
+  <link rel="canonical" href="https://azuki-plus.com/simulator/value.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="バリュー投資判定ツール無料｜PBR・PER・配当利回り・自己資本比率で割安株を評価">
+  <meta property="og:description" content="PBR・PER・配当利回り・自己資本比率など6指標でバリュー投資の観点から銘柄を判定する無料ツール。">
+  <meta property="og:url" content="https://azuki-plus.com/simulator/value.html">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"バリュー投資判定ツール","url":"https://azuki-plus.com/simulator/value.html","applicationCategory":"FinanceApplication","operatingSystem":"Any","inLanguage":"ja","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"}}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{--bg:#f4f3ee;--surface:#fff;--surface2:#f0efe8;--border:rgba(0,0,0,.09);--text:#1a1a16;--text2:#58574f;--text3:#98968c;--green:#1e6b3c;--green-l:#e6f4ec;--amber:#7a4d0a;--amber-l:#fdf3e0;--red:#992020;--red-l:#fdeaea;--blue:#1a4fa0;--blue-l:#e8eef8;--radius:10px;--radius-lg:14px;}
+    body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.7;}
+    header{background:#1a1a16;color:#fff;padding:24px 20px 20px;text-align:center;}
+    header .logo{font-size:12px;letter-spacing:.12em;color:rgba(255,255,255,.5);margin-bottom:10px;}
+    header h1{font-size:clamp(17px,4vw,24px);font-weight:700;margin-bottom:6px;}
+    header p{font-size:13px;color:rgba(255,255,255,.65);}
+    .breadcrumb{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px;font-size:12px;color:var(--text3);}
+    .breadcrumb a{color:var(--text3);text-decoration:none;}
+    .ad-slot{background:var(--surface);border-bottom:1px solid var(--border);padding:12px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:12px;}
+    .container{max-width:960px;margin:0 auto;padding:24px 16px 60px;}
+    .verdict-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;position:relative;}
+    .verdict-icon{font-size:44px;line-height:1;min-width:50px;text-align:center;}
+    .verdict-divider{width:1px;height:56px;background:var(--border);flex-shrink:0;}
+    .verdict-detail{flex:1;min-width:200px;}
+    .verdict-title{font-size:18px;font-weight:700;margin-bottom:4px;}
+    .verdict-desc{font-size:13px;color:var(--text2);}
+    .verdict-summary{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+    .reset-btn{position:absolute;top:14px;right:14px;padding:6px 14px;font-size:12px;font-family:inherit;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text2);cursor:pointer;}
+    .reset-btn:hover{background:var(--border);}
+    .sum-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+    @media(max-width:640px){.grid{grid-template-columns:1fr;}}
+    .cond-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:border-color .2s;}
+    .cond-header{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);}
+    .cond-icon{font-size:18px;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--surface2);transition:background .2s;}
+    .cond-title-wrap{flex:1;}
+    .cond-title{font-size:13px;font-weight:700;}
+    .cond-sub{font-size:11px;color:var(--text3);}
+    .cond-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;}
+    .cond-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+    .field{display:flex;flex-direction:column;gap:4px;}
+    .field label{font-size:12px;color:var(--text2);}
+    .field .row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;}
+    .field input[type=range]{width:100%;accent-color:var(--blue);}
+    .field .val{font-size:13px;font-weight:700;font-family:"Lato",sans-serif;min-width:60px;text-align:right;}
+    .field .hint{font-size:11px;color:var(--text3);}
+    .field .criteria{font-size:11px;padding:4px 8px;border-radius:4px;font-family:"Lato",sans-serif;}
+    .radio-group{display:flex;gap:6px;flex-wrap:wrap;}
+    .radio-btn{position:relative;}
+    .radio-btn input{position:absolute;opacity:0;width:0;}
+    .radio-btn label{display:block;padding:5px 10px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;background:var(--surface2);color:var(--text2);transition:all .15s;white-space:nowrap;}
+    .radio-btn input:checked+label{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700;}
+    .pass{border-color:rgba(30,107,60,.3);} .warn{border-color:rgba(122,77,10,.25);} .fail{border-color:rgba(153,32,32,.25);}
+    .pass .cond-icon{background:var(--green-l);} .warn .cond-icon{background:var(--amber-l);} .fail .cond-icon{background:var(--red-l);}
+    .pass .cond-badge{background:var(--green-l);color:var(--green);} .warn .cond-badge{background:var(--amber-l);color:var(--amber);} .fail .cond-badge{background:var(--red-l);color:var(--red);}
+    .explanation{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px 24px;margin-top:8px;}
+    .explanation h2{font-size:15px;font-weight:700;margin-bottom:14px;}
+    .four-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+    @media(max-width:600px){.four-grid{grid-template-columns:1fr;}}
+    .four-item{background:var(--surface2);border-radius:var(--radius);padding:12px 14px;}
+    .four-num{font-family:"Lato",sans-serif;font-size:22px;font-weight:900;color:var(--blue);margin-bottom:4px;}
+    .four-title{font-size:13px;font-weight:700;margin-bottom:4px;}
+    .four-text{font-size:12px;color:var(--text2);line-height:1.7;}
+    .faq-item{border-top:1px solid var(--border);padding:12px 0;}
+    .faq-q{font-size:13px;font-weight:700;margin-bottom:4px;}
+    .faq-a{font-size:13px;color:var(--text2);line-height:1.8;}
+    .ad-mid{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px;text-align:center;min-height:100px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:12px;margin-top:20px;}
+    footer{text-align:center;font-size:12px;color:var(--text3);padding:20px;border-top:1px solid var(--border);margin-top:40px;}
+  </style>
+</head>
+<body>
+<header>
+  <p class="logo">AZUKI-PLUS</p>
+  <h1>バリュー投資 判定ツール</h1>
+  <p>PBR・PER・配当利回り・自己資本比率などで割安株を判定</p>
+</header>
+<nav class="breadcrumb">
+  <a href="index.html">シミュレーター一覧</a>
+  <span style="margin:0 6px;">›</span>
+  <span>バリュー投資判定ツール</span>
+</nav>
+<div class="ad-slot"><!-- 広告枠① -->広告枠①</div>
+<div class="container">
+  <div class="verdict-bar" id="verdict-bar">
+    <button class="reset-btn" onclick="resetAll()">リセット</button>
+    <div class="verdict-icon" id="v-icon">—</div>
+    <div class="verdict-divider"></div>
+    <div class="verdict-detail">
+      <div class="verdict-title" id="v-title">数値を入力してください</div>
+      <div class="verdict-desc" id="v-desc">6つの判定項目に数値を入力すると総合判定が表示されます</div>
+      <div class="verdict-summary" id="v-summary"></div>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="cond-card" id="card-pbr">
+      <div class="cond-header">
+        <div class="cond-icon" id="icon-pbr">📊</div>
+        <div class="cond-title-wrap"><div class="cond-title">PBR（株価純資産倍率）</div><div class="cond-sub">解散価値との比較</div></div>
+        <span class="cond-badge" id="badge-pbr">未入力</span>
+      </div>
+      <div class="cond-body">
+        <div class="field">
+          <label>PBR（倍）</label>
+          <div class="row"><input type="range" min="0.1" max="5" step="0.1" value="1" id="pbr" oninput="calc()"><span class="val" id="pbr-val">1.0倍</span></div>
+          <span class="criteria" id="criteria-pbr">判定基準：1倍以下が割安。0.5倍以下なら超割安</span>
+        </div>
+      </div>
+    </div>
+    <div class="cond-card" id="card-per">
+      <div class="cond-header">
+        <div class="cond-icon" id="icon-per">💰</div>
+        <div class="cond-title-wrap"><div class="cond-title">PER（株価収益率）</div><div class="cond-sub">利益に対する割安度</div></div>
+        <span class="cond-badge" id="badge-per">未入力</span>
+      </div>
+      <div class="cond-body">
+        <div class="field">
+          <label>PER（倍）</label>
+          <div class="row"><input type="range" min="1" max="50" step="0.5" value="15" id="per" oninput="calc()"><span class="val" id="per-val">15.0倍</span></div>
+          <span class="criteria" id="criteria-per">判定基準：15倍以下で割安。10倍以下なら尚良し</span>
+        </div>
+      </div>
+    </div>
+    <div class="cond-card" id="card-div">
+      <div class="cond-header">
+        <div class="cond-icon" id="icon-div">💴</div>
+        <div class="cond-title-wrap"><div class="cond-title">配当利回り</div><div class="cond-sub">インカムゲインの水準</div></div>
+        <span class="cond-badge" id="badge-div">未入力</span>
+      </div>
+      <div class="cond-body">
+        <div class="field">
+          <label>配当利回り（%）</label>
+          <div class="row"><input type="range" min="0" max="10" step="0.1" value="2" id="div-yield" oninput="calc()"><span class="val" id="div-yield-val">2.0%</span></div>
+          <span class="criteria" id="criteria-div">判定基準：3%以上で合格。4%以上なら高配当</span>
+        </div>
+        <div class="field">
+          <label>配当の安定性・増配実績</label>
+          <div class="radio-group">
+            <div class="radio-btn"><input type="radio" name="div-stable" id="ds-0" value="0" checked onchange="calc()"><label for="ds-0">不安定・減配あり</label></div>
+            <div class="radio-btn"><input type="radio" name="div-stable" id="ds-1" value="1" onchange="calc()"><label for="ds-1">安定配当</label></div>
+            <div class="radio-btn"><input type="radio" name="div-stable" id="ds-2" value="2" onchange="calc()"><label for="ds-2">連続増配（5年以上）</label></div>
+          </div>
+          <span class="hint">連続増配は財務健全性の証</span>
+        </div>
+      </div>
+    </div>
+    <div class="cond-card" id="card-eq">
+      <div class="cond-header">
+        <div class="cond-icon" id="icon-eq">🏦</div>
+        <div class="cond-title-wrap"><div class="cond-title">自己資本比率</div><div class="cond-sub">財務の健全性</div></div>
+        <span class="cond-badge" id="badge-eq">未入力</span>
+      </div>
+      <div class="cond-body">
+        <div class="field">
+          <label>自己資本比率（%）</label>
+          <div class="row"><input type="range" min="0" max="100" step="1" value="40" id="equity-ratio" oninput="calc()"><span class="val" id="equity-ratio-val">40%</span></div>
+          <span class="criteria" id="criteria-eq">判定基準：40%以上で合格。60%以上なら優良</span>
+        </div>
+      </div>
+    </div>
+    <div class="cond-card" id="card-stable">
+      <div class="cond-header">
+        <div class="cond-icon" id="icon-stable">📈</div>
+        <div class="cond-title-wrap"><div class="cond-title">売上・利益の安定性</div><div class="cond-sub">事業の継続性・成長性</div></div>
+        <span class="cond-badge" id="badge-stable">未入力</span>
+      </div>
+      <div class="cond-body">
+        <div class="field">
+          <label>過去3〜5年の売上トレンド</label>
+          <div class="radio-group">
+            <div class="radio-btn"><input type="radio" name="sales-trend" id="st-0" value="0" checked onchange="calc()"><label for="st-0">減収傾向</label></div>
+            <div class="radio-btn"><input type="radio" name="sales-trend" id="st-1" value="1" onchange="calc()"><label for="st-1">横ばい</label></div>
+            <div class="radio-btn"><input type="radio" name="sales-trend" id="st-2" value="2" onchange="calc()"><label for="st-2">緩やかな増収</label></div>
+            <div class="radio-btn"><input type="radio" name="sales-trend" id="st-3" value="3" onchange="calc()"><label for="st-3">安定成長</label></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>過去3〜5年の利益トレンド</label>
+          <div class="radio-group">
+            <div class="radio-btn"><input type="radio" name="profit-trend" id="pt-0" value="0" checked onchange="calc()"><label for="pt-0">赤字・減益</label></div>
+            <div class="radio-btn"><input type="radio" name="profit-trend" id="pt-1" value="1" onchange="calc()"><label for="pt-1">横ばい</label></div>
+            <div class="radio-btn"><input type="radio" name="profit-trend" id="pt-2" value="2" onchange="calc()"><label for="pt-2">安定黒字</label></div>
+            <div class="radio-btn"><input type="radio" name="profit-trend" id="pt-3" value="3" onchange="calc()"><label for="pt-3">増益傾向</label></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="cond-card" id="card-moat">
+      <div class="cond-header">
+        <div class="cond-icon" id="icon-moat">🏰</div>
+        <div class="cond-title-wrap"><div class="cond-title">競争優位性・経営の質</div><div class="cond-sub">「経済の堀」と経営陣の評価</div></div>
+        <span class="cond-badge" id="badge-moat">未入力</span>
+      </div>
+      <div class="cond-body">
+        <div class="field">
+          <label>競争優位性（経済の堀）</label>
+          <div class="radio-group">
+            <div class="radio-btn"><input type="radio" name="moat" id="moat-0" value="0" checked onchange="calc()"><label for="moat-0">なし・弱い</label></div>
+            <div class="radio-btn"><input type="radio" name="moat" id="moat-1" value="1" onchange="calc()"><label for="moat-1">業界内で一定の地位</label></div>
+            <div class="radio-btn"><input type="radio" name="moat" id="moat-2" value="2" onchange="calc()"><label for="moat-2">強いブランド・特許</label></div>
+            <div class="radio-btn"><input type="radio" name="moat" id="moat-3" value="3" onchange="calc()"><label for="moat-3">独占的・参入障壁高</label></div>
+          </div>
+          <span class="hint">ブランド力・特許・コスト優位・スイッチングコストなど</span>
+        </div>
+        <div class="field">
+          <label>経営陣の質・株主還元姿勢</label>
+          <div class="radio-group">
+            <div class="radio-btn"><input type="radio" name="mgmt" id="mg-0" value="0" checked onchange="calc()"><label for="mg-0">不明・懸念あり</label></div>
+            <div class="radio-btn"><input type="radio" name="mgmt" id="mg-1" value="1" onchange="calc()"><label for="mg-1">普通</label></div>
+            <div class="radio-btn"><input type="radio" name="mgmt" id="mg-2" value="2" onchange="calc()"><label for="mg-2">株主還元・IR積極的</label></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="explanation">
+    <h2>バリュー投資の4つの要素（バフェット流）</h2>
+    <div class="four-grid">
+      <div class="four-item"><div class="four-num">1</div><div class="four-title">理解できる事業</div><div class="four-text">自分が何をしている会社かを説明できること。複雑すぎてわからないビジネスモデルは避ける。シンプルで持続可能な事業が理想。</div></div>
+      <div class="four-item"><div class="four-num">2</div><div class="four-title">長期的な競争優位性（経済の堀）</div><div class="four-text">競合他社が簡単に真似できないビジネス上の優位性。ブランド力・特許・ネットワーク効果・コスト優位性・スイッチングコストなど。</div></div>
+      <div class="four-item"><div class="four-num">3</div><div class="four-title">有能で誠実な経営陣</div><div class="four-text">株主目線で経営判断ができ、長期的な価値創造を優先する経営陣。IR情報・配当政策・自己株買いなどで株主還元への姿勢がわかる。</div></div>
+      <div class="four-item"><div class="four-num">4</div><div class="four-title">割安な価格</div><div class="four-text">「素晴らしい会社を適正な価格で買う」がバフェットの基本。PBR1倍以下・PER15倍以下・高配当利回りなどが目安。安全余裕率を確保する。</div></div>
+    </div>
+    <div class="faq-item">
+      <p class="faq-q">Q. PBR1倍以下なら必ず買いですか？</p>
+      <p class="faq-a">A. PBR1倍以下は解散価値を下回っている状態ですが、それだけで買いとは言えません。業績が悪化し続けている「バリュートラップ」に陥るリスクもあります。利益の安定性・競争優位性・財務健全性とあわせて総合判断することが重要です。</p>
+    </div>
+    <div class="faq-item">
+      <p class="faq-q">Q. 日本株でバリュー投資する際の注意点は？</p>
+      <p class="faq-a">A. 日本企業は欧米に比べてPBRが低い傾向がありますが、ROEが低い企業も多いです。東京証券取引所がPBR1倍割れ企業に改善を求めており、株主還元強化の動きが続いています。PBRの低さだけでなく、ROE・配当方針・自己株買いの実績も確認してください。</p>
+    </div>
+    <div class="faq-item">
+      <p class="faq-q">Q. 自己資本比率が高すぎる場合は？</p>
+      <p class="faq-a">A. 自己資本比率が高い（例：80%以上）のは財務的には安全ですが、資金を有効活用できていない可能性もあります。ROEが低下する原因にもなるため、投資効率（ROE）とあわせて確認してください。</p>
+    </div>
+    <p style="font-size:12px;color:var(--text3);margin-top:14px;">本ツールの判定は参考値です。実際の投資判断はご自身の責任で行ってください。</p>
+  </div>
+  <div class="ad-mid"><!-- 広告枠② -->広告枠②</div>
+</div>
+<div class="ad-slot"><!-- 広告枠③ -->広告枠③</div>
+<footer><p>本ツールの判定は参考値です。投資判断はご自身の責任で行ってください。</p></footer>
+<script>
+function calc(){
+  updateLabels();
+  const r={pbr:judgePBR(),per:judgePER(),div:judgeDiv(),eq:judgeEq(),stable:judgeStable(),moat:judgeMoat()};
+  updateCards(r);showVerdict(r);
+}
+function updateLabels(){
+  document.getElementById("pbr-val").textContent=parseFloat(document.getElementById("pbr").value).toFixed(1)+"倍";
+  document.getElementById("per-val").textContent=parseFloat(document.getElementById("per").value).toFixed(1)+"倍";
+  document.getElementById("div-yield-val").textContent=parseFloat(document.getElementById("div-yield").value).toFixed(1)+"%";
+  document.getElementById("equity-ratio-val").textContent=parseInt(document.getElementById("equity-ratio").value)+"%";
+  const pbr=parseFloat(document.getElementById("pbr").value);
+  const per=parseFloat(document.getElementById("per").value);
+  const div=parseFloat(document.getElementById("div-yield").value);
+  const eq=parseInt(document.getElementById("equity-ratio").value);
+  setCriteriaColor("criteria-pbr",pbr<=1?"pass":pbr<=2?"warn":"fail");
+  setCriteriaColor("criteria-per",per<=10?"pass":per<=15?"warn":"fail");
+  setCriteriaColor("criteria-div",div>=4?"pass":div>=3?"warn":"fail");
+  setCriteriaColor("criteria-eq",eq>=60?"pass":eq>=40?"warn":"fail");
+}
+function setCriteriaColor(id,status){
+  const el=document.getElementById(id);if(!el)return;
+  const c={pass:{bg:"var(--green-l)",color:"var(--green)"},warn:{bg:"var(--amber-l)",color:"var(--amber)"},fail:{bg:"var(--red-l)",color:"var(--red)"}};
+  el.style.background=c[status].bg;el.style.color=c[status].color;
+}
+function judgePBR(){const v=parseFloat(document.getElementById("pbr").value);return v<=1?"pass":v<=2?"warn":"fail";}
+function judgePER(){const v=parseFloat(document.getElementById("per").value);return v<=10?"pass":v<=15?"warn":"fail";}
+function judgeDiv(){
+  const y=parseFloat(document.getElementById("div-yield").value);
+  const s=parseInt(document.querySelector("input[name=div-stable]:checked").value);
+  return(y>=3&&s>=1)?"pass":(y>=3||s>=2)?"warn":"fail";
+}
+function judgeEq(){const v=parseInt(document.getElementById("equity-ratio").value);return v>=60?"pass":v>=40?"warn":"fail";}
+function judgeStable(){
+  const s=parseInt(document.querySelector("input[name=sales-trend]:checked").value);
+  const p=parseInt(document.querySelector("input[name=profit-trend]:checked").value);
+  return(s>=2&&p>=2)?"pass":(s>=1&&p>=1)?"warn":"fail";
+}
+function judgeMoat(){
+  const m=parseInt(document.querySelector("input[name=moat]:checked").value);
+  const g=parseInt(document.querySelector("input[name=mgmt]:checked").value);
+  return(m>=2&&g>=1)?"pass":(m>=1||g>=1)?"warn":"fail";
+}
+function updateCards(r){
+  const labels={pass:"合格",warn:"要注意",fail:"不合格"};
+  Object.keys(r).forEach(k=>{
+    const card=document.getElementById("card-"+k);
+    const badge=document.getElementById("badge-"+k);
+    if(!card||!badge)return;
+    card.className="cond-card "+r[k];
+    badge.textContent=labels[r[k]];badge.className="cond-badge";
+  });
+}
+function showVerdict(r){
+  const vals=Object.values(r);
+  const pass=vals.filter(v=>v==="pass").length;
+  const fail=vals.filter(v=>v==="fail").length;
+  const iconEl=document.getElementById("v-icon");
+  const titleEl=document.getElementById("v-title");
+  const descEl=document.getElementById("v-desc");
+  const sumEl=document.getElementById("v-summary");
+  const names={pbr:"PBR",per:"PER",div:"配当",eq:"自己資本比率",stable:"業績安定性",moat:"競争優位性"};
+  const col={pass:{bg:"var(--green-l)",c:"var(--green)"},warn:{bg:"var(--amber-l)",c:"var(--amber)"},fail:{bg:"var(--red-l)",c:"var(--red)"}};
+  sumEl.innerHTML=Object.entries(r).map(([k,s])=>`<span class="sum-badge" style="background:${col[s].bg};color:${col[s].c};">${names[k]}: ${{pass:"合格",warn:"要注意",fail:"不合格"}[s]}</span>`).join("");
+  if(pass===6){iconEl.textContent="★";titleEl.textContent="全条件合格 — 優良なバリュー株候補";titleEl.style.color="var(--green)";descEl.textContent="バリュー投資の6条件をすべて満たしています。割安で財務健全・競争優位性もある優良候補です。";}
+  else if(pass>=4&&fail===0){iconEl.textContent="◎";titleEl.textContent="有望なバリュー株候補";titleEl.style.color="var(--green)";descEl.textContent="多くの条件を満たしています。要注意の条件を重点的に確認し、長期保有の観点で検討してください。";}
+  else if(pass>=3&&fail<=1){iconEl.textContent="○";titleEl.textContent="条件をある程度満たす";titleEl.style.color="var(--amber)";descEl.textContent="一部条件を満たしていますが、不合格・要注意の項目を見直してください。";}
+  else if(fail>=3){iconEl.textContent="✕";titleEl.textContent="バリュー投資基準を満たしていない";titleEl.style.color="var(--red)";descEl.textContent="複数の重要条件が不合格です。より条件の揃った銘柄を探してください。";}
+  else{iconEl.textContent="△";titleEl.textContent="一部条件不足 — 慎重に判断";titleEl.style.color="var(--amber)";descEl.textContent="赤いカードの条件を特に確認してください。";}
+}
+function resetAll(){
+  document.getElementById("pbr").value=1;document.getElementById("per").value=15;
+  document.getElementById("div-yield").value=2;document.getElementById("equity-ratio").value=40;
+  ["ds-0","st-0","pt-0","moat-0","mg-0"].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=true;});
+  ["pbr","per","div","eq","stable","moat"].forEach(k=>{
+    const card=document.getElementById("card-"+k);const badge=document.getElementById("badge-"+k);
+    if(card)card.className="cond-card";
+    if(badge){badge.textContent="未入力";badge.className="cond-badge";}
+  });
+  const iconEl=document.getElementById("v-icon");const titleEl=document.getElementById("v-title");
+  const descEl=document.getElementById("v-desc");const sumEl=document.getElementById("v-summary");
+  if(iconEl)iconEl.textContent="—";
+  if(titleEl){titleEl.textContent="数値を入力してください";titleEl.style.color="var(--text)";}
+  if(descEl)descEl.textContent="6つの判定項目に数値を入力すると総合判定が表示されます";
+  if(sumEl)sumEl.innerHTML="";
+  updateLabels();
+}
+updateLabels();
+</script>
+</body>
+</html>
