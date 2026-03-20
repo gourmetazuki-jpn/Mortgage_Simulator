@@ -3,8 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>シミュレーター一覧｜azuki-plus</title>
-  <meta name="description" content="お金と人生の意思決定を助けるシミュレーターを無料で公開しています。複利・住宅ローン・老後資産・介護費用など。">
+  <title>無料シミュレーター一覧｜複利・住宅ローン・介護費用を試算 | azuki-plus</title>
+  <meta name="description" content="複利・住宅ローン・親の介護費用などを無料で試算できるシミュレーター集。資産が何年で尽きるか、ダブルケアの家計負担はいくらか、すべてブラウザ上でリアルタイム計算。">
+  <meta name="keywords" content="シミュレーター,複利,住宅ローン,介護費用,老人ホーム,資産寿命,ダブルケア,無料">
+  <link rel="canonical" href="https://azuki-plus.com/simulator/">
+
+  <!-- OGP -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="無料シミュレーター一覧｜複利・住宅ローン・介護費用を試算">
+  <meta property="og:description" content="複利・住宅ローン・親の介護費用などを無料で試算できるシミュレーター集。すべてブラウザ上でリアルタイム計算。">
+  <meta property="og:url" content="https://azuki-plus.com/simulator/">
+  <meta property="og:site_name" content="azuki-plus">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="無料シミュレーター一覧｜複利・住宅ローン・介護費用を試算">
+  <meta name="twitter:description" content="複利・住宅ローン・親の介護費用などを無料で試算できるシミュレーター集。">
+
+  <!-- 構造化データ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "azuki-plus シミュレーター",
+    "url": "https://azuki-plus.com/simulator/",
+    "description": "複利・住宅ローン・介護費用などを無料で試算できるシミュレーター集",
+    "inLanguage": "ja",
+    "hasPart": [
+      {
+        "@type": "WebApplication",
+        "name": "複利・住宅ローンシミュレーター",
+        "url": "https://azuki-plus.com/simulator/compound.html",
+        "applicationCategory": "FinanceApplication",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" }
+      },
+      {
+        "@type": "WebApplication",
+        "name": "親の介護・老人ホーム費用枯渇シミュレーター",
+        "url": "https://azuki-plus.com/simulator/kaigo.html",
+        "applicationCategory": "FinanceApplication",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" }
+      }
+    ]
+  }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
@@ -18,196 +60,48 @@
       --text: #1c1a16;
       --text2: #5c5850;
       --text3: #9a9488;
-      --accent1: #1a4fa0;
-      --accent2: #b5451b;
       --radius: 12px;
     }
-    body {
-      font-family: 'Noto Sans JP', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      font-size: 15px;
-      line-height: 1.7;
-      min-height: 100vh;
-    }
-
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 28px 20px 24px;
-      text-align: center;
-    }
-    header h1 {
-      font-size: clamp(20px, 5vw, 30px);
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 8px;
-      letter-spacing: 0.02em;
-    }
-    header p {
-      font-size: 14px;
-      color: var(--text2);
-    }
-
-    .ad-slot {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 12px;
-      text-align: center;
-      min-height: 90px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text3);
-      font-size: 12px;
-    }
-
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 32px 16px 60px;
-    }
-
-    .section-label {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: var(--text3);
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-
-    .cards {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin-bottom: 40px;
-    }
-
-    .sim-card {
-      display: flex;
-      align-items: stretch;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      text-decoration: none;
-      color: inherit;
-      overflow: hidden;
-      transition: box-shadow 0.15s, transform 0.15s;
-    }
-    .sim-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    }
-
-    .sim-card-accent {
-      width: 6px;
-      flex-shrink: 0;
-    }
-
-    .sim-card-body {
-      padding: 20px 22px;
-      flex: 1;
-    }
-
-    .sim-card-tag {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      padding: 2px 8px;
-      border-radius: 4px;
-      margin-bottom: 8px;
-    }
-
-    .sim-card h2 {
-      font-size: 17px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: var(--text);
-    }
-
-    .sim-card p {
-      font-size: 13px;
-      color: var(--text2);
-      line-height: 1.7;
-      margin-bottom: 12px;
-    }
-
-    .sim-card-features {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .feature-pill {
-      font-size: 11px;
-      color: var(--text3);
-      background: var(--surface2);
-      border-radius: 20px;
-      padding: 3px 10px;
-    }
-
-    .sim-card-arrow {
-      display: flex;
-      align-items: center;
-      padding: 0 20px 0 0;
-      color: var(--text3);
-      font-size: 20px;
-      flex-shrink: 0;
-    }
-
-    .ad-mid {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px;
-      text-align: center;
-      min-height: 100px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text3);
-      font-size: 12px;
-      margin-bottom: 40px;
-    }
-
-    .about {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px 26px;
-    }
-    .about h3 {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-    .about p {
-      font-size: 13px;
-      color: var(--text2);
-      line-height: 1.85;
-    }
-
-    footer {
-      text-align: center;
-      font-size: 12px;
-      color: var(--text3);
-      padding: 20px;
-      border-top: 1px solid var(--border);
-    }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.7; min-height: 100vh; }
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 28px 20px 24px; text-align: center; }
+    header h1 { font-size: clamp(20px, 5vw, 28px); font-weight: 700; margin-bottom: 8px; }
+    header p { font-size: 14px; color: var(--text2); }
+    .ad-slot { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px; text-align: center; min-height: 90px; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 12px; }
+    .container { max-width: 800px; margin: 0 auto; padding: 32px 16px 60px; }
+    .section-label { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: var(--text3); text-transform: uppercase; margin-bottom: 16px; }
+    .cards { display: flex; flex-direction: column; gap: 16px; margin-bottom: 40px; }
+    .sim-card { display: flex; align-items: stretch; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); text-decoration: none; color: inherit; overflow: hidden; transition: box-shadow 0.15s, transform 0.15s; }
+    .sim-card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .sim-card-accent { width: 6px; flex-shrink: 0; }
+    .sim-card-body { padding: 20px 22px; flex: 1; }
+    .sim-card-tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px; }
+    .sim-card h2 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+    .sim-card p { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 12px; }
+    .sim-card-features { display: flex; flex-wrap: wrap; gap: 6px; }
+    .feature-pill { font-size: 11px; color: var(--text3); background: var(--surface2); border-radius: 20px; padding: 3px 10px; }
+    .sim-card-arrow { display: flex; align-items: center; padding: 0 20px 0 0; color: var(--text3); font-size: 20px; flex-shrink: 0; }
+    .ad-mid { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; text-align: center; min-height: 100px; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 12px; margin-bottom: 40px; }
+    .faq { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px 26px; margin-bottom: 24px; }
+    .faq h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+    .faq-item { border-top: 1px solid var(--border); padding: 14px 0; }
+    .faq-item:first-of-type { border-top: none; padding-top: 0; }
+    .faq-q { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .faq-a { font-size: 13px; color: var(--text2); line-height: 1.8; }
+    .about { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px 26px; }
+    .about h2 { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+    .about p { font-size: 13px; color: var(--text2); line-height: 1.85; }
+    footer { text-align: center; font-size: 12px; color: var(--text3); padding: 20px; border-top: 1px solid var(--border); }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>シミュレーター一覧</h1>
+  <h1>無料シミュレーター一覧</h1>
   <p>お金と人生の意思決定を助ける、無料シミュレーター</p>
 </header>
 
-<!-- 広告枠①（ヘッダー下） -->
 <div class="ad-slot">
-  <!-- Google AdSense コードをここに貼り付け -->
+  <!-- Google AdSense 広告枠① -->
   広告枠①
 </div>
 
@@ -216,8 +110,6 @@
   <p class="section-label">公開中のシミュレーター</p>
 
   <div class="cards">
-
-    <!-- 複利・住宅ローンシミュレーター -->
     <a href="compound.html" class="sim-card">
       <div class="sim-card-accent" style="background:#1a4fa0;"></div>
       <div class="sim-card-body">
@@ -234,13 +126,12 @@
       <div class="sim-card-arrow">›</div>
     </a>
 
-    <!-- 介護・老人ホームシミュレーター -->
     <a href="kaigo.html" class="sim-card">
       <div class="sim-card-accent" style="background:#b5451b;"></div>
       <div class="sim-card-body">
         <span class="sim-card-tag" style="background:#fdf0eb;color:#b5451b;">介護・老後</span>
         <h2>親の介護・老人ホーム 費用枯渇シミュレーター</h2>
-        <p>親の貯蓄・年金・施設ランクを入力するだけで、資産が何年で底をつくかを試算。子育て費用と介護費用が重なる「ダブルケア」期間の家計への影響も可視化。</p>
+        <p>親の貯蓄・年金・施設ランクを入力するだけで、資産が何年で底をつくかを試算。教育費と介護費が重なる「ダブルケア」期間の家計への影響も可視化。</p>
         <div class="sim-card-features">
           <span class="feature-pill">施設ランク別比較</span>
           <span class="feature-pill">資産寿命</span>
@@ -250,27 +141,74 @@
       </div>
       <div class="sim-card-arrow">›</div>
     </a>
-
   </div>
 
-  <!-- 広告枠② -->
   <div class="ad-mid">
-    <!-- Google AdSense コードをここに貼り付け -->
+    <!-- Google AdSense 広告枠② -->
     広告枠②
   </div>
 
-  <div class="about">
-    <h3>このサイトについて</h3>
-    <p>人生の大きな意思決定（住宅購入・老後設計・介護準備など）に役立つシミュレーターを無料で公開しています。すべてブラウザ上で動作し、入力したデータが外部に送信されることはありません。試算はあくまで目安です。実際の判断は専門家にご相談ください。</p>
+  <div class="faq">
+    <h2>よくある質問</h2>
+    <div class="faq-item">
+      <p class="faq-q">Q. 入力したデータは保存・送信されますか？</p>
+      <p class="faq-a">A. いいえ。すべての計算はブラウザ上でのみ行われ、入力データが外部に送信されることは一切ありません。安心してご利用ください。</p>
+    </div>
+    <div class="faq-item">
+      <p class="faq-q">Q. スマートフォンでも使えますか？</p>
+      <p class="faq-a">A. はい。スマートフォン・タブレット・PCどの端末でも対応しています。</p>
+    </div>
+    <div class="faq-item">
+      <p class="faq-q">Q. 試算結果はどのくらい正確ですか？</p>
+      <p class="faq-a">A. 入力した条件をもとに数学的に計算した目安です。実際の運用成果・介護費用・税制は状況により異なるため、重要な意思決定の際はファイナンシャルプランナーや専門家にご相談ください。</p>
+    </div>
+    <div class="faq-item">
+      <p class="faq-q">Q. 利用料はかかりますか？</p>
+      <p class="faq-a">A. 無料でご利用いただけます。会員登録も不要です。</p>
+    </div>
+  </div>
+
+  <div style="margin-top:24px;" class="about">
+    <h2>このサイトについて</h2>
+    <p>住宅購入・老後設計・親の介護準備など、人生の大きな意思決定に役立つシミュレーターを無料で公開しています。複雑な計算をわかりやすく可視化し、「自分の場合はどうなるか」をすぐに確認できることを目指しています。</p>
   </div>
 
 </div>
 
-<!-- 広告枠③（フッター上） -->
 <div class="ad-slot">
-  <!-- Google AdSense コードをここに貼り付け -->
+  <!-- Google AdSense 広告枠③ -->
   広告枠③
 </div>
+
+<!-- FAQ構造化データ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "入力したデータは保存・送信されますか？",
+      "acceptedAnswer": { "@type": "Answer", "text": "いいえ。すべての計算はブラウザ上でのみ行われ、入力データが外部に送信されることは一切ありません。" }
+    },
+    {
+      "@type": "Question",
+      "name": "スマートフォンでも使えますか？",
+      "acceptedAnswer": { "@type": "Answer", "text": "はい。スマートフォン・タブレット・PCどの端末でも対応しています。" }
+    },
+    {
+      "@type": "Question",
+      "name": "試算結果はどのくらい正確ですか？",
+      "acceptedAnswer": { "@type": "Answer", "text": "入力した条件をもとに数学的に計算した目安です。実際の運用成果・介護費用・税制は状況により異なるため、重要な意思決定の際はファイナンシャルプランナーや専門家にご相談ください。" }
+    },
+    {
+      "@type": "Question",
+      "name": "利用料はかかりますか？",
+      "acceptedAnswer": { "@type": "Answer", "text": "無料でご利用いただけます。会員登録も不要です。" }
+    }
+  ]
+}
+</script>
 
 <footer>
   <p>試算はあくまで目安です。実際の運用・費用は専門家にご確認ください。</p>

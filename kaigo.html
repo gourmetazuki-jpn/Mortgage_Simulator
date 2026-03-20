@@ -3,116 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>親の介護・老人ホーム費用シミュレーター｜資産寿命・ダブルケア試算</title>
-  <meta name="description" content="親の貯蓄と年金を入力するだけで、施設ランク別に資産が何年で底をつくかを試算。教育費との「ダブルケア」期間の家計負担も可視化。40〜50代必見。">
+  <title>親の介護・老人ホーム費用シミュレーター無料｜資産寿命・ダブルケアを試算</title>
+  <meta name="description" content="親の貯蓄・年金・施設ランク（特養・民間ホームなど）を入力するだけで、資産が何年で底をつくかを試算。子育て費用と介護費用が重なる「ダブルケア」の家計への影響も可視化。40〜50代必見。">
+  <meta name="keywords" content="介護費用シミュレーター,老人ホーム費用,特養,資産寿命,ダブルケア,親の介護,介護費用計算,無料">
+  <link rel="canonical" href="https://azuki-plus.com/simulator/kaigo.html">
+
+  <!-- OGP -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="親の介護・老人ホーム費用シミュレーター無料｜資産寿命・ダブルケアを試算">
+  <meta property="og:description" content="親の貯蓄・年金・施設ランクを入力するだけで資産寿命を試算。ダブルケア期間の家計への影響も可視化。40〜50代必見。">
+  <meta property="og:url" content="https://azuki-plus.com/simulator/kaigo.html">
+  <meta property="og:site_name" content="azuki-plus">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="親の介護・老人ホーム費用シミュレーター無料">
+  <meta name="twitter:description" content="親の貯蓄・年金・施設ランクを入力するだけで資産寿命を試算。ダブルケア期間の家計への影響も可視化。">
+
+  <!-- 構造化データ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "親の介護・老人ホーム費用枯渇シミュレーター",
+    "url": "https://azuki-plus.com/simulator/kaigo.html",
+    "description": "親の貯蓄・年金・施設ランクを入力するだけで、資産が何年で底をつくかを試算できるシミュレーター。ダブルケア期間の家計への影響も可視化。",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "inLanguage": "ja",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
+    "featureList": ["介護費用試算", "施設ランク別比較", "資産寿命計算", "ダブルケア可視化", "定年・引退考慮"],
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "シミュレーター一覧", "item": "https://azuki-plus.com/simulator/" },
+        { "@type": "ListItem", "position": 2, "name": "親の介護・老人ホーム費用シミュレーター" }
+      ]
+    }
+  }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #f7f5f0;
-      --surface: #ffffff;
-      --surface2: #f0ede6;
-      --border: rgba(0,0,0,0.09);
-      --text: #1c1a16;
-      --text2: #5c5850;
-      --text3: #9a9488;
-      --accent: #b5451b;
-      --accent-light: #fdf0eb;
-      --blue: #1a4fa0;
-      --blue-light: #e8eef8;
-      --green: #2d6a1f;
-      --green-light: #eaf3e6;
-      --amber: #854f0b;
-      --amber-light: #faeeda;
-      --radius: 10px;
-      --radius-sm: 6px;
-    }
-    body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; }
-
-    header { background: var(--accent); color: #fff; padding: 28px 20px 22px; text-align: center; }
-    header h1 { font-size: clamp(17px, 4vw, 24px); font-weight: 700; margin-bottom: 6px; letter-spacing: 0.02em; }
-    header p { font-size: 13px; opacity: 0.85; }
-
-    .ad-slot { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px; text-align: center; min-height: 90px; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 12px; }
-
-    .container { max-width: 960px; margin: 0 auto; padding: 20px 16px 48px; display: flex; flex-direction: column; gap: 20px; }
-
-    /* タブ */
-    .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--accent); }
-    .tab { flex: 1; padding: 10px 8px; font-size: 13px; font-weight: 500; text-align: center; cursor: pointer; background: var(--surface2); color: var(--text2); border: none; font-family: inherit; transition: background 0.15s; border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
-    .tab.active { background: var(--accent); color: #fff; }
-
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-
-    /* カード */
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
-    .card-title { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; color: var(--text3); text-transform: uppercase; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-
-    /* グリッド */
-    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-    @media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } .grid3 { grid-template-columns: 1fr 1fr; } }
-
-    /* コントロール */
-    .ctrl { display: flex; flex-direction: column; gap: 14px; }
-    .ctrl-row { display: flex; flex-direction: column; gap: 4px; }
-    .ctrl-row label { font-size: 12px; color: var(--text2); }
-    .ctrl-row .row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
-    .ctrl-row input[type=range] { width: 100%; accent-color: var(--accent); }
-    .ctrl-row .val { font-size: 13px; font-weight: 700; min-width: 72px; text-align: right; color: var(--text); font-family: 'Lato', sans-serif; }
-
-    /* 施設ランクボタン */
-    .facility-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    @media (max-width: 500px) { .facility-grid { grid-template-columns: 1fr 1fr; } }
-    .fac-btn { border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 6px; text-align: center; cursor: pointer; background: var(--surface2); transition: all 0.15s; font-family: inherit; }
-    .fac-btn .fac-name { font-size: 12px; font-weight: 700; color: var(--text); display: block; margin-bottom: 3px; }
-    .fac-btn .fac-cost { font-size: 11px; color: var(--text3); display: block; }
-    .fac-btn.active { border-color: var(--accent); background: var(--accent-light); }
-    .fac-btn.active .fac-name { color: var(--accent); }
-
-    /* 結果メトリクス */
-    .metric { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px 14px; }
-    .metric .label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
-    .metric .value { font-size: clamp(16px, 3vw, 22px); font-weight: 700; font-family: 'Lato', sans-serif; color: var(--text); }
-    .metric.danger { background: var(--accent-light); }
-    .metric.danger .value { color: var(--accent); }
-    .metric.safe { background: var(--green-light); }
-    .metric.safe .value { color: var(--green); }
-    .metric.warn { background: var(--amber-light); }
-    .metric.warn .value { color: var(--amber); }
-
-    /* アラートバナー */
-    .alert { border-radius: var(--radius-sm); padding: 12px 16px; font-size: 13px; line-height: 1.7; }
-    .alert.danger { background: var(--accent-light); color: #7a2c10; border-left: 3px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
-    .alert.safe { background: var(--green-light); color: #1e4d13; border-left: 3px solid var(--green); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
-    .alert.warn { background: var(--amber-light); color: #5c3306; border-left: 3px solid var(--amber); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
-
-    /* チャート */
-    .chart-wrap { position: relative; width: 100%; height: 260px; }
-    .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text2); margin-bottom: 10px; }
-    .legend span { display: flex; align-items: center; gap: 5px; }
-    .leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
-
-    /* 解説 */
-    .explanation { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
-    .explanation h2 { font-size: 16px; font-weight: 700; color: var(--accent); margin-bottom: 12px; }
-    .explanation h3 { font-size: 14px; font-weight: 700; margin: 16px 0 6px; }
-    .explanation p, .explanation li { font-size: 13px; color: var(--text2); line-height: 1.85; }
-    .explanation ul { padding-left: 18px; }
-    .cost-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-    .cost-table th { background: var(--surface2); padding: 8px 12px; text-align: left; font-weight: 700; border-bottom: 1px solid var(--border); }
-    .cost-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--text2); }
-    .cost-table tr:last-child td { border-bottom: none; }
-
-    footer { text-align: center; font-size: 12px; color: var(--text3); padding: 20px; border-top: 1px solid var(--border); }
-
-    .section-gap { display: flex; flex-direction: column; gap: 16px; }
-    .divider { border: none; border-top: 1px solid var(--border); }
-  </style>
 </head>
 <body>
 
@@ -121,6 +53,11 @@
   <p>施設ランク別「資産寿命」とダブルケア家計破綻ラインを試算</p>
 </header>
 
+<nav aria-label="パンくずリスト" style="background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px;font-size:12px;color:var(--text3);">
+  <a href="index.html" style="color:var(--text3);text-decoration:none;">シミュレーター一覧</a>
+  <span style="margin:0 6px;">›</span>
+  <span>親の介護・老人ホーム費用シミュレーター</span>
+</nav>
 <div class="ad-slot">
   <!-- Google AdSense 広告枠①（ヘッダー下） -->
   広告枠①
