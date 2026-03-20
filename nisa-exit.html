@@ -180,6 +180,49 @@
           <div style="font-size:11px;color:var(--text3);">開始時資産の4%を毎年定額で取り崩す<br>初年度取り崩し額：<span id="four-pct-label" style="font-weight:700;color:var(--purple);">—</span></div>
         </div>
       </div>
+
+      <div class="card">
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>暴落シナリオ</span>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--text2);">
+            <input type="checkbox" id="crash-enabled" onchange="update()" style="accent-color:var(--red);">
+            有効にする
+          </label>
+        </div>
+        <div class="ctrl" id="crash-ctrl" style="opacity:0.4;pointer-events:none;">
+          <div class="ctrl-row">
+            <label>最初の暴落発生（取り崩し開始から何年目）</label>
+            <div class="row">
+              <input type="range" min="1" max="20" step="1" value="5" id="crash-year" oninput="update()">
+              <span class="val" id="crash-year-label">5年目</span>
+            </div>
+          </div>
+          <div class="ctrl-row">
+            <label>暴落率（資産が何％下落するか）</label>
+            <div class="row">
+              <input type="range" min="10" max="70" step="5" value="40" id="crash-rate" oninput="update()">
+              <span class="val" id="crash-rate-label">40%下落</span>
+            </div>
+            <span class="hint">リーマンショック約50%・コロナショック約30%</span>
+          </div>
+          <div class="ctrl-row">
+            <label>回復期間（何年で暴落前水準に戻るか）</label>
+            <div class="row">
+              <input type="range" min="1" max="15" step="1" value="5" id="crash-recover" oninput="update()">
+              <span class="val" id="crash-recover-label">5年</span>
+            </div>
+            <span class="hint">リーマンショック約5年・ITバブル崩壊約13年</span>
+          </div>
+          <div class="ctrl-row">
+            <label>暴落の繰り返し周期（0=1回のみ）</label>
+            <div class="row">
+              <input type="range" min="0" max="20" step="1" value="0" id="crash-cycle" oninput="update()">
+              <span class="val" id="crash-cycle-label">繰り返しなし</span>
+            </div>
+            <span class="hint">例：10年おきに暴落が来るシナリオ</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 右：結果 -->
@@ -303,6 +346,12 @@ function fmtAxis(v) {
 }
 
 function update() {
+  // 暴落チェックボックスのON/OFF
+  const crashEnabled = document.getElementById('crash-enabled').checked;
+  const crashCtrl = document.getElementById('crash-ctrl');
+  crashCtrl.style.opacity = crashEnabled ? '1' : '0.4';
+  crashCtrl.style.pointerEvents = crashEnabled ? 'auto' : 'none';
+
   const assets   = parseInt(document.getElementById('assets').value);
   const rate     = parseFloat(document.getElementById('rate').value) / 100;
   const age      = parseInt(document.getElementById('age').value);
@@ -319,6 +368,33 @@ function update() {
   document.getElementById('fixed-amt-label').textContent = fmt(fixedAmt);
   document.getElementById('monthly-label').textContent = '約' + (fixedAmt/12/10000).toFixed(1) + '万円/月';
   document.getElementById('four-pct-label').textContent = fmt(fourPct) + '/年';
+
+  // 暴落パラメータ
+  const crashYear    = parseInt(document.getElementById('crash-year').value);
+  const crashRate    = parseInt(document.getElementById('crash-rate').value) / 100;
+  const crashRecover = parseInt(document.getElementById('crash-recover').value);
+  const crashCycle   = parseInt(document.getElementById('crash-cycle').value);
+  document.getElementById('crash-year-label').textContent = crashYear + '年目';
+  document.getElementById('crash-rate-label').textContent = crashRate*100 + '%下落';
+  document.getElementById('crash-recover-label').textContent = crashRecover + '年';
+  document.getElementById('crash-cycle-label').textContent = crashCycle === 0 ? '繰り返しなし' : crashCycle + '年おき';
+
+  // 暴落が発生する年のセットを生成（yearsはこの時点で未定義なのでlifespan/ageから計算）
+  const yearsForCrash = Math.max(lifespan - age, 1);
+  const crashYears = new Set();
+  if (crashEnabled) {
+    crashYears.add(crashYear);
+    if (crashCycle > 0) {
+      for (let cy = crashYear + crashCycle; cy <= yearsForCrash; cy += crashCycle) {
+        crashYears.add(cy);
+      }
+    }
+  }
+
+  // 回復中の利率調整：暴落後crashRecover年かけて通常利率に戻る
+  // crashYears[y]=true の年に資産がcrashRate%下落、その後回復
+  // recoveringMap: year -> 残り回復年数
+  const recoveringMap = {};
   document.querySelectorAll('.ls-age').forEach(el => el.textContent = lifespan);
 
   const years = Math.max(lifespan - age, 1);
@@ -336,21 +412,42 @@ function update() {
       fourData.push(Math.round(balFour));
       pctIncome.push(0); fixIncome.push(0); fourIncome.push(0);
     } else {
+      // 暴落判定：この年に暴落が発生するか
+      const isCrashYear = crashYears.has(y);
+
+      // 暴落年は利率をマイナスに（暴落率を年率換算で適用）
+      // 回復中フラグを更新
+      if (isCrashYear) {
+        for (let r = 1; r <= crashRecover; r++) {
+          recoveringMap[y + r] = (recoveringMap[y + r] || 0) + 1;
+        }
+      }
+      // この年の実効利率を計算
+      let effRate = rate;
+      if (isCrashYear) {
+        // 暴落年：資産がcrashRate%下落
+        effRate = -crashRate;
+      } else if (recoveringMap[y]) {
+        // 回復中：通常より低い利率（線形回復）
+        const recoverProgress = 1 - (recoveringMap[y] / crashRecover);
+        effRate = rate * recoverProgress;
+      }
+
       // 定率
       const pw = balPct * ratePct;
-      balPct = Math.max(0, balPct * (1+rate) - pw);
+      balPct = Math.max(0, balPct * (1 + effRate) - pw);
       if (balPct <= 0 && pctDeplete === null) pctDeplete = curAge;
       pctData.push(Math.round(balPct));
       pctIncome.push(Math.round(pw));
       // 定額
-      const fw = Math.min(fixedAmt, balFix * (1+rate));
-      balFix = Math.max(0, balFix * (1+rate) - fixedAmt);
+      const fw = Math.min(fixedAmt, Math.max(0, balFix * (1 + effRate)));
+      balFix = Math.max(0, balFix * (1 + effRate) - fixedAmt);
       if (balFix <= 0 && fixDeplete === null) fixDeplete = curAge;
       fixData.push(Math.round(balFix));
       fixIncome.push(Math.round(fw));
       // 4%ルール
-      const yw = Math.min(fourPct, balFour * (1+rate));
-      balFour = Math.max(0, balFour * (1+rate) - fourPct);
+      const yw = Math.min(fourPct, Math.max(0, balFour * (1 + effRate)));
+      balFour = Math.max(0, balFour * (1 + effRate) - fourPct);
       if (balFour <= 0 && fourDeplete === null) fourDeplete = curAge;
       fourData.push(Math.round(balFour));
       fourIncome.push(Math.round(yw));
@@ -453,6 +550,46 @@ function update() {
 }
 
 update();
+
+// 暴落タイミングマーカー
+const crashMarker = {
+  id: 'crashMarker',
+  afterDraw(ch) {
+    if (ch.canvas.id !== 'main-chart') return;
+    const enabled = document.getElementById('crash-enabled').checked;
+    if (!enabled) return;
+    const age      = parseInt(document.getElementById('age').value);
+    const lifespan = parseInt(document.getElementById('lifespan').value);
+    const crashYear  = parseInt(document.getElementById('crash-year').value);
+    const crashCycle = parseInt(document.getElementById('crash-cycle').value);
+    const lifespan2 = parseInt(document.getElementById('lifespan').value);
+    const maxYrs = Math.max(lifespan2 - age, 1);
+    const meta = ch.getDatasetMeta(0);
+    if (!meta.data.length) return;
+    const ctx = ch.ctx;
+    const top = ch.chartArea.top, bottom = ch.chartArea.bottom;
+    const crashYearsArr = [crashYear];
+    if (crashCycle > 0) {
+      for (let cy = crashYear + crashCycle; cy <= maxYrs; cy += crashCycle) crashYearsArr.push(cy);
+    }
+    crashYearsArr.forEach(cy => {
+      if (!meta.data[cy]) return;
+      const x = meta.data[cy].x;
+      ctx.save();
+      ctx.strokeStyle = '#992020';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#992020';
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('暴落', x, top - 3);
+      ctx.restore();
+    });
+  }
+};
+Chart.register(crashMarker);
 </script>
 </body>
 </html>
