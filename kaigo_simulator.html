@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>親の介護・老人ホーム費用シミュレーター｜資産寿命・ダブルケア試算</title>
+  <meta name="description" content="親の貯蓄と年金を入力するだけで、施設ランク別に資産が何年で底をつくかを試算。教育費との「ダブルケア」期間の家計負担も可視化。40〜50代必見。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f7f5f0;
+      --surface: #ffffff;
+      --surface2: #f0ede6;
+      --border: rgba(0,0,0,0.09);
+      --text: #1c1a16;
+      --text2: #5c5850;
+      --text3: #9a9488;
+      --accent: #b5451b;
+      --accent-light: #fdf0eb;
+      --blue: #1a4fa0;
+      --blue-light: #e8eef8;
+      --green: #2d6a1f;
+      --green-light: #eaf3e6;
+      --amber: #854f0b;
+      --amber-light: #faeeda;
+      --radius: 10px;
+      --radius-sm: 6px;
+    }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; }
+
+    header { background: var(--accent); color: #fff; padding: 28px 20px 22px; text-align: center; }
+    header h1 { font-size: clamp(17px, 4vw, 24px); font-weight: 700; margin-bottom: 6px; letter-spacing: 0.02em; }
+    header p { font-size: 13px; opacity: 0.85; }
+
+    .ad-slot { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px; text-align: center; min-height: 90px; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 12px; }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 20px 16px 48px; display: flex; flex-direction: column; gap: 20px; }
+
+    /* タブ */
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--accent); }
+    .tab { flex: 1; padding: 10px 8px; font-size: 13px; font-weight: 500; text-align: center; cursor: pointer; background: var(--surface2); color: var(--text2); border: none; font-family: inherit; transition: background 0.15s; border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+    .tab.active { background: var(--accent); color: #fff; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* カード */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .card-title { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; color: var(--text3); text-transform: uppercase; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+    /* グリッド */
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    @media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } .grid3 { grid-template-columns: 1fr 1fr; } }
+
+    /* コントロール */
+    .ctrl { display: flex; flex-direction: column; gap: 14px; }
+    .ctrl-row { display: flex; flex-direction: column; gap: 4px; }
+    .ctrl-row label { font-size: 12px; color: var(--text2); }
+    .ctrl-row .row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
+    .ctrl-row input[type=range] { width: 100%; accent-color: var(--accent); }
+    .ctrl-row .val { font-size: 13px; font-weight: 700; min-width: 72px; text-align: right; color: var(--text); font-family: 'Lato', sans-serif; }
+
+    /* 施設ランクボタン */
+    .facility-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    @media (max-width: 500px) { .facility-grid { grid-template-columns: 1fr 1fr; } }
+    .fac-btn { border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 6px; text-align: center; cursor: pointer; background: var(--surface2); transition: all 0.15s; font-family: inherit; }
+    .fac-btn .fac-name { font-size: 12px; font-weight: 700; color: var(--text); display: block; margin-bottom: 3px; }
+    .fac-btn .fac-cost { font-size: 11px; color: var(--text3); display: block; }
+    .fac-btn.active { border-color: var(--accent); background: var(--accent-light); }
+    .fac-btn.active .fac-name { color: var(--accent); }
+
+    /* 結果メトリクス */
+    .metric { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px 14px; }
+    .metric .label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+    .metric .value { font-size: clamp(16px, 3vw, 22px); font-weight: 700; font-family: 'Lato', sans-serif; color: var(--text); }
+    .metric.danger { background: var(--accent-light); }
+    .metric.danger .value { color: var(--accent); }
+    .metric.safe { background: var(--green-light); }
+    .metric.safe .value { color: var(--green); }
+    .metric.warn { background: var(--amber-light); }
+    .metric.warn .value { color: var(--amber); }
+
+    /* アラートバナー */
+    .alert { border-radius: var(--radius-sm); padding: 12px 16px; font-size: 13px; line-height: 1.7; }
+    .alert.danger { background: var(--accent-light); color: #7a2c10; border-left: 3px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+    .alert.safe { background: var(--green-light); color: #1e4d13; border-left: 3px solid var(--green); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+    .alert.warn { background: var(--amber-light); color: #5c3306; border-left: 3px solid var(--amber); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+
+    /* チャート */
+    .chart-wrap { position: relative; width: 100%; height: 260px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text2); margin-bottom: 10px; }
+    .legend span { display: flex; align-items: center; gap: 5px; }
+    .leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+    /* 解説 */
+    .explanation { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+    .explanation h2 { font-size: 16px; font-weight: 700; color: var(--accent); margin-bottom: 12px; }
+    .explanation h3 { font-size: 14px; font-weight: 700; margin: 16px 0 6px; }
+    .explanation p, .explanation li { font-size: 13px; color: var(--text2); line-height: 1.85; }
+    .explanation ul { padding-left: 18px; }
+    .cost-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+    .cost-table th { background: var(--surface2); padding: 8px 12px; text-align: left; font-weight: 700; border-bottom: 1px solid var(--border); }
+    .cost-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--text2); }
+    .cost-table tr:last-child td { border-bottom: none; }
+
+    footer { text-align: center; font-size: 12px; color: var(--text3); padding: 20px; border-top: 1px solid var(--border); }
+
+    .section-gap { display: flex; flex-direction: column; gap: 16px; }
+    .divider { border: none; border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>親の介護・老人ホーム 費用枯渇シミュレーター</h1>
+  <p>施設ランク別「資産寿命」とダブルケア家計破綻ラインを試算</p>
+</header>
+
+<div class="ad-slot">
+  <!-- Google AdSense 広告枠①（ヘッダー下） -->
+  広告枠①
+</div>
+
+<div class="container">
+
+  <!-- タブ -->
+  <div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('tab1', this)">施設ランク別・資産寿命</button>
+      <button class="tab" onclick="switchTab('tab2', this)">ダブルケア 家計破綻ライン</button>
+    </div>
+
+    <!-- ===== タブ1: 資産寿命 ===== -->
+    <div id="tab1" class="tab-content active" style="margin-top:16px;">
+      <div class="grid2">
+
+        <!-- 左：入力 -->
+        <div class="section-gap">
+          <div class="card">
+            <div class="card-title">親の状況</div>
+            <div class="ctrl">
+              <div class="ctrl-row">
+                <label>親の現在の貯蓄総額</label>
+                <div class="row">
+                  <input type="range" min="0" max="50000000" step="500000" value="10000000" id="savings" oninput="calcAsset()">
+                  <span class="val" id="savings-label">1,000万円</span>
+                </div>
+              </div>
+              <div class="ctrl-row">
+                <label>親の年金収入（月額）</label>
+                <div class="row">
+                  <input type="range" min="0" max="400000" step="5000" value="150000" id="pension" oninput="calcAsset()">
+                  <span class="val" id="pension-label">15万円</span>
+                </div>
+              </div>
+              <div class="ctrl-row">
+                <label>現在の親の年齢</label>
+                <div class="row">
+                  <input type="range" min="65" max="95" step="1" value="80" id="parent-age" oninput="calcAsset()">
+                  <span class="val" id="parent-age-label">80歳</span>
+                </div>
+              </div>
+              <div class="ctrl-row">
+                <label>親の生活費（施設費用以外・月額）<br><span style="font-size:11px;color:var(--text3);">食費・日用品・医療費・被服費など</span></label>
+                <div class="row">
+                  <input type="range" min="0" max="150000" step="5000" value="30000" id="living-cost" oninput="calcAsset()">
+                  <span class="val" id="living-cost-label">3万円</span>
+                </div>
+              </div>
+              <div class="ctrl-row">
+                <label>子からの月額支援（任意）</label>
+                <div class="row">
+                  <input type="range" min="0" max="100000" step="5000" value="0" id="support" oninput="calcAsset()">
+                  <span class="val" id="support-label">0円</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">施設ランクを選ぶ</div>
+            <div class="facility-grid">
+              <button class="fac-btn" id="fac0" onclick="selectFac(0)">
+                <span class="fac-name">在宅介護</span>
+                <span class="fac-cost">月5〜10万円</span>
+              </button>
+              <button class="fac-btn active" id="fac1" onclick="selectFac(1)">
+                <span class="fac-name">特養（公的）</span>
+                <span class="fac-cost">月8〜13万円</span>
+              </button>
+              <button class="fac-btn" id="fac2" onclick="selectFac(2)">
+                <span class="fac-name">老健・GH</span>
+                <span class="fac-cost">月15〜20万円</span>
+              </button>
+              <button class="fac-btn" id="fac3" onclick="selectFac(3)">
+                <span class="fac-name">民間ホーム</span>
+                <span class="fac-cost">月25〜35万円</span>
+              </button>
+            </div>
+            <div style="margin-top:12px;" class="ctrl">
+              <div class="ctrl-row">
+                <label id="fac-cost-label">月額費用（特養）</label>
+                <div class="row">
+                  <input type="range" min="30000" max="500000" step="10000" value="100000" id="monthly-cost" oninput="calcAsset()">
+                  <span class="val" id="monthly-cost-label">10万円</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右：結果 -->
+        <div class="section-gap">
+          <div class="grid3">
+            <div class="metric danger" id="m-deplete">
+              <div class="label">資産が尽きるまで</div>
+              <div class="value" id="deplete-val">—</div>
+            </div>
+            <div class="metric" id="m-deplete-age">
+              <div class="label">親の年齢（枯渇時）</div>
+              <div class="value" id="deplete-age-val">—</div>
+            </div>
+            <div class="metric">
+              <div class="label">月間収支</div>
+              <div class="value" id="monthly-balance-val">—</div>
+            </div>
+          </div>
+
+          <div id="asset-alert" class="alert warn">計算中...</div>
+
+          <div class="card" style="padding:16px;">
+            <div class="legend">
+              <span><span class="leg-dot" style="background:#b5451b;"></span>貯蓄残高</span>
+              <span><span class="leg-dot" style="background:#1a4fa0;opacity:0.5;"></span>年金のみの場合</span>
+            </div>
+            <div class="chart-wrap"><canvas id="asset-chart"></canvas></div>
+          </div>
+
+          <div class="ad-slot" style="border:1px solid var(--border);border-radius:var(--radius);">
+            <!-- 広告枠② -->広告枠②
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== タブ2: ダブルケア ===== -->
+    <div id="tab2" class="tab-content" style="margin-top:16px;">
+      <div class="grid2">
+
+        <!-- 左：入力 -->
+        <div class="section-gap">
+          <div class="card">
+            <div class="card-title">あなたの家計</div>
+            <div class="ctrl">
+              <div class="ctrl-row">
+                <label>あなたの年齢</label>
+                <div class="row">
+                  <input type="range" min="35" max="60" step="1" value="48" id="my-age" oninput="calcDouble()">
+                  <span class="val" id="my-age-label">48歳</span>
+                </div>
+              </div>
+              <div class="ctrl-row">
+                <label>世帯の手取り月収</label>
+                <div class="row">
+                  <input type="range" min="200000" max="1000000" step="10000" value="450000" id="income" oninput="calcDouble()">
+                  <span class="val" id="income-label">45万円</span>
+                </div>
+              </div>
+              <div class="ctrl-row">
+                <label>介護費用を除く月の生活費</label>
+                <div class="row">
+                  <input type="range" min="100000" max="600000" step="10000" value="280000" id="living" oninput="calcDouble()">
+                  <span class="val" id="living-label">28万円</span>
+                </div>
+              </div>
+              <div class="ctrl-row">
+                <label>現在の保有資産（貯蓄）</label>
+                <div class="row">
+                  <input type="range" min="0" max="100000000" step="500000" value="10000000" id="my-savings" oninput="calcDouble()">
+                  <span class="val" id="my-savings-label">1,000万円</span>
+                </div>
+              </div>
+              <div class="ctrl-row">
+                <label>自分の想定寿命</label>
+                <div class="row">
+                  <input type="range" min="60" max="110" step="1" value="90" id="my-lifespan" oninput="calcDouble()">
+                  <span class="val" id="my-lifespan-label">90歳</span>
+                </div>
+              </div>
+              <div class="ctrl-row">
+                <label>定年退職の年齢</label>
+                <div class="row">
+                  <input type="range" min="55" max="70" step="1" value="65" id="retire-age" oninput="calcDouble()">
+                  <span class="val" id="retire-age-label">65歳</span>
+                </div>
+              </div>
+              <div class="ctrl-row">
+                <label>定年後の月収（再雇用・パートなど）<br><span style="font-size:11px;color:var(--text3);">ゼロの場合は収入なしとして計算</span></label>
+                <div class="row">
+                  <input type="range" min="0" max="400000" step="10000" value="150000" id="retire-income" oninput="calcDouble()">
+                  <span class="val" id="retire-income-label">15万円</span>
+                </div>
+              </div>
+              <div class="ctrl-row">
+                <label>仕事を完全に引退する年齢<br><span style="font-size:11px;color:var(--text3);">この年齢以降は年金収入のみとして計算</span></label>
+                <div class="row">
+                  <input type="range" min="60" max="80" step="1" value="70" id="full-retire-age" oninput="calcDouble()">
+                  <span class="val" id="full-retire-age-label">70歳</span>
+                </div>
+              </div>
+              <div class="ctrl-row">
+                <label>完全引退後の月収（年金など）</label>
+                <div class="row">
+                  <input type="range" min="0" max="400000" step="10000" value="120000" id="pension-income" oninput="calcDouble()">
+                  <span class="val" id="pension-income-label">12万円</span>
+                </div>
+              </div>
+              <div class="ctrl-row">
+                <label>資産の運用利率（年率）<br><span style="font-size:11px;color:var(--text3);">0%にすると運用なし（タンス預金）として計算</span></label>
+                <div class="row">
+                  <input type="range" min="0" max="10" step="0.5" value="3" id="my-rate" oninput="calcDouble()">
+                  <span class="val" id="my-rate-label">3.0%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">子供の教育費</div>
+            <div class="ctrl">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+                <span style="font-size:13px;color:var(--text2);">子供の人数</span>
+                <div class="toggle-group" style="width:auto;">
+                  <button id="nc0" onclick="setChildNum(0)" style="padding:6px 14px;font-size:13px;border:none;cursor:pointer;background:var(--surface2);color:var(--text2);font-family:inherit;">0人</button>
+                  <button id="nc1" onclick="setChildNum(1)" style="padding:6px 14px;font-size:13px;border:none;cursor:pointer;background:#b5451b;color:#fff;font-weight:500;font-family:inherit;">1人</button>
+                  <button id="nc2" onclick="setChildNum(2)" style="padding:6px 14px;font-size:13px;border:none;cursor:pointer;background:var(--surface2);color:var(--text2);font-family:inherit;">2人</button>
+                  <button id="nc3" onclick="setChildNum(3)" style="padding:6px 14px;font-size:13px;border:none;cursor:pointer;background:var(--surface2);color:var(--text2);font-family:inherit;">3人</button>
+                </div>
+              </div>
+              <div id="children-inputs"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">親の介護費用負担</div>
+            <div class="ctrl">
+              <div class="ctrl-row">
+                <label>親の現在の年齢</label>
+                <div class="row">
+                  <input type="range" min="65" max="95" step="1" value="78" id="parent-age-double" oninput="calcDouble()">
+                  <span class="val" id="parent-age-double-label">78歳</span>
+                </div>
+              </div>
+              <div class="ctrl-row">
+                <label>親への月額支援額（あなた負担分）</label>
+                <div class="row">
+                  <input type="range" min="0" max="200000" step="5000" value="30000" id="care-support" oninput="calcDouble()">
+                  <span class="val" id="care-support-label">3万円</span>
+                </div>
+              </div>
+              <div class="ctrl-row">
+                <label>本格化後の月額支援増加額</label>
+                <div class="row">
+                  <input type="range" min="0" max="200000" step="5000" value="50000" id="care-increase" oninput="calcDouble()">
+                  <span class="val" id="care-increase-label">5万円</span>
+                </div>
+              </div>
+              <div class="ctrl-row">
+                <label>介護が本格化する親の年齢</label>
+                <div class="row">
+                  <input type="range" min="70" max="95" step="1" value="83" id="care-start-age" oninput="calcDouble()">
+                  <span class="val" id="care-start-age-label">83歳</span>
+                </div>
+              </div>
+              <div class="ctrl-row">
+                <label>親の想定寿命</label>
+                <div class="row">
+                  <input type="range" min="75" max="105" step="1" value="90" id="parent-lifespan" oninput="calcDouble()">
+                  <span class="val" id="parent-lifespan-label">90歳</span>
+                </div>
+              </div>
+              <div id="double-care-period-info" style="background:var(--surface2);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;color:var(--text2);line-height:1.8;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右：結果 -->
+        <div class="section-gap">
+          <div class="grid3">
+            <div class="metric" id="m-double-start">
+              <div class="label">ダブルケア開始</div>
+              <div class="value" id="double-start-val">—</div>
+            </div>
+            <div class="metric" id="m-double-end">
+              <div class="label">ダブルケア終了</div>
+              <div class="value" id="double-end-val">—</div>
+            </div>
+            <div class="metric" id="m-double-worst">
+              <div class="label">最大月額赤字</div>
+              <div class="value" id="double-worst-val">—</div>
+            </div>
+            <div class="metric" id="m-my-deplete">
+              <div class="label">資産が尽きるまで</div>
+              <div class="value" id="my-deplete-val">—</div>
+            </div>
+            <div class="metric" id="m-my-deplete-age">
+              <div class="label">枯渇時のあなたの年齢</div>
+              <div class="value" id="my-deplete-age-val">—</div>
+            </div>
+
+          </div>
+
+          <div id="double-alert" class="alert warn">計算中...</div>
+
+          <div class="card" style="padding:16px;">
+            <div class="legend">
+              <span><span class="leg-dot" style="background:#1a4fa0;"></span>月間収支</span>
+              <span><span class="leg-dot" style="background:#EF9F27;opacity:0.5;"></span>ダブルケア期間</span>
+              <span><span class="leg-dot" style="background:#854f0b;width:14px;height:3px;border-radius:1px;"></span>定年</span>
+              <span><span class="leg-dot" style="background:#534AB7;width:14px;height:3px;border-radius:1px;"></span>完全引退</span>
+            </div>
+            <div class="chart-wrap"><canvas id="double-chart"></canvas></div>
+          </div>
+
+          <div class="card" style="padding:16px;">
+            <div class="legend">
+              <span><span class="leg-dot" style="background:#2d6a1f;"></span>保有資産残高</span>
+              <span><span class="leg-dot" style="background:#EF9F27;opacity:0.5;"></span>ダブルケア期間</span>
+              <span><span class="leg-dot" style="background:#854f0b;width:14px;height:3px;border-radius:1px;"></span>定年</span>
+              <span><span class="leg-dot" style="background:#534AB7;width:14px;height:3px;border-radius:1px;"></span>完全引退</span>
+            </div>
+            <div class="chart-wrap"><canvas id="savings-chart"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 解説 -->
+  <div class="explanation">
+    <h2>施設ランク別・月額費用の目安（2025年現在）</h2>
+    <table class="cost-table">
+      <thead><tr><th>施設種別</th><th>月額費用目安</th><th>特徴</th></tr></thead>
+      <tbody>
+        <tr><td>在宅介護（訪問・通所）</td><td>5〜10万円</td><td>自己負担1〜3割。住み慣れた環境で介護可能。家族の負担大。</td></tr>
+        <tr><td>特別養護老人ホーム（特養）</td><td>8〜13万円</td><td>公的施設で低コスト。要介護3以上が原則。待機期間が数年に及ぶことも。</td></tr>
+        <tr><td>老人保健施設（老健）・グループホーム</td><td>15〜20万円</td><td>リハビリ目的が中心。認知症対応のグループホームも同程度。</td></tr>
+        <tr><td>民間有料老人ホーム</td><td>25〜35万円</td><td>入居一時金が0〜数千万円のものも。サービスが充実。すぐ入居可能。</td></tr>
+      </tbody>
+    </table>
+
+    <h3>「特養待ち」の現実</h3>
+    <p>特養の入居待機者は全国で約27万人（厚労省2023年調査）。都市部では数年待ちも珍しくありません。待機期間中は在宅介護や民間施設でつなぐ必要があり、その間の費用が資産を大きく圧迫します。</p>
+
+    <h3>ダブルケアとは</h3>
+    <p>子育て・教育費の負担がピークを迎える時期に、親の介護が重なる状態を「ダブルケア」と呼びます。内閣府の調査では40代前半が最もダブルケアになりやすい年齢層とされています。この時期は家計の支出が二重にかかるため、貯蓄の取り崩しや離職リスクが高まります。</p>
+
+    <h3>資産が底をついたら</h3>
+    <ul>
+      <li>生活保護申請により特養費用の公費負担が受けられる場合があります</li>
+      <li>高額介護サービス費制度（月額負担に上限あり）の活用を検討してください</li>
+      <li>市区町村の介護保険課やケアマネジャーに早めに相談することが重要です</li>
+    </ul>
+  </div>
+
+  <div class="ad-slot" style="border:1px solid var(--border);border-radius:var(--radius);">
+    <!-- 広告枠③（記事下） -->広告枠③
+  </div>
+
+</div>
+
+<footer>
+  <p>試算はあくまで目安です。実際の費用・制度はお住まいの市区町村・ケアマネジャーにご確認ください。</p>
+</footer>
+
+<script>
+// 学費マスタ（月額）
+// ===== ユーティリティ =====
+function fmtMan(v) {
+  v = Math.round(v);
+  if (Math.abs(v) >= 100000000) return (v/100000000).toFixed(1) + '億円';
+  if (Math.abs(v) >= 10000) return (v/10000).toFixed(0) + '万円';
+  return v.toLocaleString('ja-JP') + '円';
+}
+function fmtAxis(v) {
+  if (Math.abs(v) >= 100000000) return (v/100000000).toFixed(1) + '億';
+  if (Math.abs(v) >= 10000) return (v/10000).toFixed(0) + '万';
+  return v.toLocaleString();
+}
+
+// ===== タブ切替 =====
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ===== 施設ランク =====
+const FAC_PRESETS = [
+  { name: '在宅介護', cost: 75000 },
+  { name: '特養（公的）', cost: 100000 },
+  { name: '老健・GH', cost: 175000 },
+  { name: '民間ホーム', cost: 280000 },
+];
+let selectedFac = 1;
+function selectFac(i) {
+  selectedFac = i;
+  document.querySelectorAll('.fac-btn').forEach((b,j) => b.className = 'fac-btn' + (j===i?' active':''));
+  document.getElementById('monthly-cost').value = FAC_PRESETS[i].cost;
+  document.getElementById('fac-cost-label').textContent = '月額費用（' + FAC_PRESETS[i].name + '）';
+  calcAsset();
+}
+
+// ===== タブ1：資産寿命 =====
+let assetChart;
+function calcAsset() {
+  const savings = parseInt(document.getElementById('savings').value);
+  const pension = parseInt(document.getElementById('pension').value);
+  const parentAge = parseInt(document.getElementById('parent-age').value);
+  const support = parseInt(document.getElementById('support').value);
+  const monthlyCost = parseInt(document.getElementById('monthly-cost').value);
+  const livingCost = parseInt(document.getElementById('living-cost').value);
+
+  document.getElementById('savings-label').textContent = fmtMan(savings);
+  document.getElementById('pension-label').textContent = (pension/10000).toFixed(0) + '万円';
+  document.getElementById('parent-age-label').textContent = parentAge + '歳';
+  document.getElementById('support-label').textContent = support === 0 ? '0円' : (support/10000).toFixed(0) + '万円';
+  document.getElementById('monthly-cost-label').textContent = fmtMan(monthlyCost);
+  document.getElementById('living-cost-label').textContent = livingCost === 0 ? '0円' : (livingCost/10000).toFixed(0) + '万円';
+
+  const totalMonthlyOut = monthlyCost + livingCost;
+  const monthlyBalance = pension + support - totalMonthlyOut;
+  const balEl = document.getElementById('monthly-balance-val');
+  balEl.textContent = (monthlyBalance >= 0 ? '+' : '') + fmtMan(monthlyBalance);
+  balEl.style.color = monthlyBalance >= 0 ? 'var(--green)' : 'var(--accent)';
+
+  const labels = [], withData = [], pensionOnlyData = [];
+  let bal = savings;
+  let depleteYear = null;
+  const maxYears = 35;  // グラフ表示用
+  const calcYears1 = 80; // 枯渇計算用
+
+  for (let y = 0; y <= calcYears1; y++) {
+    if (y <= maxYears) {
+      labels.push((parentAge + y) + '歳');
+      withData.push(Math.max(0, Math.round(bal)));
+      pensionOnlyData.push(Math.max(0, Math.round(savings + (pension - totalMonthlyOut) * 12 * y)));
+    }
+    if (depleteYear === null && bal <= 0) depleteYear = y;
+    bal += monthlyBalance * 12;
+  }
+
+  const depleteEl = document.getElementById('deplete-val');
+  const depleteAgeEl = document.getElementById('deplete-age-val');
+  const alertEl = document.getElementById('asset-alert');
+  const mDeplete = document.getElementById('m-deplete');
+  const mDepleteAge = document.getElementById('m-deplete-age');
+
+  if (depleteYear === null) {
+    depleteEl.textContent = '枯渇しない';
+    depleteAgeEl.textContent = '—';
+    mDeplete.className = 'metric safe';
+    mDepleteAge.className = 'metric safe';
+    alertEl.className = 'alert safe';
+    alertEl.textContent = '年金収入が施設費用・生活費の合計を上回っているため、理論上資産は枯渇しません。';
+  } else if (depleteYear <= 5) {
+    depleteEl.textContent = depleteYear + '年後';
+    depleteAgeEl.textContent = (parentAge + depleteYear) + '歳';
+    mDeplete.className = 'metric danger';
+    mDepleteAge.className = 'metric danger';
+    alertEl.className = 'alert danger';
+    alertEl.innerHTML = '<strong>警告：</strong>' + depleteYear + '年後（' + (parentAge + depleteYear) + '歳頃）に資産が枯渇します。施設ランクの見直し、または子からの支援増額を検討してください。特養への申し込みは今すぐ始めることをおすすめします。';
+  } else if (depleteYear <= 15) {
+    depleteEl.textContent = depleteYear + '年後';
+    depleteAgeEl.textContent = (parentAge + depleteYear) + '歳';
+    mDeplete.className = 'metric warn';
+    mDepleteAge.className = 'metric warn';
+    alertEl.className = 'alert warn';
+    alertEl.innerHTML = depleteYear + '年後（' + (parentAge + depleteYear) + '歳頃）に資産が枯渇する見込みです。早めに施設の選択肢や公的制度（高額介護サービス費など）を確認しておきましょう。';
+  } else {
+    depleteEl.textContent = depleteYear + '年後';
+    depleteAgeEl.textContent = (parentAge + depleteYear) + '歳';
+    mDeplete.className = 'metric';
+    mDepleteAge.className = 'metric';
+    alertEl.className = 'alert safe';
+    alertEl.textContent = depleteYear + '年後（' + (parentAge + depleteYear) + '歳頃）に資産が枯渇する見込みですが、当面は安定しています。定期的な見直しをおすすめします。';
+  }
+
+  if (assetChart) {
+    assetChart.data.labels = labels;
+    assetChart.data.datasets[0].data = withData;
+    assetChart.data.datasets[1].data = pensionOnlyData;
+    assetChart.update();
+  } else {
+    assetChart = new Chart(document.getElementById('asset-chart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label:'貯蓄残高', data:withData, borderColor:'#b5451b', backgroundColor:'rgba(181,69,27,0.08)', fill:true, tension:0.3, pointRadius:2, borderWidth:2 },
+          { label:'年金収入のみ', data:pensionOnlyData, borderColor:'#1a4fa0', backgroundColor:'transparent', fill:false, tension:0.3, pointRadius:2, borderWidth:1.5, borderDash:[4,3] }
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ctx.dataset.label+': '+fmtMan(ctx.parsed.y) } } },
+        scales:{
+          x:{ ticks:{autoSkip:true, maxTicksLimit:8, font:{size:11}}, grid:{display:false} },
+          y:{ min:0, ticks:{font:{size:11}, callback:v=>fmtAxis(v)}, grid:{color:'rgba(0,0,0,0.05)'} }
+        }
+      }
+    });
+  }
+}
+
+// ===== タブ2：ダブルケア =====
+let doubleChart;
+let savingsChart;
+function calcDouble() {
+  const childNum = window._childAges ? window._childAges.length : 0;
+  const myAge = parseInt(document.getElementById('my-age').value);
+  const income = parseInt(document.getElementById('income').value);
+  const living = parseInt(document.getElementById('living').value);
+  // 子供ごとの年齢・学費（windowから取得）
+  const childAges = window._childAges || [];
+  const childEduCosts = window._childEduCosts || [];
+  const careSupport = parseInt(document.getElementById('care-support').value);
+  const careStartAge = parseInt(document.getElementById('care-start-age').value);
+  const careIncrease = parseInt(document.getElementById('care-increase').value);
+  const mySavings = parseInt(document.getElementById('my-savings').value);
+  const myLifespan = parseInt(document.getElementById('my-lifespan').value);
+  const retireAge = parseInt(document.getElementById('retire-age').value);
+  const retireIncome = parseInt(document.getElementById('retire-income').value);
+  const fullRetireAge = parseInt(document.getElementById('full-retire-age').value);
+  const pensionIncome = parseInt(document.getElementById('pension-income').value);
+  const myRate = parseFloat(document.getElementById('my-rate').value) / 100;
+  const parentAgeForDouble = parseInt(document.getElementById('parent-age-double').value);
+  const parentLifespan = parseInt(document.getElementById('parent-lifespan').value);
+  const ageDiff = parentAgeForDouble - myAge; // 親とあなたの年齢差
+
+  document.getElementById('my-age-label').textContent = myAge + '歳';
+  document.getElementById('income-label').textContent = (income/10000).toFixed(0) + '万円';
+  document.getElementById('living-label').textContent = (living/10000).toFixed(0) + '万円';
+  document.getElementById('my-savings-label').textContent = fmtMan(mySavings);
+  document.getElementById('my-lifespan-label').textContent = myLifespan + '歳';
+  document.getElementById('retire-age-label').textContent = retireAge + '歳';
+  document.getElementById('retire-income-label').textContent = retireIncome === 0 ? '0円' : (retireIncome/10000).toFixed(0) + '万円';
+  document.getElementById('full-retire-age-label').textContent = fullRetireAge + '歳';
+  document.getElementById('pension-income-label').textContent = pensionIncome === 0 ? '0円' : (pensionIncome/10000).toFixed(0) + '万円';
+  document.getElementById('my-rate-label').textContent = (myRate * 100).toFixed(1) + '%';
+  document.getElementById('care-support-label').textContent = (careSupport/10000).toFixed(0) + '万円';
+  document.getElementById('parent-age-double-label').textContent = parentAgeForDouble + '歳';
+  document.getElementById('parent-lifespan-label').textContent = parentLifespan + '歳';
+
+  // 年齢差・介護期間の情報ボックスを更新
+  const careEndAge = parentLifespan; // 親が寿命を迎える年齢
+  const careEndYourAge = myAge + (careEndAge - parentAgeForDouble); // そのときのあなたの年齢
+  const careStartYourAge = myAge + (careStartAge - parentAgeForDouble); // 介護本格化時のあなたの年齢
+  const infoBox = document.getElementById('double-care-period-info');
+  infoBox.innerHTML =
+    '親との年齢差：<strong>' + ageDiff + '歳</strong>　' +
+    '介護本格化：あなた <strong>' + careStartYourAge + '歳</strong>頃<br>' +
+    '介護終了（想定）：あなた <strong>' + careEndYourAge + '歳</strong>頃　' +
+    '介護期間：約 <strong>' + Math.max(0, careEndAge - careStartAge) + '年</strong>';
+  document.getElementById('care-start-age-label').textContent = careStartAge + '歳';
+  document.getElementById('care-increase-label').textContent = (careIncrease/10000).toFixed(0) + '万円';
+
+  const calcYears = Math.max(myLifespan - myAge, 1); // 自分の寿命まで計算
+  const maxYears = Math.min(calcYears, 40); // グラフ表示は最大40年
+  const labels = [], incomeData = [], expendData = [], balanceData = [], savingsData = [];
+  let doubleCareStart = null, doubleCareEnd = null, worstDeficit = 0;
+  let savingsBal = mySavings;
+  let depleteYear = null;
+  let totalDeficit = 0;
+
+  for (let y = 0; y <= calcYears; y++) {
+    const age = myAge + y;
+    const pAge = parentAgeForDouble + y;
+
+    // 収入の3段階切り替え：現役→定年後再雇用→完全引退
+    let currentIncome;
+    if (age < retireAge) currentIncome = income;
+    else if (age < fullRetireAge) currentIncome = retireIncome;
+    else currentIncome = pensionIncome;
+
+    // 教育費（全子供・学校段階別スライダー）
+    let edu = 0;
+    for (let ci = 0; ci < childAges.length; ci++) {
+      const cAgeI = childAges[ci] + y;
+      const c = childEduCosts[ci] || { elem:25000, jhs:30000, hs:35000, univ:55000 };
+      if      (cAgeI >= 6  && cAgeI < 12) edu += c.elem;
+      else if (cAgeI >= 12 && cAgeI < 15) edu += c.jhs;
+      else if (cAgeI >= 15 && cAgeI < 18) edu += c.hs;
+      else if (cAgeI >= 18 && cAgeI < 22) edu += c.univ;
+    }
+
+    // 介護費（親が寿命を超えたら介護終了）
+    const careActive = pAge <= parentLifespan;
+    const careIntensified = pAge >= careStartAge && careActive;
+    const care = careActive ? (careSupport + (careIntensified ? careIncrease : 0)) : 0;
+
+    const totalExpend = living + edu + care;
+    const balance = currentIncome - totalExpend;
+
+    // 貯蓄残高の更新
+    // 黒字：収支を積み増した上で運用。赤字：先に取り崩してから残高に運用利率を適用
+    const annualBalance = balance * 12;
+    if (annualBalance >= 0) {
+      savingsBal = savingsBal * (1 + myRate) + annualBalance;
+    } else {
+      savingsBal = savingsBal + annualBalance; // まず赤字分を取り崩し
+      if (savingsBal > 0) savingsBal = savingsBal * (1 + myRate); // 残高がプラスなら運用
+    }
+    if (savingsBal < 0 && depleteYear === null) depleteYear = y;
+    if (annualBalance < 0) totalDeficit += -annualBalance;
+
+    const hasAnyEdu = edu > 0;
+    const isDoubleCare = hasAnyEdu && careActive && (careSupport > 0 || (careIntensified && careIncrease > 0));
+    if (isDoubleCare && doubleCareStart === null) doubleCareStart = age;
+    if (isDoubleCare) doubleCareEnd = age;
+    // 最大赤字はダブルケア期間中のみ記録
+    if (isDoubleCare && balance < worstDeficit) worstDeficit = balance;
+
+    if (y <= maxYears) {
+      labels.push(age + '歳');
+      incomeData.push(currentIncome);
+      expendData.push(totalExpend);
+      balanceData.push(Math.round(balance));
+      savingsData.push(Math.max(0, Math.round(savingsBal)));
+    }
+  }
+
+  const dsEl = document.getElementById('double-start-val');
+  const deEl = document.getElementById('double-end-val');
+  const dwEl = document.getElementById('double-worst-val');
+  const mDs = document.getElementById('m-double-start');
+  const mDe = document.getElementById('m-double-end');
+  const mDw = document.getElementById('m-double-worst');
+  const mDep = document.getElementById('m-my-deplete');
+  const mDepAge = document.getElementById('m-my-deplete-age');
+  const alertEl = document.getElementById('double-alert');
+
+  dsEl.textContent = doubleCareStart ? doubleCareStart + '歳' : 'なし';
+  deEl.textContent = doubleCareEnd ? doubleCareEnd + '歳' : 'なし';
+  dwEl.textContent = worstDeficit < 0 ? '-' + fmtMan(-worstDeficit) : '黒字';
+  mDw.className = 'metric ' + (worstDeficit < -50000 ? 'danger' : worstDeficit < 0 ? 'warn' : 'safe');
+
+  if (depleteYear !== null) {
+    document.getElementById('my-deplete-val').textContent = depleteYear + '年後';
+    document.getElementById('my-deplete-age-val').textContent = (myAge + depleteYear) + '歳';
+    mDep.className = 'metric ' + (depleteYear <= 10 ? 'danger' : 'warn');
+    mDepAge.className = 'metric ' + (depleteYear <= 10 ? 'danger' : 'warn');
+  } else {
+    document.getElementById('my-deplete-val').textContent = '枯渇しない';
+    document.getElementById('my-deplete-age-val').textContent = myLifespan + '歳時点で残存';
+    mDep.className = 'metric safe';
+    mDepAge.className = 'metric safe';
+  }
+
+  if (doubleCareStart && worstDeficit < -50000) {
+    alertEl.className = 'alert danger';
+    alertEl.innerHTML = '<strong>要注意：</strong>' + doubleCareStart + '〜' + doubleCareEnd + '歳のダブルケア期間に月最大' + fmtMan(-worstDeficit) + 'の赤字が発生します。' + (depleteYear !== null ? (myAge+depleteYear)+'歳頃に資産が枯渇する見込みです。' : '保有資産で対応できる見込みです。');
+  } else if (doubleCareStart && worstDeficit < 0) {
+    alertEl.className = 'alert warn';
+    alertEl.innerHTML = doubleCareStart + '〜' + doubleCareEnd + '歳にダブルケア期間があります。' + (worstDeficit < 0 ? 'この期間の最大赤字は月' + fmtMan(-worstDeficit) + 'です。' : 'この期間の収支は黒字です。') + (depleteYear !== null ? (myAge+depleteYear)+'歳頃に資産が枯渇する可能性があります。' : '保有資産内で対応できる見込みです。');
+  } else if (!doubleCareStart) {
+    alertEl.className = 'alert safe';
+    alertEl.textContent = '設定条件ではダブルケア期間は発生しません。保有資産は25年以上持続する見込みです。';
+  } else {
+    alertEl.className = 'alert safe';
+    alertEl.textContent = doubleCareStart + '〜' + doubleCareEnd + '歳にダブルケア期間がありますが、現在の収入・資産で対応できる見込みです。';
+  }
+
+  if (doubleChart) {
+    doubleChart.data.labels = labels;
+    doubleChart.data.datasets[0].data = balanceData;
+    doubleChart.data.datasets[0].backgroundColor = balanceData.map(v => v >= 0 ? 'rgba(26,79,160,0.7)' : 'rgba(181,69,27,0.7)');
+    doubleChart.data.datasets[0].borderColor = balanceData.map(v => v >= 0 ? '#1a4fa0' : '#b5451b');
+    doubleChart.update();
+  } else {
+    doubleChart = new Chart(document.getElementById('double-chart'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label:'月間収支',
+            data: balanceData,
+            backgroundColor: balanceData.map(v => v >= 0 ? 'rgba(26,79,160,0.7)' : 'rgba(181,69,27,0.7)'),
+            borderColor: balanceData.map(v => v >= 0 ? '#1a4fa0' : '#b5451b'),
+            borderWidth: 1,
+            borderRadius: 2
+          }
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => '月間収支: '+fmtMan(ctx.parsed.y) } } },
+        scales:{
+          x:{ ticks:{autoSkip:true, maxTicksLimit:8, font:{size:11}}, grid:{display:false} },
+          y:{ ticks:{font:{size:11}, callback:v=>fmtAxis(v)}, grid:{color:'rgba(0,0,0,0.05)'} }
+        }
+      }
+    });
+  }
+
+  // 資産グラフ
+  if (savingsChart) {
+    savingsChart.data.labels = labels;
+    savingsChart.data.datasets[0].data = savingsData;
+    savingsChart.update();
+  } else {
+    savingsChart = new Chart(document.getElementById('savings-chart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label:'保有資産残高', data:savingsData, borderColor:'#2d6a1f', backgroundColor:'rgba(45,106,31,0.08)', fill:true, tension:0.3, pointRadius:2, borderWidth:2 }
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ctx.dataset.label+': '+fmtMan(ctx.parsed.y) } } },
+        scales:{
+          x:{ ticks:{autoSkip:true, maxTicksLimit:8, font:{size:11}}, grid:{display:false} },
+          y:{ min:0, ticks:{font:{size:11}, callback:v=>fmtAxis(v)}, grid:{color:'rgba(0,0,0,0.05)'} }
+        }
+      }
+    });
+  }
+}
+
+// 定年ラインをグラフに描画
+const doubleMarkerPlugin = {
+  id: 'doubleMarkerPlugin',
+  afterDraw(ch) {
+    if (ch.canvas.id !== 'double-chart' && ch.canvas.id !== 'savings-chart') return;
+    const myAge = parseInt(document.getElementById('my-age').value);
+    const retireAge = parseInt(document.getElementById('retire-age').value);
+    const parentAgeD = parseInt(document.getElementById('parent-age-double').value);
+    const parentLifespan = parseInt(document.getElementById('parent-lifespan').value);
+    const careStartAge = parseInt(document.getElementById('care-start-age').value);
+    const careSupport = parseInt(document.getElementById('care-support').value);
+    const careIncrease = parseInt(document.getElementById('care-increase').value);
+    const childAgesW = window._childAges || [];
+    const childEduCostsW = window._childEduCosts || [];
+    const myLifespan = parseInt(document.getElementById('my-lifespan').value);
+    const maxYears = Math.min(Math.max(myLifespan - myAge, 1), 40);
+    const meta = ch.getDatasetMeta(0);
+    if (!meta.data.length) return;
+    const ctx = ch.ctx;
+    const top = ch.chartArea.top, bottom = ch.chartArea.bottom;
+
+    // ダブルケア期間の帯（黄色）
+    let dcStart = null, dcEnd = null;
+    for (let y = 0; y <= maxYears; y++) {
+      const pAge = parentAgeD + y;
+      let hasEdu = false;
+      for (let ci = 0; ci < childAgesW.length; ci++) {
+        const cAgeI = childAgesW[ci] + y;
+        const cm = childEduCostsW[ci] || { elem:25000, jhs:30000, hs:35000, univ:55000 };
+        const cost = (cAgeI>=6&&cAgeI<12?cm.elem:cAgeI>=12&&cAgeI<15?cm.jhs:cAgeI>=15&&cAgeI<18?cm.hs:cAgeI>=18&&cAgeI<22?cm.univ:0);
+        if (cost > 0) { hasEdu = true; break; }
+      }
+      const careActive = pAge <= parentLifespan;
+      const hasCare = careActive && (careSupport > 0 || (pAge >= careStartAge && careIncrease > 0));
+      if (hasEdu && hasCare) {
+        if (dcStart === null) dcStart = y;
+        dcEnd = y;
+      }
+    }
+    if (dcStart !== null && dcEnd !== null && meta.data[dcStart] && meta.data[dcEnd]) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(239,159,39,0.15)';
+      ctx.fillRect(meta.data[dcStart].x, top, meta.data[dcEnd].x - meta.data[dcStart].x, bottom - top);
+      ctx.restore();
+    }
+
+    // 定年ライン（茶色）
+    const retireIdx = retireAge - myAge;
+    if (retireIdx >= 0 && retireIdx <= maxYears && meta.data[retireIdx]) {
+      const x = meta.data[retireIdx].x;
+      ctx.save();
+      ctx.strokeStyle = '#854f0b'; ctx.lineWidth = 1.5; ctx.setLineDash([5,3]);
+      ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#854f0b'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('定年', x, top - 3);
+      ctx.restore();
+    }
+
+    // 完全引退ライン（紫）
+    const fullRetireAgeM = parseInt(document.getElementById('full-retire-age').value);
+    const fullRetireIdx = fullRetireAgeM - myAge;
+    if (fullRetireIdx >= 0 && fullRetireIdx <= maxYears && fullRetireIdx !== retireIdx && meta.data[fullRetireIdx]) {
+      const x2 = meta.data[fullRetireIdx].x;
+      ctx.save();
+      ctx.strokeStyle = '#534AB7'; ctx.lineWidth = 1.5; ctx.setLineDash([5,3]);
+      ctx.beginPath(); ctx.moveTo(x2, top); ctx.lineTo(x2, bottom); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#534AB7'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('引退', x2, top - 3);
+      ctx.restore();
+    }
+  }
+};
+Chart.register(doubleMarkerPlugin);
+
+// ===== 子供人数管理 =====
+let childNum = 1;
+window._childAges = [10];
+window._childEduCosts = [{ elem:25000, jhs:30000, hs:35000, univ:55000 }];
+
+function setChildNum(n) {
+  childNum = n;
+  ['nc0','nc1','nc2','nc3'].forEach((id, i) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.style.background = i === n ? '#b5451b' : 'var(--surface2)';
+    btn.style.color = i === n ? '#fff' : 'var(--text2)';
+    btn.style.fontWeight = i === n ? '500' : '400';
+  });
+  renderChildInputs();
+  calcDouble();
+}
+
+function renderChildInputs() {
+  const container = document.getElementById('children-inputs');
+  if (!container) return;
+  if (childNum === 0) {
+    container.innerHTML = '<p style="font-size:12px;color:var(--text3);padding:4px 0;">子供なし</p>';
+    window._childAges = [];
+    window._childEduCosts = [];
+    return;
+  }
+  const childLabels = ['1人目', '2人目', '3人目'];
+  const defaultAges = [10, 7, 4];
+  const defaults = { elem:25000, jhs:30000, hs:35000, univ:55000 };
+  const stages = [
+    { key:'elem', label:'小学校（月額）' },
+    { key:'jhs',  label:'中学校（月額）' },
+    { key:'hs',   label:'高校（月額）'   },
+    { key:'univ', label:'大学（月額）'   },
+  ];
+  let html = '';
+  for (let i = 1; i <= childNum; i++) {
+    const prevAge = (window._childAges && window._childAges[i-1] !== undefined) ? window._childAges[i-1] : defaultAges[i-1];
+    const prevCosts = (window._childEduCosts && window._childEduCosts[i-1]) || { ...defaults };
+    html += '<div style="border-top:0.5px solid rgba(0,0,0,0.09);padding-top:10px;margin-top:8px;">';
+    html += '<span style="font-size:11px;font-weight:500;color:var(--text3);">' + childLabels[i-1] + '</span>';
+    html += '<div class="ctrl-row" style="margin-top:8px;"><label>現在の年齢</label><div class="row">';
+    html += '<input type="range" min="0" max="22" step="1" value="' + prevAge + '" id="child' + i + '-age" oninput="updateChildAge(' + i + ')">';
+    html += '<span class="val" id="child' + i + '-age-label">' + prevAge + '歳</span>';
+    html += '</div></div>';
+    stages.forEach(function(s) {
+      const val = (prevCosts[s.key] !== undefined) ? prevCosts[s.key] : defaults[s.key];
+      const disp = val >= 10000 ? (val/10000).toFixed(1) + '万円' : val + '円';
+      html += '<div class="ctrl-row"><label>' + s.label + '</label><div class="row">';
+      html += '<input type="range" min="0" max="300000" step="5000" value="' + val + '" id="child' + i + '-' + s.key + '" oninput="updateChildEdu(' + i + ',\'' + s.key + '\')">';
+      html += '<span class="val" id="child' + i + '-' + s.key + '-label">' + disp + '</span>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+  }
+  container.innerHTML = html;
+  syncChildData();
+}
+
+function syncChildData() {
+  window._childAges = [];
+  window._childEduCosts = [];
+  const defaults = { elem:25000, jhs:30000, hs:35000, univ:55000 };
+  for (let i = 1; i <= childNum; i++) {
+    const ageEl = document.getElementById('child' + i + '-age');
+    window._childAges.push(ageEl ? parseInt(ageEl.value) : 10);
+    window._childEduCosts.push({
+      elem: parseInt(document.getElementById('child' + i + '-elem')?.value ?? defaults.elem),
+      jhs:  parseInt(document.getElementById('child' + i + '-jhs')?.value  ?? defaults.jhs),
+      hs:   parseInt(document.getElementById('child' + i + '-hs')?.value   ?? defaults.hs),
+      univ: parseInt(document.getElementById('child' + i + '-univ')?.value ?? defaults.univ),
+    });
+  }
+}
+
+function updateChildAge(i) {
+  const el = document.getElementById('child' + i + '-age');
+  if (el) {
+    document.getElementById('child' + i + '-age-label').textContent = el.value + '歳';
+    if (window._childAges) window._childAges[i-1] = parseInt(el.value);
+  }
+  calcDouble();
+}
+
+function updateChildEdu(i, stage) {
+  const el = document.getElementById('child' + i + '-' + stage);
+  if (el) {
+    const v = parseInt(el.value);
+    const disp = v >= 10000 ? (v/10000).toFixed(1) + '万円' : v + '円';
+    document.getElementById('child' + i + '-' + stage + '-label').textContent = disp;
+    if (window._childEduCosts && window._childEduCosts[i-1]) window._childEduCosts[i-1][stage] = v;
+  }
+  calcDouble();
+}
+
+// 初期化
+selectFac(1);
+renderChildInputs();
+calcDouble();
+</script>
+</body>
+</html>

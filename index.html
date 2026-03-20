@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>シミュレーター一覧｜azuki-plus</title>
+  <meta name="description" content="お金と人生の意思決定を助けるシミュレーターを無料で公開しています。複利・住宅ローン・老後資産・介護費用など。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f7f5f0;
+      --surface: #ffffff;
+      --surface2: #f0ede6;
+      --border: rgba(0,0,0,0.09);
+      --text: #1c1a16;
+      --text2: #5c5850;
+      --text3: #9a9488;
+      --accent1: #1a4fa0;
+      --accent2: #b5451b;
+      --radius: 12px;
+    }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 20px 24px;
+      text-align: center;
+    }
+    header h1 {
+      font-size: clamp(20px, 5vw, 30px);
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+      letter-spacing: 0.02em;
+    }
+    header p {
+      font-size: 14px;
+      color: var(--text2);
+    }
+
+    .ad-slot {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px;
+      text-align: center;
+      min-height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text3);
+      font-size: 12px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 32px 16px 60px;
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--text3);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .sim-card {
+      display: flex;
+      align-items: stretch;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      text-decoration: none;
+      color: inherit;
+      overflow: hidden;
+      transition: box-shadow 0.15s, transform 0.15s;
+    }
+    .sim-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .sim-card-accent {
+      width: 6px;
+      flex-shrink: 0;
+    }
+
+    .sim-card-body {
+      padding: 20px 22px;
+      flex: 1;
+    }
+
+    .sim-card-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+
+    .sim-card h2 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .sim-card p {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+
+    .sim-card-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .feature-pill {
+      font-size: 11px;
+      color: var(--text3);
+      background: var(--surface2);
+      border-radius: 20px;
+      padding: 3px 10px;
+    }
+
+    .sim-card-arrow {
+      display: flex;
+      align-items: center;
+      padding: 0 20px 0 0;
+      color: var(--text3);
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .ad-mid {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      text-align: center;
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text3);
+      font-size: 12px;
+      margin-bottom: 40px;
+    }
+
+    .about {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 26px;
+    }
+    .about h3 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .about p {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.85;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text3);
+      padding: 20px;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>シミュレーター一覧</h1>
+  <p>お金と人生の意思決定を助ける、無料シミュレーター</p>
+</header>
+
+<!-- 広告枠①（ヘッダー下） -->
+<div class="ad-slot">
+  <!-- Google AdSense コードをここに貼り付け -->
+  広告枠①
+</div>
+
+<div class="container">
+
+  <p class="section-label">公開中のシミュレーター</p>
+
+  <div class="cards">
+
+    <!-- 複利・住宅ローンシミュレーター -->
+    <a href="compound.html" class="sim-card">
+      <div class="sim-card-accent" style="background:#1a4fa0;"></div>
+      <div class="sim-card-body">
+        <span class="sim-card-tag" style="background:#e8eef8;color:#1a4fa0;">資産運用</span>
+        <h2>複利・住宅ローン シミュレーター</h2>
+        <p>元本・毎年の追加投資・運用利率・定年・住宅購入を設定して、資産の推移をリアルタイムで試算。一括払いとローン（元利定額/元金定額）の比較も可能。</p>
+        <div class="sim-card-features">
+          <span class="feature-pill">複利効果</span>
+          <span class="feature-pill">住宅ローン比較</span>
+          <span class="feature-pill">定年後の資産推移</span>
+          <span class="feature-pill">元利/元金定額</span>
+        </div>
+      </div>
+      <div class="sim-card-arrow">›</div>
+    </a>
+
+    <!-- 介護・老人ホームシミュレーター -->
+    <a href="kaigo.html" class="sim-card">
+      <div class="sim-card-accent" style="background:#b5451b;"></div>
+      <div class="sim-card-body">
+        <span class="sim-card-tag" style="background:#fdf0eb;color:#b5451b;">介護・老後</span>
+        <h2>親の介護・老人ホーム 費用枯渇シミュレーター</h2>
+        <p>親の貯蓄・年金・施設ランクを入力するだけで、資産が何年で底をつくかを試算。子育て費用と介護費用が重なる「ダブルケア」期間の家計への影響も可視化。</p>
+        <div class="sim-card-features">
+          <span class="feature-pill">施設ランク別比較</span>
+          <span class="feature-pill">資産寿命</span>
+          <span class="feature-pill">ダブルケア試算</span>
+          <span class="feature-pill">定年・引退考慮</span>
+        </div>
+      </div>
+      <div class="sim-card-arrow">›</div>
+    </a>
+
+  </div>
+
+  <!-- 広告枠② -->
+  <div class="ad-mid">
+    <!-- Google AdSense コードをここに貼り付け -->
+    広告枠②
+  </div>
+
+  <div class="about">
+    <h3>このサイトについて</h3>
+    <p>人生の大きな意思決定（住宅購入・老後設計・介護準備など）に役立つシミュレーターを無料で公開しています。すべてブラウザ上で動作し、入力したデータが外部に送信されることはありません。試算はあくまで目安です。実際の判断は専門家にご相談ください。</p>
+  </div>
+
+</div>
+
+<!-- 広告枠③（フッター上） -->
+<div class="ad-slot">
+  <!-- Google AdSense コードをここに貼り付け -->
+  広告枠③
+</div>
+
+<footer>
+  <p>試算はあくまで目安です。実際の運用・費用は専門家にご確認ください。</p>
+</footer>
+
+</body>
+</html>
