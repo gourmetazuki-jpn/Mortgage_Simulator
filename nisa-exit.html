@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新NISA出口戦略シミュレーター無料｜定率・定額取り崩しで資産寿命を試算 | azuki-plus</title>
+  <meta name="description" content="新NISAの取り崩し方法（定率・定額・4%ルール）を比較して資産が何年持つかを無料で試算。運用しながら取り崩す「出口戦略」をグラフで可視化。老後資金計画に。">
+  <meta name="keywords" content="新NISA,出口戦略,取り崩し,定率,定額,4%ルール,老後資金,資産寿命,シミュレーター,無料">
+  <link rel="canonical" href="https://azuki-plus.com/simulator/nisa-exit.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="新NISA出口戦略シミュレーター無料｜定率・定額取り崩しで資産寿命を試算">
+  <meta property="og:description" content="新NISAの取り崩し方法を比較して資産が何年持つかを無料で試算。定率・定額・4%ルールの3方式を同時グラフ表示。">
+  <meta property="og:url" content="https://azuki-plus.com/simulator/nisa-exit.html">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "新NISA出口戦略シミュレーター",
+    "url": "https://azuki-plus.com/simulator/nisa-exit.html",
+    "description": "新NISAの取り崩し方法（定率・定額・4%ルール）を比較して資産が何年持つかを無料で試算",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "inLanguage": "ja",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" }
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f4f3ee; --surface: #ffffff; --surface2: #f0efe8;
+      --border: rgba(0,0,0,0.09); --text: #1a1a16; --text2: #58574f; --text3: #98968c;
+      --green: #1e6b3c; --green-l: #e6f4ec; --amber: #7a4d0a; --amber-l: #fdf3e0;
+      --red: #992020; --red-l: #fdeaea; --blue: #1a4fa0; --blue-l: #e8eef8;
+      --purple: #534AB7; --purple-l: #EEEDFE; --radius: 10px; --radius-lg: 14px;
+    }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.7; }
+    header { background: #1a1a16; color: #fff; padding: 24px 20px 20px; text-align: center; }
+    header .logo { font-size: 12px; letter-spacing: 0.12em; color: rgba(255,255,255,0.5); margin-bottom: 10px; }
+    header h1 { font-size: clamp(17px, 4vw, 24px); font-weight: 700; margin-bottom: 6px; }
+    header p { font-size: 13px; color: rgba(255,255,255,0.65); }
+    .breadcrumb { background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 20px; font-size: 12px; color: var(--text3); }
+    .breadcrumb a { color: var(--text3); text-decoration: none; }
+    .ad-slot { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px; text-align: center; min-height: 90px; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 12px; }
+    .container { max-width: 960px; margin: 0 auto; padding: 24px 16px 60px; display: flex; flex-direction: column; gap: 20px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 22px; }
+    .card-title { font-size: 12px; font-weight: 700; letter-spacing: 0.07em; color: var(--text3); text-transform: uppercase; padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+    .layout { display: grid; grid-template-columns: 300px 1fr; gap: 20px; }
+    @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
+    .ctrl { display: flex; flex-direction: column; gap: 14px; }
+    .ctrl-row { display: flex; flex-direction: column; gap: 4px; }
+    .ctrl-row label { font-size: 12px; color: var(--text2); }
+    .ctrl-row .row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
+    .ctrl-row input[type=range] { width: 100%; accent-color: var(--blue); }
+    .ctrl-row .val { font-size: 13px; font-weight: 700; font-family: 'Lato', sans-serif; min-width: 72px; text-align: right; }
+    .ctrl-row .hint { font-size: 11px; color: var(--text3); }
+    .divider { border: none; border-top: 1px solid var(--border); }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    @media (max-width: 500px) { .metrics { grid-template-columns: 1fr 1fr; } }
+    .metric { background: var(--surface2); border-radius: var(--radius); padding: 11px 13px; }
+    .metric .label { font-size: 11px; color: var(--text3); margin-bottom: 3px; }
+    .metric .value { font-size: clamp(13px, 2vw, 16px); font-weight: 700; font-family: 'Lato', sans-serif; }
+    .metric.safe   { background: var(--green-l);  } .metric.safe .value   { color: var(--green);  }
+    .metric.danger { background: var(--red-l);    } .metric.danger .value { color: var(--red);    }
+    .metric.warn   { background: var(--amber-l);  } .metric.warn .value   { color: var(--amber);  }
+    .metric.highlight { background: var(--blue-l); } .metric.highlight .value { color: var(--blue); }
+    .alert { border-radius: var(--radius); padding: 11px 15px; font-size: 13px; line-height: 1.7; }
+    .alert.safe   { background: var(--green-l); color: #1e4d2a; border-left: 3px solid var(--green);  border-radius: 0 var(--radius) var(--radius) 0; }
+    .alert.warn   { background: var(--amber-l); color: #5c3306; border-left: 3px solid var(--amber);  border-radius: 0 var(--radius) var(--radius) 0; }
+    .alert.danger { background: var(--red-l);   color: #6b1616; border-left: 3px solid var(--red);    border-radius: 0 var(--radius) var(--radius) 0; }
+    .alert.info   { background: var(--blue-l);  color: #0c447c; border-left: 3px solid var(--blue);   border-radius: 0 var(--radius) var(--radius) 0; }
+    .chart-wrap { position: relative; width: 100%; height: 280px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 10px; font-size: 12px; color: var(--text2); }
+    .legend span { display: flex; align-items: center; gap: 5px; }
+    .leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+    .explanation { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; }
+    .explanation h2 { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+    .method-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    @media (max-width: 600px) { .method-cards { grid-template-columns: 1fr; } }
+    .method-card { border-radius: var(--radius); padding: 14px; }
+    .method-card .m-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+    .method-card .m-pros { font-size: 12px; color: var(--green); margin-bottom: 2px; }
+    .method-card .m-cons { font-size: 12px; color: var(--red); margin-bottom: 2px; }
+    .faq-item { border-top: 1px solid var(--border); padding: 13px 0; }
+    .faq-q { font-size: 13px; font-weight: 700; margin-bottom: 5px; }
+    .faq-a { font-size: 13px; color: var(--text2); line-height: 1.8; }
+    .ad-mid { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px; text-align: center; min-height: 100px; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 12px; }
+    footer { text-align: center; font-size: 12px; color: var(--text3); padding: 20px; border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="logo">AZUKI-PLUS</p>
+  <h1>新NISA 出口戦略シミュレーター</h1>
+  <p>定率・定額・4%ルールで「資産がいつまで持つか」を比較</p>
+</header>
+
+<nav class="breadcrumb">
+  <a href="index.html">シミュレーター一覧</a>
+  <span style="margin:0 6px;">›</span>
+  <span>新NISA出口戦略シミュレーター</span>
+</nav>
+
+<div class="ad-slot"><!-- 広告枠① -->広告枠①</div>
+
+<div class="container">
+
+  <div class="layout">
+
+    <!-- 左：コントロール -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="card">
+        <div class="card-title">基本設定</div>
+        <div class="ctrl">
+          <div class="ctrl-row">
+            <label>取り崩し開始時の資産残高</label>
+            <div class="row">
+              <input type="range" min="1000000" max="100000000" step="500000" value="20000000" id="assets" oninput="update()">
+              <span class="val" id="assets-label">2,000万円</span>
+            </div>
+          </div>
+          <div class="ctrl-row">
+            <label>運用利率（取り崩し中も運用）</label>
+            <div class="row">
+              <input type="range" min="0" max="10" step="0.5" value="4" id="rate" oninput="update()">
+              <span class="val" id="rate-label">4.0%</span>
+            </div>
+            <span class="hint">新NISAは非課税のため税引き前の利率をそのまま入力</span>
+          </div>
+          <div class="ctrl-row">
+            <label>取り崩し開始年齢</label>
+            <div class="row">
+              <input type="range" min="50" max="80" step="1" value="65" id="age" oninput="update()">
+              <span class="val" id="age-label">65歳</span>
+            </div>
+          </div>
+          <div class="ctrl-row">
+            <label>想定寿命</label>
+            <div class="row">
+              <input type="range" min="70" max="110" step="1" value="95" id="lifespan" oninput="update()">
+              <span class="val" id="lifespan-label">95歳</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">取り崩し設定</div>
+        <div class="ctrl">
+          <div style="font-size:12px;font-weight:700;color:var(--red);">① 定率取り崩し</div>
+          <div class="ctrl-row">
+            <label>毎年の取り崩し率</label>
+            <div class="row">
+              <input type="range" min="1" max="10" step="0.5" value="4" id="rate-pct" oninput="update()">
+              <span class="val" id="rate-pct-label">4.0%</span>
+            </div>
+            <span class="hint">残高に対する割合（毎年変動）</span>
+          </div>
+          <hr class="divider">
+          <div style="font-size:12px;font-weight:700;color:var(--green);">② 定額取り崩し</div>
+          <div class="ctrl-row">
+            <label>毎年の取り崩し額</label>
+            <div class="row">
+              <input type="range" min="100000" max="5000000" step="100000" value="800000" id="fixed-amt" oninput="update()">
+              <span class="val" id="fixed-amt-label">80万円</span>
+            </div>
+            <span class="hint">毎月換算：<span id="monthly-label">約6.7万円</span></span>
+          </div>
+          <hr class="divider">
+          <div style="font-size:12px;font-weight:700;color:var(--purple);">③ 4%ルール</div>
+          <div style="font-size:11px;color:var(--text3);">開始時資産の4%を毎年定額で取り崩す<br>初年度取り崩し額：<span id="four-pct-label" style="font-weight:700;color:var(--purple);">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右：結果 -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <div class="metrics">
+        <div class="metric info" id="mc-pct-life">
+          <div class="label">① 定率：資産寿命</div>
+          <div class="value" id="m-pct-life">—</div>
+        </div>
+        <div class="metric info" id="mc-fix-life">
+          <div class="label">② 定額：資産寿命</div>
+          <div class="value" id="m-fix-life">—</div>
+        </div>
+        <div class="metric info" id="mc-4pct-life">
+          <div class="label">③ 4%ルール：資産寿命</div>
+          <div class="value" id="m-4pct-life">—</div>
+        </div>
+        <div class="metric" id="mc-pct-remain">
+          <div class="label">定率：<span class="ls-age">95</span>歳時残高</div>
+          <div class="value" id="m-pct-remain">—</div>
+        </div>
+        <div class="metric" id="mc-fix-remain">
+          <div class="label">定額：<span class="ls-age">95</span>歳時残高</div>
+          <div class="value" id="m-fix-remain">—</div>
+        </div>
+        <div class="metric" id="mc-4pct-remain">
+          <div class="label">4%ルール：<span class="ls-age">95</span>歳時残高</div>
+          <div class="value" id="m-4pct-remain">—</div>
+        </div>
+      </div>
+
+      <div id="alert-area" class="alert info">スライダーを動かすと試算結果が表示されます</div>
+
+      <div class="card" style="padding:16px;">
+        <div class="legend">
+          <span><span class="leg-dot" style="background:#b5451b;"></span>① 定率取り崩し</span>
+          <span><span class="leg-dot" style="background:#1e6b3c;"></span>② 定額取り崩し</span>
+          <span><span class="leg-dot" style="background:#534AB7;"></span>③ 4%ルール</span>
+        </div>
+        <div class="chart-wrap"><canvas id="main-chart"></canvas></div>
+      </div>
+
+      <div class="card" style="padding:16px;">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">毎年の受取額推移</div>
+        <div class="legend">
+          <span><span class="leg-dot" style="background:#b5451b;"></span>定率（変動）</span>
+          <span><span class="leg-dot" style="background:#1e6b3c;width:14px;height:3px;border-radius:1px;"></span>定額（固定）</span>
+          <span><span class="leg-dot" style="background:#534AB7;width:14px;height:3px;border-radius:1px;"></span>4%ルール（固定）</span>
+        </div>
+        <div class="chart-wrap" style="height:180px;"><canvas id="income-chart"></canvas></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 解説 -->
+  <div class="explanation">
+    <h2>3つの取り崩し方式を比較</h2>
+    <div class="method-cards">
+      <div class="method-card" style="background:var(--blue-l);">
+        <div class="m-title" style="color:var(--blue);">① 定率取り崩し</div>
+        <div class="m-pros">◎ 資産が理論上ゼロになりにくい</div>
+        <div class="m-pros">◎ 相場下落時は自動で取り崩し額が減る</div>
+        <div class="m-cons">✕ 毎年の受取額が変動する</div>
+        <div class="m-cons">✕ 生活費の計画が立てにくい</div>
+      </div>
+      <div class="method-card" style="background:var(--green-l);">
+        <div class="m-title" style="color:var(--green);">② 定額取り崩し</div>
+        <div class="m-pros">◎ 毎年の受取額が一定で計画しやすい</div>
+        <div class="m-pros">◎ 生活費に合わせた設計が可能</div>
+        <div class="m-cons">✕ 資産が枯渇するリスクがある</div>
+        <div class="m-cons">✕ 相場下落時も同額引き出す</div>
+      </div>
+      <div class="method-card" style="background:var(--purple-l);">
+        <div class="m-title" style="color:var(--purple);">③ 4%ルール</div>
+        <div class="m-pros">◎ 30年間持続する可能性が高い（米研究）</div>
+        <div class="m-pros">◎ 計算がシンプル</div>
+        <div class="m-cons">✕ 日本の低成長環境では過剰な場合も</div>
+        <div class="m-cons">✕ インフレ・為替リスクは考慮しない</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <p class="faq-q">Q. 新NISAの取り崩しに税金はかかりますか？</p>
+      <p class="faq-a">A. 新NISA口座内の運用益は非課税です。ただし取り崩した現金を再投資する場合、NISA枠の再利用は翌年以降になります（年間投資枠の制限あり）。</p>
+    </div>
+    <div class="faq-item">
+      <p class="faq-q">Q. 運用しながら取り崩すとはどういうことですか？</p>
+      <p class="faq-a">A. 全額引き出してから使うのではなく、残った資産を引き続き運用しながら毎年一部だけ引き出す方法です。残高が運用利率で増えながら取り崩すため、一括引き出しより長く資産が持続します。</p>
+    </div>
+    <div class="faq-item">
+      <p class="faq-q">Q. 4%ルールは日本でも使えますか？</p>
+      <p class="faq-a">A. 4%ルールは米国株の長期リターンを前提にした研究です。日本株・円建て資産では3〜3.5%程度に引き下げて考える専門家もいます。このシミュレーターの「運用利率」を調整して確認してください。</p>
+    </div>
+  </div>
+
+  <div class="ad-mid"><!-- 広告枠② -->広告枠②</div>
+
+</div>
+
+<div class="ad-slot"><!-- 広告枠③ -->広告枠③</div>
+
+<footer>
+  <p>試算はあくまで目安です。実際の運用・税制はご自身でご確認ください。</p>
+</footer>
+
+<script>
+let mainChart, incomeChart;
+
+function fmt(v) {
+  v = Math.round(v);
+  if (Math.abs(v) >= 100000000) return (v/100000000).toFixed(2) + '億円';
+  if (Math.abs(v) >= 10000) return (v/10000).toFixed(0) + '万円';
+  return v.toLocaleString('ja-JP') + '円';
+}
+function fmtAxis(v) {
+  if (Math.abs(v) >= 100000000) return (v/100000000).toFixed(1) + '億';
+  if (Math.abs(v) >= 10000) return (v/10000).toFixed(0) + '万';
+  return v.toLocaleString();
+}
+
+function update() {
+  const assets   = parseInt(document.getElementById('assets').value);
+  const rate     = parseFloat(document.getElementById('rate').value) / 100;
+  const age      = parseInt(document.getElementById('age').value);
+  const lifespan = parseInt(document.getElementById('lifespan').value);
+  const ratePct  = parseFloat(document.getElementById('rate-pct').value) / 100;
+  const fixedAmt = parseInt(document.getElementById('fixed-amt').value);
+  const fourPct  = assets * 0.04;
+
+  document.getElementById('assets-label').textContent = fmt(assets);
+  document.getElementById('rate-label').textContent = (rate*100).toFixed(1) + '%';
+  document.getElementById('age-label').textContent = age + '歳';
+  document.getElementById('lifespan-label').textContent = lifespan + '歳';
+  document.getElementById('rate-pct-label').textContent = (ratePct*100).toFixed(1) + '%';
+  document.getElementById('fixed-amt-label').textContent = fmt(fixedAmt);
+  document.getElementById('monthly-label').textContent = '約' + (fixedAmt/12/10000).toFixed(1) + '万円/月';
+  document.getElementById('four-pct-label').textContent = fmt(fourPct) + '/年';
+  document.querySelectorAll('.ls-age').forEach(el => el.textContent = lifespan);
+
+  const years = Math.max(lifespan - age, 1);
+  const labels = [], pctData = [], fixData = [], fourData = [];
+  const pctIncome = [], fixIncome = [], fourIncome = [];
+  let balPct = assets, balFix = assets, balFour = assets;
+  let pctDeplete = null, fixDeplete = null, fourDeplete = null;
+
+  for (let y = 0; y <= years; y++) {
+    const curAge = age + y;
+    labels.push(curAge + '歳');
+    if (y === 0) {
+      pctData.push(Math.round(balPct));
+      fixData.push(Math.round(balFix));
+      fourData.push(Math.round(balFour));
+      pctIncome.push(0); fixIncome.push(0); fourIncome.push(0);
+    } else {
+      // 定率
+      const pw = balPct * ratePct;
+      balPct = Math.max(0, balPct * (1+rate) - pw);
+      if (balPct <= 0 && pctDeplete === null) pctDeplete = curAge;
+      pctData.push(Math.round(balPct));
+      pctIncome.push(Math.round(pw));
+      // 定額
+      const fw = Math.min(fixedAmt, balFix * (1+rate));
+      balFix = Math.max(0, balFix * (1+rate) - fixedAmt);
+      if (balFix <= 0 && fixDeplete === null) fixDeplete = curAge;
+      fixData.push(Math.round(balFix));
+      fixIncome.push(Math.round(fw));
+      // 4%ルール
+      const yw = Math.min(fourPct, balFour * (1+rate));
+      balFour = Math.max(0, balFour * (1+rate) - fourPct);
+      if (balFour <= 0 && fourDeplete === null) fourDeplete = curAge;
+      fourData.push(Math.round(balFour));
+      fourIncome.push(Math.round(yw));
+    }
+  }
+
+  // メトリクス
+  function setLife(metricId, valId, deplete, lifespan) {
+    const el = document.getElementById(valId);
+    const mc = document.getElementById(metricId);
+    if (deplete) {
+      el.textContent = deplete + '歳で枯渇';
+      mc.className = 'metric danger';
+    } else {
+      el.textContent = lifespan + '歳まで持続';
+      mc.className = 'metric safe';
+    }
+  }
+  function setRemain(metricId, valId, val) {
+    const el = document.getElementById(valId);
+    const mc = document.getElementById(metricId);
+    el.textContent = fmt(val);
+    mc.className = 'metric ' + (val > 0 ? 'highlight' : 'warn');
+  }
+  setLife('mc-pct-life',    'm-pct-life',    pctDeplete,  lifespan);
+  setLife('mc-fix-life',    'm-fix-life',    fixDeplete,  lifespan);
+  setLife('mc-4pct-life',   'm-4pct-life',   fourDeplete, lifespan);
+  setRemain('mc-pct-remain',  'm-pct-remain',  pctData[years]);
+  setRemain('mc-fix-remain',  'm-fix-remain',  fixData[years]);
+  setRemain('mc-4pct-remain', 'm-4pct-remain', fourData[years]);
+
+  // アラート
+  const alertEl = document.getElementById('alert-area');
+  const allSafe = !pctDeplete && !fixDeplete && !fourDeplete;
+  if (allSafe) {
+    alertEl.className = 'alert safe';
+    alertEl.textContent = '3つの方式すべてで' + lifespan + '歳まで資産が持続します。定率：' + fmt(pctData[years]) + '、定額：' + fmt(fixData[years]) + '、4%ルール：' + fmt(fourData[years]) + 'が' + lifespan + '歳時点で残ります。';
+  } else if (!pctDeplete && fixDeplete) {
+    alertEl.className = 'alert warn';
+    alertEl.innerHTML = '定額取り崩しは <strong>' + fixDeplete + '歳で枯渇</strong>します。定率取り崩しなら' + lifespan + '歳まで持続します。取り崩し額を減らすか、定率方式への切り替えを検討してください。';
+  } else if (pctDeplete && !fixDeplete) {
+    alertEl.className = 'alert warn';
+    alertEl.innerHTML = '定率取り崩しは <strong>' + pctDeplete + '歳で枯渇</strong>します。取り崩し率を下げることを検討してください。';
+  } else {
+    const earliest = [pctDeplete, fixDeplete, fourDeplete].filter(Boolean).sort((a,b)=>a-b)[0];
+    alertEl.className = 'alert danger';
+    alertEl.innerHTML = '複数の方式で資産枯渇が見込まれます（最短 <strong>' + earliest + '歳</strong>）。運用利率・取り崩し額・資産残高を見直してください。';
+  }
+
+  // グラフ
+  if (mainChart) {
+    mainChart.data.labels = labels;
+    mainChart.data.datasets[0].data = pctData;
+    mainChart.data.datasets[1].data = fixData;
+    mainChart.data.datasets[2].data = fourData;
+    mainChart.update();
+  } else {
+    mainChart = new Chart(document.getElementById('main-chart'), {
+      type: 'line',
+      data: { labels, datasets: [
+        { label:'定率', data:pctData,  borderColor:'#b5451b', backgroundColor:'rgba(181,69,27,0.06)',  fill:true, tension:0.3, pointRadius:2, borderWidth:2 },
+        { label:'定額', data:fixData,  borderColor:'#1e6b3c', backgroundColor:'rgba(30,107,60,0.06)',  fill:true, tension:0.3, pointRadius:2, borderWidth:2 },
+        { label:'4%',   data:fourData, borderColor:'#534AB7', backgroundColor:'rgba(83,74,183,0.06)', fill:true, tension:0.3, pointRadius:2, borderWidth:2 },
+      ]},
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ctx.dataset.label+': '+fmt(ctx.parsed.y) } } },
+        scales:{
+          x:{ ticks:{autoSkip:true, maxTicksLimit:10, font:{size:11}}, grid:{display:false} },
+          y:{ min:0, ticks:{font:{size:11}, callback:v=>fmtAxis(v)}, grid:{color:'rgba(0,0,0,0.05)'} }
+        }
+      }
+    });
+  }
+
+  if (incomeChart) {
+    incomeChart.data.labels = labels;
+    incomeChart.data.datasets[0].data = pctIncome;
+    incomeChart.data.datasets[1].data = fixIncome;
+    incomeChart.data.datasets[2].data = fourIncome;
+    incomeChart.update();
+  } else {
+    incomeChart = new Chart(document.getElementById('income-chart'), {
+      type: 'line',
+      data: { labels, datasets: [
+        { label:'定率', data:pctIncome,  borderColor:'#b5451b', backgroundColor:'transparent', tension:0.3, pointRadius:2, borderWidth:2 },
+        { label:'定額', data:fixIncome,  borderColor:'#1e6b3c', backgroundColor:'transparent', tension:0,   pointRadius:2, borderWidth:2, borderDash:[4,3] },
+        { label:'4%',   data:fourIncome, borderColor:'#534AB7', backgroundColor:'transparent', tension:0,   pointRadius:2, borderWidth:2, borderDash:[2,4] },
+      ]},
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ctx.dataset.label+': '+fmt(ctx.parsed.y) } } },
+        scales:{
+          x:{ ticks:{autoSkip:true, maxTicksLimit:10, font:{size:11}}, grid:{display:false} },
+          y:{ min:0, ticks:{font:{size:11}, callback:v=>fmtAxis(v)}, grid:{color:'rgba(0,0,0,0.05)'} }
+        }
+      }
+    });
+  }
+}
+
+update();
+</script>
+</body>
+</html>
