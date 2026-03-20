@@ -3,49 +3,341 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>複利・住宅ローンシミュレーター無料｜元利定額vs元金定額・定年後の資産推移を試算</title>
-  <meta name="description" content="複利効果・住宅ローンの返済方式（元利定額/元金定額）・定年後の資産推移を無料で試算。元本・運用利率・追加投資・大型支出をスライダーで設定するだけでグラフがリアルタイム更新。">
-  <meta name="keywords" content="複利シミュレーター,住宅ローン比較,元利均等,元金均等,資産運用,老後資金,定年,無料">
-  <link rel="canonical" href="https://azuki-plus.com/simulator/compound.html">
-
-  <!-- OGP -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="複利・住宅ローンシミュレーター無料｜元利定額vs元金定額・定年後の資産推移を試算">
-  <meta property="og:description" content="複利効果・住宅ローンの返済方式・定年後の資産推移を無料で試算。スライダーを動かすだけでグラフがリアルタイム更新。">
-  <meta property="og:url" content="https://azuki-plus.com/simulator/compound.html">
-  <meta property="og:site_name" content="azuki-plus">
-  <meta property="og:locale" content="ja_JP">
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="複利・住宅ローンシミュレーター無料">
-  <meta name="twitter:description" content="複利効果・住宅ローンの返済方式・定年後の資産推移を無料で試算。">
-
-  <!-- 構造化データ -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "複利・住宅ローンシミュレーター",
-    "url": "https://azuki-plus.com/simulator/compound.html",
-    "description": "複利効果・住宅ローンの返済方式（元利定額/元金定額）・定年後の資産推移を無料で試算できるシミュレーター",
-    "applicationCategory": "FinanceApplication",
-    "operatingSystem": "Any",
-    "inLanguage": "ja",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
-    "featureList": ["複利計算", "住宅ローン比較", "元利定額・元金定額", "定年後資産推移", "大型支出シミュレーション"],
-    "breadcrumb": {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "シミュレーター一覧", "item": "https://azuki-plus.com/simulator/" },
-        { "@type": "ListItem", "position": 2, "name": "複利・住宅ローンシミュレーター" }
-      ]
-    }
-  }
-  <\/script>
+  <title>複利・住宅ローンシミュレーター｜資産運用・定年・返済方式を一括比較</title>
+  <meta name="description" content="元本・追加投資・運用利率・定年・住宅購入・ローン返済方式（元利定額/元金定額）を設定して、資産の推移をリアルタイムでシミュレーション。一括払いvsローンの比較も可能。">
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f4f0;
+      --surface: #ffffff;
+      --surface2: #f0efe9;
+      --border: rgba(0,0,0,0.1);
+      --text: #1a1a18;
+      --text2: #5a5a55;
+      --text3: #8a8a82;
+      --accent: #1a4fa0;
+      --accent-light: #e8eef8;
+      --danger: #993C1D;
+      --danger-light: #fdf0eb;
+      --green: #2d6a1f;
+      --green-light: #eaf3e6;
+      --radius: 10px;
+      --radius-sm: 6px;
+    }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ヘッダー */
+    header {
+      background: var(--accent);
+      color: #fff;
+      padding: 24px 20px 20px;
+      text-align: center;
+    }
+    header h1 {
+      font-size: clamp(18px, 4vw, 26px);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 6px;
+    }
+    header p {
+      font-size: 13px;
+      opacity: 0.8;
+    }
+
+    /* アドセンス枠（ヘッダー下） */
+    .ad-top {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px;
+      text-align: center;
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text3);
+      font-size: 12px;
+    }
+
+    /* メインレイアウト */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 700px) {
+      .container {
+        grid-template-columns: 320px 1fr;
+        padding: 28px 20px 60px;
+        gap: 24px;
+      }
+    }
+
+    /* コントロールパネル */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--text3);
+      text-transform: uppercase;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .control-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .control-row label {
+      font-size: 13px;
+      color: var(--text2);
+      grid-column: 1 / -1;
+    }
+
+    .control-row input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      height: 4px;
+      cursor: pointer;
+    }
+
+    .control-row .val {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      min-width: 72px;
+      text-align: right;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ローン方式トグル */
+    .toggle-group {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .toggle-group button {
+      flex: 1;
+      padding: 8px 6px;
+      font-size: 12px;
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      background: var(--surface2);
+      color: var(--text2);
+      transition: background 0.15s, color 0.15s;
+      font-weight: 400;
+    }
+    .toggle-group button.active {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .loan-desc {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 4px;
+    }
+
+    /* 右カラム */
+    .result-col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* 数値カード */
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 500px) {
+      .cards { grid-template-columns: 1fr 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+    }
+    .card .card-label {
+      font-size: 11px;
+      color: var(--text3);
+      margin-bottom: 4px;
+    }
+    .card .card-value {
+      font-size: clamp(14px, 2.5vw, 18px);
+      font-weight: 700;
+      color: var(--text);
+      font-family: 'Lato', sans-serif;
+    }
+    .card.accent { border-color: var(--accent); background: var(--accent-light); }
+    .card.accent .card-value { color: var(--accent); }
+    .card.danger { border-color: var(--danger); background: var(--danger-light); }
+    .card.danger .card-value { color: var(--danger); }
+
+    /* プレビューボックス */
+    .preview-box {
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--text2);
+      line-height: 1.9;
+    }
+
+    /* グラフ */
+    .chart-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: var(--text2);
+    }
+    .chart-legend span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .chart-canvas-wrap {
+      position: relative;
+      width: 100%;
+      height: 280px;
+    }
+
+    /* アドセンス枠（グラフ下） */
+    .ad-mid {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      text-align: center;
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text3);
+      font-size: 12px;
+    }
+
+    /* 解説セクション */
+    .explanation {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      grid-column: 1 / -1;
+    }
+    .explanation h2 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--accent);
+    }
+    .explanation h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin: 16px 0 6px;
+      color: var(--text);
+    }
+    .explanation p {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.8;
+      margin-bottom: 8px;
+    }
+    .explanation ul {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.8;
+      padding-left: 18px;
+    }
+
+    /* アドセンス枠（記事下） */
+    .ad-bottom {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      text-align: center;
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text3);
+      font-size: 12px;
+      grid-column: 1 / -1;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text3);
+      padding: 20px;
+      border-top: 1px solid var(--border);
+    }
+  </style>
 </head>
 <body>
 
@@ -53,9 +345,8 @@
   <h1>複利・住宅ローン シミュレーター</h1>
   <p>資産運用・定年・大型支出・ローン返済方式を一括比較</p>
 </header>
-
-<nav aria-label="パンくずリスト" style="background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px;font-size:12px;color:var(--text3);">
-  <a href="index.html" style="color:var(--text3);text-decoration:none;">シミュレーター一覧</a>
+<nav aria-label="パンくずリスト" style="background:#fff;border-bottom:1px solid rgba(0,0,0,0.09);padding:8px 20px;font-size:12px;color:#9a9488;">
+  <a href="index.html" style="color:#9a9488;text-decoration:none;">シミュレーター一覧</a>
   <span style="margin:0 6px;">›</span>
   <span>複利・住宅ローンシミュレーター</span>
 </nav>
