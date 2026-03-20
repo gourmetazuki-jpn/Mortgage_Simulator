@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CANSLIMチェックツール無料｜オニール流成長株スクリーニング | azuki-plus</title>
+  <meta name="description" content="オニールのCANSLIM投資法に基づき、銘柄の7条件を採点する無料チェックツール。EPS成長率・売上成長率・機関投資家動向・チャートパターンなどを入力するだけでスコアを自動算出。">
+  <meta name="keywords" content="CANSLIM,オニール,成長株,株式投資,スクリーニング,銘柄選定,チェックツール,無料">
+  <link rel="canonical" href="https://azuki-plus.com/simulator/canslim.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="CANSLIMチェックツール無料｜オニール流成長株スクリーニング">
+  <meta property="og:description" content="オニールのCANSLIM投資法の7条件を採点する無料ツール。銘柄の数値を入力するだけでスコアを自動算出。">
+  <meta property="og:url" content="https://azuki-plus.com/simulator/canslim.html">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "CANSLIMチェックツール",
+    "url": "https://azuki-plus.com/simulator/canslim.html",
+    "description": "オニールのCANSLIM投資法に基づき、銘柄の7条件を採点する無料チェックツール",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "inLanguage": "ja",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "シミュレーター一覧", "item": "https://azuki-plus.com/simulator/" },
+        { "@type": "ListItem", "position": 2, "name": "CANSLIMチェックツール" }
+      ]
+    }
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f4f3ee;
+      --surface: #ffffff;
+      --surface2: #f0efe8;
+      --border: rgba(0,0,0,0.09);
+      --text: #1a1a16;
+      --text2: #58574f;
+      --text3: #98968c;
+      --green: #1e6b3c;
+      --green-l: #e6f4ec;
+      --amber: #7a4d0a;
+      --amber-l: #fdf3e0;
+      --red: #992020;
+      --red-l: #fdeaea;
+      --blue: #1a4fa0;
+      --blue-l: #e8eef8;
+      --radius: 10px;
+      --radius-lg: 14px;
+    }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.7; }
+
+    /* ヘッダー */
+    header { background: #1a1a16; color: #fff; padding: 24px 20px 20px; text-align: center; }
+    header .logo { font-size: 12px; letter-spacing: 0.12em; color: rgba(255,255,255,0.5); margin-bottom: 10px; }
+    header h1 { font-size: clamp(18px, 4vw, 26px); font-weight: 700; letter-spacing: 0.02em; margin-bottom: 6px; }
+    header p { font-size: 13px; color: rgba(255,255,255,0.65); }
+
+    /* パンくず */
+    .breadcrumb { background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 20px; font-size: 12px; color: var(--text3); }
+    .breadcrumb a { color: var(--text3); text-decoration: none; }
+
+    /* 広告枠 */
+    .ad-slot { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px; text-align: center; min-height: 90px; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 12px; }
+
+    /* メインレイアウト */
+    .container { max-width: 960px; margin: 0 auto; padding: 24px 16px 60px; }
+
+    /* 銘柄入力 */
+    .reset-btn { padding: 8px 16px; font-size: 13px; font-family: inherit; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface2); color: var(--text2); cursor: pointer; white-space: nowrap; }
+    .reset-btn:hover { background: var(--border); }
+
+    /* スコアカード */
+    .score-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 24px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+    .score-main { text-align: center; min-width: 80px; }
+    .score-label { font-size: 11px; color: var(--text3); margin-top: 4px; }
+    .score-divider { width: 1px; height: 60px; background: var(--border); flex-shrink: 0; }
+    .score-detail { flex: 1; min-width: 200px; }
+    .score-verdict { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .score-desc { font-size: 13px; color: var(--text2); }
+
+    /* グリッド */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+
+    /* 条件カード */
+    .cond-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .cond-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .cond-letter { font-family: 'Lato', sans-serif; font-size: 22px; font-weight: 900; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--surface2); color: var(--text3); transition: background 0.2s, color 0.2s; }
+    .cond-title-wrap { flex: 1; }
+    .cond-title { font-size: 14px; font-weight: 700; }
+    .cond-subtitle { font-size: 11px; color: var(--text3); }
+    .cond-badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+    .cond-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+
+    /* 入力コントロール */
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field-label { font-size: 12px; color: var(--text2); }
+    .field-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
+    .field-row input[type=range] { width: 100%; accent-color: var(--blue); }
+    .field-val { font-size: 13px; font-weight: 700; font-family: 'Lato', sans-serif; min-width: 60px; text-align: right; color: var(--text); }
+    .field-hint { font-size: 11px; color: var(--text3); }
+
+    /* ラジオボタングループ */
+    .radio-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    .radio-btn { position: relative; }
+    .radio-btn input { position: absolute; opacity: 0; width: 0; }
+    .radio-btn label { display: block; padding: 6px 12px; font-size: 12px; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; background: var(--surface2); color: var(--text2); transition: all 0.15s; white-space: nowrap; }
+    .radio-btn input:checked + label { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 700; }
+
+    /* 条件の状態色 */
+    .pass .cond-letter { background: var(--green-l); color: var(--green); }
+    .warn .cond-letter { background: var(--amber-l); color: var(--amber); }
+    .fail .cond-letter { background: var(--red-l); color: var(--red); }
+    .pass { border-color: rgba(30,107,60,0.25); }
+    .warn { border-color: rgba(122,77,10,0.2); }
+    .fail { border-color: rgba(153,32,32,0.2); }
+    .pass .cond-badge { background: var(--green-l); color: var(--green); }
+    .warn .cond-badge { background: var(--amber-l); color: var(--amber); }
+    .fail .cond-badge { background: var(--red-l); color: var(--red); }
+
+    /* 解説セクション */
+    .explanation { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; margin-top: 24px; }
+    .explanation h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+    .exp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+    @media (max-width: 640px) { .exp-grid { grid-template-columns: 1fr; } }
+    .exp-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .exp-item:nth-last-child(-n+2) { border-bottom: none; }
+    @media (max-width: 640px) { .exp-item:last-child { border-bottom: none; } .exp-item { border-bottom: 1px solid var(--border); } }
+    .exp-item:nth-child(odd) { padding-right: 20px; border-right: 1px solid var(--border); }
+    @media (max-width: 640px) { .exp-item:nth-child(odd) { border-right: none; padding-right: 0; } }
+    .exp-item:nth-child(even) { padding-left: 20px; }
+    @media (max-width: 640px) { .exp-item:nth-child(even) { padding-left: 0; } }
+    .exp-letter { font-family: 'Lato', sans-serif; font-size: 13px; font-weight: 900; color: var(--blue); margin-bottom: 4px; }
+    .exp-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .exp-text { font-size: 12px; color: var(--text2); line-height: 1.7; }
+
+    .ad-mid { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px; text-align: center; min-height: 100px; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 12px; margin-top: 20px; }
+    footer { text-align: center; font-size: 12px; color: var(--text3); padding: 20px; border-top: 1px solid var(--border); margin-top: 40px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="logo">AZUKI-PLUS</p>
+  <h1>CANSLIMチェックツール</h1>
+  <p>オニール流・成長株の7条件を採点してスコアを算出</p>
+</header>
+
+<nav class="breadcrumb">
+  <a href="index.html">シミュレーター一覧</a>
+  <span style="margin:0 6px;">›</span>
+  <span>CANSLIMチェックツール</span>
+</nav>
+
+<div class="ad-slot">
+  <!-- Google AdSense 広告枠① -->
+  広告枠①
+</div>
+
+<div class="container">
+
+  <!-- 総合判定 -->
+  <div class="score-bar" id="score-bar" style="position:relative;">
+    <button class="reset-btn" onclick="resetAll()" style="position:absolute;top:14px;right:14px;font-size:12px;padding:5px 12px;">リセット</button>
+    <div class="score-main">
+      <div id="score-icon" style="font-size:40px;line-height:1;">—</div>
+      <div class="score-label" style="margin-top:6px;">総合判定</div>
+    </div>
+    <div class="score-divider"></div>
+    <div class="score-detail">
+      <div class="score-verdict" id="score-verdict">数値を入力してください</div>
+      <div class="score-desc" id="score-desc">CANSLIMの7条件に値を入力すると総合判定が表示されます</div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;" id="cond-summary"></div>
+    </div>
+  </div>
+
+  <!-- C・A条件（上段） -->
+  <div class="grid" style="margin-bottom:16px;">
+
+    <!-- C: 直近四半期EPS -->
+    <div class="cond-card" id="card-c">
+      <div class="cond-header">
+        <div class="cond-letter">C</div>
+        <div class="cond-title-wrap">
+          <div class="cond-title">Current Quarterly Earnings</div>
+          <div class="cond-subtitle">直近四半期EPS成長率</div>
+        </div>
+        <span class="cond-badge" id="badge-c">未入力</span>
+      </div>
+      <div class="cond-body">
+        <div class="field">
+          <div class="field-label">直近四半期EPS成長率（前年同期比）</div>
+          <div class="field-row">
+            <input type="range" min="-50" max="200" step="1" value="0" id="c-eps" oninput="calcScore()">
+            <span class="field-val" id="c-eps-val">0%</span>
+          </div>
+          <div class="field-hint">理想：+25%以上。+50%以上なら強力なシグナル</div>
+        </div>
+        <div class="field">
+          <div class="field-label">直近四半期売上成長率（前年同期比）</div>
+          <div class="field-row">
+            <input type="range" min="-50" max="200" step="1" value="0" id="c-sales" oninput="calcScore()">
+            <span class="field-val" id="c-sales-val">0%</span>
+          </div>
+          <div class="field-hint">理想：+25%以上</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A: 年間EPS成長 -->
+    <div class="cond-card" id="card-a">
+      <div class="cond-header">
+        <div class="cond-letter">A</div>
+        <div class="cond-title-wrap">
+          <div class="cond-title">Annual Earnings Growth</div>
+          <div class="cond-subtitle">年間EPS成長率</div>
+        </div>
+        <span class="cond-badge" id="badge-a">未入力</span>
+      </div>
+      <div class="cond-body">
+        <div class="field">
+          <div class="field-label">3年間の年平均EPS成長率</div>
+          <div class="field-row">
+            <input type="range" min="-30" max="150" step="1" value="0" id="a-eps3" oninput="calcScore()">
+            <span class="field-val" id="a-eps3-val">0%</span>
+          </div>
+          <div class="field-hint">理想：+25%以上（過去3年連続）</div>
+        </div>
+        <div class="field">
+          <div class="field-label">自己資本利益率（ROE）</div>
+          <div class="field-row">
+            <input type="range" min="0" max="60" step="1" value="0" id="a-roe" oninput="calcScore()">
+            <span class="field-val" id="a-roe-val">0%</span>
+          </div>
+          <div class="field-hint">理想：17%以上</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- N・S・L条件（中段） -->
+  <div class="grid" style="margin-bottom:16px;">
+
+    <!-- N: 新製品・新経営陣・新高値 -->
+    <div class="cond-card" id="card-n">
+      <div class="cond-header">
+        <div class="cond-letter">N</div>
+        <div class="cond-title-wrap">
+          <div class="cond-title">New Products, Management, Highs</div>
+          <div class="cond-subtitle">新製品・新経営陣・新高値</div>
+        </div>
+        <span class="cond-badge" id="badge-n">未入力</span>
+      </div>
+      <div class="cond-body">
+        <div class="field">
+          <div class="field-label">株価の52週高値からの位置</div>
+          <div class="field-row">
+            <input type="range" min="0" max="100" step="1" value="50" id="n-high" oninput="calcScore()">
+            <span class="field-val" id="n-high-val">50%</span>
+          </div>
+          <div class="field-hint">高値比 100%=高値更新。理想：高値の75%以上</div>
+        </div>
+        <div class="field">
+          <div class="field-label">新しいカタリスト（新製品・M&A・規制変化など）</div>
+          <div class="radio-group" id="n-catalyst-group">
+            <div class="radio-btn"><input type="radio" name="n-catalyst" id="n-cat-0" value="0" checked onchange="calcScore()"><label for="n-cat-0">なし</label></div>
+            <div class="radio-btn"><input type="radio" name="n-catalyst" id="n-cat-1" value="1" onchange="calcScore()"><label for="n-cat-1">小さい</label></div>
+            <div class="radio-btn"><input type="radio" name="n-catalyst" id="n-cat-2" value="2" onchange="calcScore()"><label for="n-cat-2">中程度</label></div>
+            <div class="radio-btn"><input type="radio" name="n-catalyst" id="n-cat-3" value="3" onchange="calcScore()"><label for="n-cat-3">大きい</label></div>
+          </div>
+          <div class="field-hint">理想：明確な成長ドライバーがある</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S: 株式の需給 -->
+    <div class="cond-card" id="card-s">
+      <div class="cond-header">
+        <div class="cond-letter">S</div>
+        <div class="cond-title-wrap">
+          <div class="cond-title">Supply & Demand</div>
+          <div class="cond-subtitle">株式の需給</div>
+        </div>
+        <span class="cond-badge" id="badge-s">未入力</span>
+      </div>
+      <div class="cond-body">
+        <div class="field">
+          <div class="field-label">出来高の変化（直近の出来高 / 平均出来高）</div>
+          <div class="field-row">
+            <input type="range" min="0" max="500" step="10" value="100" id="s-volume" oninput="calcScore()">
+            <span class="field-val" id="s-volume-val">100%</span>
+          </div>
+          <div class="field-hint">上昇時に150%以上なら強い需要のシグナル</div>
+        </div>
+        <div class="field">
+          <div class="field-label">発行済み株式数（浮動株）</div>
+          <div class="radio-group">
+            <div class="radio-btn"><input type="radio" name="s-shares" id="s-sh-0" value="0" checked onchange="calcScore()"><label for="s-sh-0">大型（1億株超）</label></div>
+            <div class="radio-btn"><input type="radio" name="s-shares" id="s-sh-1" value="1" onchange="calcScore()"><label for="s-sh-1">中型</label></div>
+            <div class="radio-btn"><input type="radio" name="s-shares" id="s-sh-2" value="2" onchange="calcScore()"><label for="s-sh-2">小型（少ない）</label></div>
+          </div>
+          <div class="field-hint">株式数が少ないほど需給がタイトで動きやすい</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- L・I・M条件（下段） -->
+  <div class="grid" style="margin-bottom:24px;">
+
+    <!-- L: 主導株か停滞株か -->
+    <div class="cond-card" id="card-l">
+      <div class="cond-header">
+        <div class="cond-letter">L</div>
+        <div class="cond-title-wrap">
+          <div class="cond-title">Leader or Laggard</div>
+          <div class="cond-subtitle">主導株か停滞株か</div>
+        </div>
+        <span class="cond-badge" id="badge-l">未入力</span>
+      </div>
+      <div class="cond-body">
+        <div class="field">
+          <div class="field-label">相対力指数（RS レーティング）</div>
+          <div class="field-row">
+            <input type="range" min="1" max="99" step="1" value="50" id="l-rs" oninput="calcScore()">
+            <span class="field-val" id="l-rs-val">50</span>
+          </div>
+          <div class="field-hint">理想：80以上。IBD等のRS Ratingを参考に入力</div>
+        </div>
+        <div class="field">
+          <div class="field-label">業界内での株価パフォーマンス順位</div>
+          <div class="radio-group">
+            <div class="radio-btn"><input type="radio" name="l-rank" id="l-rk-0" value="0" checked onchange="calcScore()"><label for="l-rk-0">下位30%</label></div>
+            <div class="radio-btn"><input type="radio" name="l-rank" id="l-rk-1" value="1" onchange="calcScore()"><label for="l-rk-1">中位</label></div>
+            <div class="radio-btn"><input type="radio" name="l-rank" id="l-rk-2" value="2" onchange="calcScore()"><label for="l-rk-2">上位30%</label></div>
+            <div class="radio-btn"><input type="radio" name="l-rank" id="l-rk-3" value="3" onchange="calcScore()"><label for="l-rk-3">業界No.1</label></div>
+          </div>
+          <div class="field-hint">理想：業界内トップ1〜2銘柄</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- I: 機関投資家の動向 -->
+    <div class="cond-card" id="card-i">
+      <div class="cond-header">
+        <div class="cond-letter">I</div>
+        <div class="cond-title-wrap">
+          <div class="cond-title">Institutional Sponsorship</div>
+          <div class="cond-subtitle">機関投資家の保有動向</div>
+        </div>
+        <span class="cond-badge" id="badge-i">未入力</span>
+      </div>
+      <div class="cond-body">
+        <div class="field">
+          <div class="field-label">機関投資家の保有動向（直近四半期）</div>
+          <div class="radio-group">
+            <div class="radio-btn"><input type="radio" name="i-inst" id="i-in-0" value="0" checked onchange="calcScore()"><label for="i-in-0">大幅減少</label></div>
+            <div class="radio-btn"><input type="radio" name="i-inst" id="i-in-1" value="1" onchange="calcScore()"><label for="i-in-1">やや減少</label></div>
+            <div class="radio-btn"><input type="radio" name="i-inst" id="i-in-2" value="2" onchange="calcScore()"><label for="i-in-2">横ばい</label></div>
+            <div class="radio-btn"><input type="radio" name="i-inst" id="i-in-3" value="3" onchange="calcScore()"><label for="i-in-3">増加</label></div>
+            <div class="radio-btn"><input type="radio" name="i-inst" id="i-in-4" value="4" onchange="calcScore()"><label for="i-in-4">大幅増加</label></div>
+          </div>
+          <div class="field-hint">理想：増加傾向。優良ファンドが新規・追加保有</div>
+        </div>
+        <div class="field">
+          <div class="field-label">保有する機関投資家の質</div>
+          <div class="radio-group">
+            <div class="radio-btn"><input type="radio" name="i-quality" id="i-q-0" value="0" checked onchange="calcScore()"><label for="i-q-0">不明/低い</label></div>
+            <div class="radio-btn"><input type="radio" name="i-quality" id="i-q-1" value="1" onchange="calcScore()"><label for="i-q-1">普通</label></div>
+            <div class="radio-btn"><input type="radio" name="i-quality" id="i-q-2" value="2" onchange="calcScore()"><label for="i-q-2">優良ファンド保有</label></div>
+          </div>
+          <div class="field-hint">理想：実績ある成長株ファンドが保有</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- M: 市場の方向性（全幅） -->
+  <div class="cond-card" id="card-m" style="margin-bottom:24px;">
+    <div class="cond-header">
+      <div class="cond-letter">M</div>
+      <div class="cond-title-wrap">
+        <div class="cond-title">Market Direction</div>
+        <div class="cond-subtitle">市場全体のトレンド（最重要）</div>
+      </div>
+      <span class="cond-badge" id="badge-m">未入力</span>
+    </div>
+    <div class="cond-body" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="field">
+        <div class="field-label">現在の市場トレンド</div>
+        <div class="radio-group">
+          <div class="radio-btn"><input type="radio" name="m-trend" id="m-tr-0" value="0" checked onchange="calcScore()"><label for="m-tr-0">明確な下降トレンド</label></div>
+          <div class="radio-btn"><input type="radio" name="m-trend" id="m-tr-1" value="1" onchange="calcScore()"><label for="m-tr-1">不確定・もみ合い</label></div>
+          <div class="radio-btn"><input type="radio" name="m-trend" id="m-tr-2" value="2" onchange="calcScore()"><label for="m-tr-2">上昇トレンド確認</label></div>
+        </div>
+        <div class="field-hint">理想：Confirmed Uptrend。下降相場での購入は禁物</div>
+      </div>
+      <div class="field">
+        <div class="field-label">日経平均/TOPIXの200日移動平均線との位置</div>
+        <div class="radio-group">
+          <div class="radio-btn"><input type="radio" name="m-ma" id="m-ma-0" value="0" checked onchange="calcScore()"><label for="m-ma-0">大幅に下</label></div>
+          <div class="radio-btn"><input type="radio" name="m-ma" id="m-ma-1" value="1" onchange="calcScore()"><label for="m-ma-1">やや下</label></div>
+          <div class="radio-btn"><input type="radio" name="m-ma" id="m-ma-2" value="2" onchange="calcScore()"><label for="m-ma-2">上</label></div>
+          <div class="radio-btn"><input type="radio" name="m-ma" id="m-ma-3" value="3" onchange="calcScore()"><label for="m-ma-3">大幅に上</label></div>
+        </div>
+        <div class="field-hint">理想：200日線を明確に上回っている</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 広告枠② -->
+  <div class="ad-mid">
+    <!-- Google AdSense 広告枠② -->
+    広告枠②
+  </div>
+
+  <!-- 解説 -->
+  <div class="explanation">
+    <h2>CANSLIMとは？ — オニールの7条件解説</h2>
+    <div class="exp-grid">
+      <div class="exp-item">
+        <div class="exp-letter">C — Current Quarterly Earnings</div>
+        <div class="exp-title">直近四半期EPS・売上成長率</div>
+        <div class="exp-text">直近四半期のEPSが前年同期比で最低+25%以上成長していること。売上も同様に加速していることが重要。</div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-letter">A — Annual Earnings Growth</div>
+        <div class="exp-title">年間EPS成長率・ROE</div>
+        <div class="exp-text">過去3年間の年平均EPS成長率が+25%以上。ROEは17%以上が目安。単年の成長より継続性を重視。</div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-letter">N — New Products, Management, Highs</div>
+        <div class="exp-title">新しいカタリスト・新高値</div>
+        <div class="exp-text">新製品・新サービス・新経営陣・業界の変化など明確な成長ドライバーがあること。株価は52週高値付近が理想。</div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-letter">S — Supply & Demand</div>
+        <div class="exp-title">株式の需給バランス</div>
+        <div class="exp-text">上昇時に出来高が平均の1.5倍以上増加していること。浮動株が少ないほど需給がタイトで大きな動きが出やすい。</div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-letter">L — Leader or Laggard</div>
+        <div class="exp-title">主導株かどうか</div>
+        <div class="exp-text">RS（相対力指数）が80以上の業界トップ銘柄を狙う。2番手以下の銘柄は避ける。</div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-letter">I — Institutional Sponsorship</div>
+        <div class="exp-title">機関投資家の動向</div>
+        <div class="exp-text">優良な機関投資家（ファンド）が新規・追加保有していること。機関投資家の買いが株価上昇の原動力になる。</div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-letter">M — Market Direction</div>
+        <div class="exp-title">市場全体のトレンド（最重要）</div>
+        <div class="exp-text">下降相場では全体の4分の3の銘柄が下落する。市場が「Confirmed Uptrend」のときだけ購入する。Mが×なら他が全て○でも買わない。</div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-letter">注意事項</div>
+        <div class="exp-title">このツールについて</div>
+        <div class="exp-text">本ツールの採点は参考値です。実際の投資判断はご自身の責任で行ってください。特にMの市場環境は最重要で、スコアが高くても下降相場では購入しないことが原則です。</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="ad-slot">
+  <!-- Google AdSense 広告枠③ -->
+  広告枠③
+</div>
+
+<footer>
+  <p>本ツールの採点は参考値です。投資判断はご自身の責任で行ってください。</p>
+</footer>
+
+<script>
+// ===== 判定ロジック =====
+// 各条件: 'pass'=合格 / 'warn'=要注意 / 'fail'=不合格
+
+function calcScore() {
+  updateLabels();
+
+  const results = {
+    c: judgeC(),
+    a: judgeA(),
+    n: judgeN(),
+    s: judgeS(),
+    l: judgeL(),
+    i: judgeI(),
+    m: judgeM(),
+  };
+
+  updateCards(results);
+  showVerdict(results);
+}
+
+function updateLabels() {
+  const fields = [
+    ['c-eps',   v => v + '%'],
+    ['c-sales', v => v + '%'],
+    ['a-eps3',  v => v + '%'],
+    ['a-roe',   v => v + '%'],
+    ['n-high',  v => v + '%'],
+    ['s-volume',v => v + '%'],
+    ['l-rs',    v => v],
+  ];
+  fields.forEach(([id, fmt]) => {
+    const el = document.getElementById(id);
+    const lbl = document.getElementById(id + '-val');
+    if (el && lbl) lbl.textContent = fmt(el.value);
+  });
+}
+
+// C: 直近四半期EPS+25%以上、売上+25%以上で合格
+function judgeC() {
+  const eps = parseInt(document.getElementById('c-eps').value);
+  const sales = parseInt(document.getElementById('c-sales').value);
+  if (eps >= 25 && sales >= 25) return 'pass';
+  if (eps >= 10 || sales >= 10) return 'warn';
+  return 'fail';
+}
+
+// A: 3年平均EPS+25%以上、ROE17%以上で合格
+function judgeA() {
+  const eps3 = parseInt(document.getElementById('a-eps3').value);
+  const roe = parseInt(document.getElementById('a-roe').value);
+  if (eps3 >= 25 && roe >= 17) return 'pass';
+  if (eps3 >= 15 || roe >= 10) return 'warn';
+  return 'fail';
+}
+
+// N: 高値の75%以上かつカタリストあり
+function judgeN() {
+  const high = parseInt(document.getElementById('n-high').value);
+  const catalyst = parseInt(document.querySelector('input[name="n-catalyst"]:checked').value);
+  if (high >= 75 && catalyst >= 2) return 'pass';
+  if (high >= 50 || catalyst >= 1) return 'warn';
+  return 'fail';
+}
+
+// S: 上昇時出来高150%以上、かつ浮動株が少ない
+function judgeS() {
+  const vol = parseInt(document.getElementById('s-volume').value);
+  const shares = parseInt(document.querySelector('input[name="s-shares"]:checked').value);
+  if (vol >= 150 && shares >= 1) return 'pass';
+  if (vol >= 100 || shares >= 1) return 'warn';
+  return 'fail';
+}
+
+// L: RS80以上かつ業界上位
+function judgeL() {
+  const rs = parseInt(document.getElementById('l-rs').value);
+  const rank = parseInt(document.querySelector('input[name="l-rank"]:checked').value);
+  if (rs >= 80 && rank >= 2) return 'pass';
+  if (rs >= 60 || rank >= 1) return 'warn';
+  return 'fail';
+}
+
+// I: 機関投資家が増加傾向
+function judgeI() {
+  const inst = parseInt(document.querySelector('input[name="i-inst"]:checked').value);
+  const quality = parseInt(document.querySelector('input[name="i-quality"]:checked').value);
+  if (inst >= 3 && quality >= 1) return 'pass';
+  if (inst >= 2) return 'warn';
+  return 'fail';
+}
+
+// M: 上昇トレンド確認済みで200日線の上
+function judgeM() {
+  const trend = parseInt(document.querySelector('input[name="m-trend"]:checked').value);
+  const ma = parseInt(document.querySelector('input[name="m-ma"]:checked').value);
+  if (trend === 2 && ma >= 2) return 'pass';
+  if (trend >= 1 && ma >= 1) return 'warn';
+  return 'fail';
+}
+
+function updateCards(results) {
+  const labels = {
+    pass: '合格',
+    warn: '要注意',
+    fail: '不合格',
+  };
+  Object.keys(results).forEach(key => {
+    const card = document.getElementById('card-' + key);
+    const badge = document.getElementById('badge-' + key);
+    if (!card || !badge) return;
+    const status = results[key];
+    card.className = 'cond-card ' + status;
+    badge.textContent = labels[status];
+    badge.className = 'cond-badge';
+  });
+}
+
+function showVerdict(results) {
+  const values = Object.values(results);
+  const passCount = values.filter(v => v === 'pass').length;
+  const failCount = values.filter(v => v === 'fail').length;
+  const mResult = results.m;
+
+  const iconEl = document.getElementById('score-icon');
+  const verdictEl = document.getElementById('score-verdict');
+  const descEl = document.getElementById('score-desc');
+  const summaryEl = document.getElementById('cond-summary');
+
+  // 条件サマリーバッジ
+  const condNames = { c:'C', a:'A', n:'N', s:'S', l:'L', i:'I', m:'M' };
+  const colors = {
+    pass: { bg: 'var(--green-l)', color: 'var(--green)' },
+    warn: { bg: 'var(--amber-l)', color: 'var(--amber)' },
+    fail: { bg: 'var(--red-l)', color: 'var(--red)' },
+  };
+  summaryEl.innerHTML = Object.entries(results).map(([key, status]) => {
+    const c = colors[status];
+    return `<span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:${c.bg};color:${c.color};">${condNames[key]}: ${{pass:'合格',warn:'要注意',fail:'不合格'}[status]}</span>`;
+  }).join('');
+
+  // Mが不合格なら即アウト
+  if (mResult === 'fail') {
+    iconEl.textContent = '⛔';
+    verdictEl.textContent = '市場環境が不良 — 購入禁止';
+    verdictEl.style.color = 'var(--red)';
+    descEl.textContent = 'M（市場環境）が不合格です。下降相場ではどんなに良い銘柄でも購入しないことがCANSLIMの大原則です。';
+    return;
+  }
+
+  if (passCount === 7) {
+    iconEl.textContent = '★';
+    verdictEl.textContent = '全条件合格 — 強力な買いサイン';
+    verdictEl.style.color = 'var(--green)';
+    descEl.textContent = 'CANSLIMの全7条件を満たしています。チャートのベースパターン（カップウィズハンドルなど）とピボットポイントも確認して判断を。';
+  } else if (passCount >= 5 && failCount === 0) {
+    iconEl.textContent = '◎';
+    verdictEl.textContent = '有望な買い候補';
+    verdictEl.style.color = 'var(--green)';
+    descEl.textContent = '多くの条件を満たしています。「要注意」の条件を確認した上でチャートパターンを検討してください。';
+  } else if (passCount >= 4 && failCount <= 1) {
+    iconEl.textContent = '○';
+    verdictEl.textContent = '条件をほぼ満たす — 要確認';
+    verdictEl.style.color = 'var(--amber)';
+    descEl.textContent = '概ね基準を満たしていますが、不合格・要注意の条件を再確認してください。';
+  } else if (failCount >= 3) {
+    iconEl.textContent = '✕';
+    verdictEl.textContent = '基準を満たしていない — 見送り推奨';
+    verdictEl.style.color = 'var(--red)';
+    descEl.textContent = 'CANSLIM基準には届いていません。不合格の条件（赤いカード）を重点的に確認し、より強い銘柄を探すことをおすすめします。';
+  } else {
+    iconEl.textContent = '△';
+    verdictEl.textContent = '一部条件不足 — 慎重に判断';
+    verdictEl.style.color = 'var(--amber)';
+    descEl.textContent = 'いくつかの条件が不足しています。赤・黄色のカードの条件を改善してから検討してください。';
+  }
+}
+
+function resetAll() {
+  document.getElementById('c-eps').value = 0;
+  document.getElementById('c-sales').value = 0;
+  document.getElementById('a-eps3').value = 0;
+  document.getElementById('a-roe').value = 0;
+  document.getElementById('n-high').value = 50;
+  document.getElementById('s-volume').value = 100;
+  document.getElementById('l-rs').value = 50;
+
+  const defaults = ['n-cat-0','s-sh-0','l-rk-0','i-in-2','i-q-0','m-tr-1','m-ma-1'];
+  defaults.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = true;
+  });
+
+  ['c','a','n','s','l','i','m'].forEach(key => {
+    const card = document.getElementById('card-' + key);
+    const badge = document.getElementById('badge-' + key);
+    if (card) card.className = 'cond-card';
+    if (badge) { badge.textContent = '未入力'; badge.className = 'cond-badge'; }
+  });
+
+  const iconEl = document.getElementById('score-icon');
+  const verdictEl = document.getElementById('score-verdict');
+  const descEl = document.getElementById('score-desc');
+  const summaryEl = document.getElementById('cond-summary');
+  if (iconEl) iconEl.textContent = '—';
+  if (verdictEl) { verdictEl.textContent = '数値を入力してください'; verdictEl.style.color = 'var(--text)'; }
+  if (descEl) descEl.textContent = 'CANSLIMの7条件に値を入力すると総合判定が表示されます';
+  if (summaryEl) summaryEl.innerHTML = '';
+
+  updateLabels();
+}
+
+updateLabels();
+</script>
+</body>
+</html>
