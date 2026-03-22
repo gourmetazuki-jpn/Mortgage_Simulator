@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>景気サイクル判定ツール｜セクターローテーション・GICS11セクター分析 | アズキぷらす</title>
+  <meta name="description" content="AIが最新の経済指標（金利・GDP・PMI・雇用統計）を分析して景気サイクルのフェーズを12段階で判定。GICS11セクターのローテーション（強気・中立・弱気）をリアルタイム表示。株式投資の参考に。">
+  <meta name="keywords" content="景気サイクル,セクターローテーション,GICS,景気判定,株式投資,景気フェーズ,回復期,拡張期,後退期,収縮期,アズキぷらす">
+  <link rel="canonical" href="https://azuki-plus.com/cycle.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="景気サイクル判定ツール｜セクターローテーション分析 | アズキぷらす">
+  <meta property="og:description" content="AIが最新の経済指標を分析して景気サイクルのフェーズを12段階で判定。GICS11セクターのローテーションを表示。">
+  <meta property="og:url" content="https://azuki-plus.com/cycle.html">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "景気サイクル判定ツール",
+    "url": "https://azuki-plus.com/cycle.html",
+    "description": "AIが最新の経済指標を分析して景気サイクルのフェーズを12段階で判定。GICS11セクターのローテーションを表示。",
+    "applicationCategory": "FinanceApplication",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
+    "author": { "@type": "Person", "name": "アズキぷらす" }
+  }
+  </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4271655790847344" crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@400;700;900&family=DotGothic16&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#0c0c14;--s:#13131f;--s2:#1c1c2e;--b:rgba(255,255,255,.07);
+      --t:#e8e8f4;--t2:#8888aa;--t3:#444466;
+      --recovery:#00d4aa;--expansion:#f5a623;--slowdown:#ff6b6b;--recession:#8b5cf6;
+      --r:10px;--rl:14px;
+    }
+    body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--t);font-size:14px;line-height:1.7;min-height:100vh;}
+
+    header{background:linear-gradient(135deg,#0c0c14,#1a1a2e);border-bottom:1px solid var(--b);padding:20px;text-align:center;}
+    header .back a{font-size:12px;color:var(--t3);text-decoration:none;}
+    header h1{font-family:"DotGothic16",monospace;font-size:clamp(16px,4vw,22px);color:#fff;margin:8px 0 4px;letter-spacing:.06em;}
+    header p{font-size:12px;color:var(--t2);}
+    .breadcrumb{background:var(--s);border-bottom:1px solid var(--b);padding:8px 20px;font-size:11px;color:var(--t3);}
+    .breadcrumb a{color:var(--t3);text-decoration:none;}
+    .ad-slot{background:var(--s);border-bottom:1px solid var(--b);padding:10px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    .container{max-width:900px;margin:0 auto;padding:24px 16px 60px;display:flex;flex-direction:column;gap:18px;}
+    .card{background:var(--s);border:1px solid var(--b);border-radius:var(--rl);padding:20px 22px;}
+
+    /* 実行ボタン */
+    .run-card{text-align:center;padding:28px 22px;}
+    .run-card p{font-size:13px;color:var(--t2);margin-bottom:20px;line-height:1.8;}
+    .run-btn{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#4488ff,#6644ff);color:#fff;border:none;border-radius:10px;padding:14px 32px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:opacity .15s,transform .15s;}
+    .run-btn:hover{opacity:.85;transform:translateY(-1px);}
+    .run-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+    .loading-text{font-family:"DotGothic16",monospace;font-size:13px;color:#4488ff;margin-top:12px;}
+    .dot::after{content:"...";animation:dots 1.2s infinite;}
+    @keyframes dots{0%{content:"."}33%{content:".."}66%{content:"..."}100%{content:"."}}
+
+    /* 景気サイクルホイール */
+    .cycle-wheel{position:relative;width:280px;height:280px;margin:0 auto 20px;}
+    .cycle-wheel svg{width:100%;height:100%;}
+    .phase-label{font-size:11px;font-weight:700;fill:#fff;text-anchor:middle;dominant-baseline:middle;}
+    .center-text{text-anchor:middle;dominant-baseline:middle;}
+
+    /* フェーズ結果カード */
+    .phase-result{display:none;border-radius:var(--rl);padding:20px 22px;margin-bottom:0;}
+    .phase-result.show{display:block;}
+    .phase-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:12px;}
+    .phase-name{font-size:24px;font-weight:700;margin-bottom:6px;}
+    .phase-desc{font-size:13px;line-height:1.8;color:var(--t2);}
+    .confidence{display:flex;align-items:center;gap:8px;margin-top:10px;}
+    .confidence-bar{flex:1;height:6px;background:var(--b);border-radius:3px;overflow:hidden;}
+    .confidence-fill{height:100%;border-radius:3px;transition:width 1s ease;}
+    .confidence-label{font-size:11px;color:var(--t3);min-width:60px;text-align:right;}
+
+    /* セクターローテーション */
+    .sector-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+    .sector-item{background:var(--s2);border-radius:var(--r);padding:12px 14px;border:1px solid var(--b);transition:border-color .2s;}
+    .sector-item.strong{border-color:currentColor;}
+    .sector-rank{font-size:10px;font-weight:700;letter-spacing:.08em;margin-bottom:4px;}
+    .sector-name{font-size:13px;font-weight:700;margin-bottom:4px;}
+    .sector-reason{font-size:11px;color:var(--t2);line-height:1.5;}
+    .sector-bar{height:3px;border-radius:2px;margin-top:8px;}
+
+    /* サイクル説明 */
+    .cycle-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    @media(max-width:600px){.cycle-grid{grid-template-columns:1fr;}}
+    .cycle-item{padding:14px 16px;border-radius:var(--r);border:1px solid var(--b);}
+    .cycle-item h3{font-size:13px;font-weight:700;margin-bottom:6px;}
+    .cycle-item p{font-size:12px;color:var(--t2);line-height:1.7;}
+
+    .notice{background:var(--s2);border-radius:var(--r);padding:12px 14px;font-size:11px;color:var(--t3);line-height:1.7;border:1px solid var(--b);}
+    .ad-mid{background:var(--s);border:1px solid var(--b);border-radius:var(--rl);padding:12px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    .section-title{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--b);}
+    footer{text-align:center;font-size:12px;color:var(--t3);padding:20px;border-top:1px solid var(--b);}
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="back"><a href="index.html">← アズキぷらす</a></p>
+  <h1>📊 景気サイクル判定ツール</h1>
+  <p>AIが最新の経済指標を分析して現在のフェーズを判定</p>
+</header>
+
+<nav class="breadcrumb">
+  <a href="index.html">アズキぷらす</a> › 景気サイクル判定ツール
+</nav>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<div class="container">
+
+  <!-- 実行カード -->
+  <div class="card run-card">
+    <p>AIが金利・GDP・PMI・雇用統計などの最新経済指標をもとに、<br>現在の景気サイクルフェーズとセクターローテーションを分析します。</p>
+    <button class="run-btn" id="run-btn" onclick="analyze()">
+      ▶ 今の景気フェーズを分析する
+    </button>
+    <div class="loading-text" id="loading" style="display:none;">AIが経済指標を分析中<span class="dot"></span></div>
+  </div>
+
+  <!-- 景気サイクルホイール -->
+  <div class="card" style="text-align:center;">
+    <p class="section-title">景気サイクル</p>
+    <div class="cycle-wheel">
+      <svg viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg">
+        <!-- 回復期 -->
+        <path id="arc-recovery" d="M140,140 L140,20 A120,120 0 0,1 260,140 Z" fill="#00d4aa" opacity="0.15" stroke="#00d4aa" stroke-width="1"/>
+        <!-- 拡張期 -->
+        <path id="arc-expansion" d="M140,140 L260,140 A120,120 0 0,1 140,260 Z" fill="#f5a623" opacity="0.15" stroke="#f5a623" stroke-width="1"/>
+        <!-- 後退期 -->
+        <path id="arc-slowdown" d="M140,140 L140,260 A120,120 0 0,1 20,140 Z" fill="#ff6b6b" opacity="0.15" stroke="#ff6b6b" stroke-width="1"/>
+        <!-- 収縮期 -->
+        <path id="arc-recession" d="M140,140 L20,140 A120,120 0 0,1 140,20 Z" fill="#8b5cf6" opacity="0.15" stroke="#8b5cf6" stroke-width="1"/>
+        <!-- ラベル -->
+        <text x="200" y="80" class="phase-label" fill="#00d4aa" font-size="11">回復期</text>
+        <text x="200" y="200" class="phase-label" fill="#f5a623" font-size="11">拡張期</text>
+        <text x="80" y="200" class="phase-label" fill="#ff6b6b" font-size="11">後退期</text>
+        <text x="80" y="80" class="phase-label" fill="#8b5cf6" font-size="11">収縮期</text>
+        <!-- 中心 -->
+        <circle cx="140" cy="140" r="50" fill="#13131f" stroke="rgba(255,255,255,.1)" stroke-width="1"/>
+        <text id="center-phase" x="140" y="135" class="center-text" fill="#fff" font-size="13" font-weight="700">？</text>
+        <text id="center-sub" x="140" y="153" class="center-text" fill="rgba(255,255,255,.4)" font-size="10">分析前</text>
+        <!-- 現在位置インジケーター -->
+        <circle id="position-dot" cx="140" cy="20" r="8" fill="#fff" opacity="0" style="transition:all 1s ease;"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- フェーズ結果 -->
+  <div class="phase-result card" id="phase-result">
+    <p class="section-title">判定結果</p>
+    <div class="phase-badge" id="phase-badge"></div>
+    <div class="phase-name" id="phase-name"></div>
+    <div class="phase-desc" id="phase-desc"></div>
+    <div class="confidence" style="margin-top:14px;">
+      <span style="font-size:12px;color:var(--t2);min-width:60px;">確信度</span>
+      <div class="confidence-bar"><div class="confidence-fill" id="conf-fill"></div></div>
+      <span class="confidence-label" id="conf-label"></span>
+    </div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--b);">
+      <p style="font-size:12px;color:var(--t2);line-height:1.8;" id="key-indicators"></p>
+      <p style="font-size:12px;font-weight:700;margin-top:8px;display:none;" id="next-phase"></p>
+      <p style="font-size:11px;color:var(--t2);margin-top:8px;line-height:1.8;white-space:pre-line;display:none;" id="why-not"></p>
+    </div>
+  </div>
+
+  <!-- セクターローテーション -->
+  <div class="card" id="sector-card" style="display:none;">
+    <p class="section-title">セクターローテーション（日本株）</p>
+    <div class="sector-grid" id="sector-grid"></div>
+  </div>
+
+  <div class="ad-mid">
+    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+  <!-- 景気サイクル説明 -->
+  <div class="card">
+    <p class="section-title">景気サイクルとセクターローテーションとは？</p>
+    <div class="cycle-grid">
+      <div class="cycle-item" style="border-color:rgba(0,212,170,.3);background:rgba(0,212,170,.05);">
+        <h3 style="color:#00d4aa;">🌱 回復期</h3>
+        <p>金融緩和・低金利で景気が底打ちし回復し始める時期。<br>強いセクター：IT・一般消費財・不動産・金融</p>
+      </div>
+      <div class="cycle-item" style="border-color:rgba(245,166,35,.3);background:rgba(245,166,35,.05);">
+        <h3 style="color:#f5a623;">🚀 拡張期</h3>
+        <p>景気拡大・需要旺盛・企業業績好調の時期。<br>強いセクター：エネルギー・素材・資本財・テクノロジー</p>
+      </div>
+      <div class="cycle-item" style="border-color:rgba(255,107,107,.3);background:rgba(255,107,107,.05);">
+        <h3 style="color:#ff6b6b;">🌡️ 後退期</h3>
+        <p>過熱感・金利上昇・インフレで成長が鈍化する時期。<br>強いセクター：生活必需品・ヘルスケア・公益・通信</p>
+      </div>
+      <div class="cycle-item" style="border-color:rgba(139,92,246,.3);background:rgba(139,92,246,.05);">
+        <h3 style="color:#8b5cf6;">❄️ 収縮期</h3>
+        <p>景気悪化・失業増加・企業業績悪化の時期。<br>強いセクター：公益・ヘルスケア・通信・生活必需品</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="notice">
+    ⚠️ このツールはAIによる推定であり、投資判断の根拠にはなりません。実際の投資判断はご自身の責任で行ってください。景気サイクルの判定は専門家の間でも見解が分かれることがあります。
+  </div>
+
+</div>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<footer>© アズキぷらす | 株式投資・決算解説 YouTubeチャンネル</footer>
+
+<script>
+const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
+
+const PHASE_CONFIG = {
+  recovery: { name:'回復期', color:'#00d4aa', bg:'rgba(0,212,170,.15)', arc:'arc-recovery', dot:{cx:200,cy:80} },
+  expansion:{ name:'拡張期', color:'#f5a623', bg:'rgba(245,166,35,.15)', arc:'arc-expansion', dot:{cx:200,cy:200} },
+  slowdown: { name:'後退期', color:'#ff6b6b', bg:'rgba(255,107,107,.15)', arc:'arc-slowdown', dot:{cx:80,cy:200} },
+  recession:{ name:'収縮期', color:'#8b5cf6', bg:'rgba(139,92,246,.15)', arc:'arc-recession', dot:{cx:80,cy:80} },
+};
+
+// 12段階の詳細ドット位置（ホイール上の角度で計算）
+const STAGE_DOTS = {
+  recovery_early:  {cx:220,cy:60},
+  recovery_mid:    {cx:200,cy:80},
+  recovery_late:   {cx:230,cy:120},
+  expansion_early: {cx:240,cy:160},
+  expansion_mid:   {cx:200,cy:200},
+  expansion_late:  {cx:160,cy:240},
+  slowdown_early:  {cx:120,cy:240},
+  slowdown_mid:    {cx:80, cy:200},
+  slowdown_late:   {cx:50, cy:160},
+  recession_early: {cx:40, cy:120},
+  recession_mid:   {cx:80, cy:80},
+  recession_late:  {cx:120,cy:50},
+};
+
+const STAGE_LABEL = { early:'前期', mid:'中期', late:'後期' };
+
+async function analyze() {
+  document.getElementById('run-btn').disabled = true;
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('phase-result').classList.remove('show');
+  document.getElementById('sector-card').style.display = 'none';
+
+  const now = new Date();
+  const prompt = `あなたは経済アナリストです。${now.getFullYear()}年${now.getMonth()+1}月現在の景気サイクルフェーズを判定してください。
+
+## 判定の考え方（重要）
+政府発表の「緩やかに回復」という表現に惑わされず、以下の実態を重視してください：
+- 🚀 拡張期：景気の勢いがピーク。企業業績好調・需要旺盛・株価上昇
+- 🌡️ 後退期：拡張期のピークを過ぎ、物価高・金利高が成長を抑制し始めた局面
+- ❄️ 収縮期：失業率悪化・消費激減・本格的な景気後退
+
+## 現在の主要指標（2026年3月時点）を調べて確認
+- 米国政策金利（FRBの利下げ状況）
+- 日銀政策金利と利上げ動向
+- 原油・エネルギー価格トレンド
+- 米国・日本のPMI（製造業・サービス業）
+- 雇用統計（失業率）
+- インフレ率（CPI）
+- 長短金利差（イールドカーブ）
+
+## 判定基準（12段階）
+- recovery_early/mid/late：金融緩和中・景気底打ちから回復途上
+- expansion_early/mid/late：景気拡大・需要旺盛・企業業績絶好調
+- slowdown_early/mid/late：金利高止まり・インフレ・成長鈍化・ディフェンシブ株が強くなる
+- recession_early/mid/late：失業増・消費激減・企業倒産増加
+
+## 重要な判定ヒント
+「金利上昇中」「インフレ高止まり」「IT過熱感・バブル懸念」「ディフェンシブ株が強い」→ これらは後退期のサイン
+「失業率が深刻に悪化していない」「賃上げが続いている」→ まだ収縮期ではない
+
+JSON形式のみで回答。説明文・Markdown不要。
+
+{
+  "phase": "slowdown_early など12段階のいずれか",
+  "phase_ja": "後退期・前期 など",
+  "base_phase": "recovery|expansion|slowdown|recession",
+  "stage": "early|mid|late",
+  "confidence": 0.0〜1.0,
+  "description": "現在の景気状況（100字以内・具体的な指標を含む）",
+  "key_indicators": "判断根拠の主要指標（80字以内）",
+  "why_not_expansion": "拡張期でない理由（50字以内）",
+  "why_not_recession": "収縮期でない理由（50字以内）",
+  "next_phase": "次フェーズ予想",
+  "sectors": [
+    {"name":"情報技術","rank":"strong|neutral|weak","reason":"20字以内"},
+    {"name":"金融","rank":"strong|neutral|weak","reason":"20字以内"},
+    {"name":"ヘルスケア","rank":"strong|neutral|weak","reason":"20字以内"},
+    {"name":"一般消費財","rank":"strong|neutral|weak","reason":"20字以内"},
+    {"name":"生活必需品","rank":"strong|neutral|weak","reason":"20字以内"},
+    {"name":"通信サービス","rank":"strong|neutral|weak","reason":"20字以内"},
+    {"name":"資本財","rank":"strong|neutral|weak","reason":"20字以内"},
+    {"name":"素材","rank":"strong|neutral|weak","reason":"20字以内"},
+    {"name":"エネルギー","rank":"strong|neutral|weak","reason":"20字以内"},
+    {"name":"公共事業","rank":"strong|neutral|weak","reason":"20字以内"},
+    {"name":"不動産","rank":"strong|neutral|weak","reason":"20字以内"}
+  ]
+}`;
+
+  try {
+    const res = await fetch(WORKER, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+    const data = await res.json();
+    if (data.errorInfo) throw new Error('APIエラー: ' + JSON.stringify(data.errorInfo));
+    if (!data.text) throw new Error('レスポンスが空です');
+
+    const cleaned = data.text.replace(/```json/gi,'').replace(/```/g,'').trim();
+    const s = cleaned.indexOf('{'), e = cleaned.lastIndexOf('}');
+    if (s === -1) throw new Error('JSONが見つかりません');
+    const json = JSON.parse(cleaned.slice(s, e+1));
+    render(json);
+  } catch(err) {
+    alert('エラー: ' + err.message);
+  } finally {
+    document.getElementById('run-btn').disabled = false;
+    document.getElementById('loading').style.display = 'none';
+  }
+}
+
+function render(d) {
+  const basePhase = d.base_phase || (d.phase ? d.phase.split('_')[0] : 'recovery');
+  const stage = d.stage || 'mid';
+  const cfg = PHASE_CONFIG[basePhase] || PHASE_CONFIG.recovery;
+  const fullPhaseKey = d.phase || (basePhase + '_' + stage);
+
+  // ホイールのハイライト
+  Object.keys(PHASE_CONFIG).forEach(k => {
+    const arc = document.getElementById(PHASE_CONFIG[k].arc);
+    if (arc) arc.setAttribute('opacity', k === basePhase ? '0.5' : '0.1');
+  });
+
+  // 現在位置ドット（12段階の詳細位置）
+  const dot = document.getElementById('position-dot');
+  const dotPos = STAGE_DOTS[fullPhaseKey] || cfg.dot;
+  dot.setAttribute('cx', dotPos.cx);
+  dot.setAttribute('cy', dotPos.cy);
+  dot.setAttribute('fill', cfg.color);
+  dot.setAttribute('opacity', '1');
+
+  // 中心テキスト
+  document.getElementById('center-phase').textContent = cfg.name;
+  document.getElementById('center-phase').setAttribute('fill', cfg.color);
+  document.getElementById('center-sub').textContent = (STAGE_LABEL[stage]||'') + ' 確信度' + Math.round((d.confidence||0.5)*100) + '%';
+
+  // フェーズ結果
+  const badge = document.getElementById('phase-badge');
+  badge.textContent = cfg.name;
+  badge.style.background = cfg.bg;
+  badge.style.color = cfg.color;
+  badge.style.border = `1px solid ${cfg.color}`;
+
+  document.getElementById('phase-name').textContent = d.phase_ja || cfg.name;
+  document.getElementById('phase-name').style.color = cfg.color;
+  document.getElementById('phase-desc').textContent = d.description || '';
+  document.getElementById('key-indicators').textContent = '📌 ' + (d.key_indicators || '');
+  
+  const whyEl = document.getElementById('why-not');
+  if (whyEl) {
+    let whyText = '';
+    if (d.why_not_expansion) whyText += '🚀 拡張期でない理由: ' + d.why_not_expansion + String.fromCharCode(10);
+    if (d.why_not_recession) whyText += '❄️ 収縮期でない理由: ' + d.why_not_recession;
+    whyEl.textContent = whyText;
+    whyEl.style.display = whyText ? 'block' : 'none';
+  }
+
+  // 次のフェーズ
+  const nextKey = d.next_phase || '';
+  const nextBase = nextKey ? nextKey.split('_')[0] : '';
+  const nextStage = nextKey ? nextKey.split('_')[1] : '';
+  const nextCfg = PHASE_CONFIG[nextBase];
+  const nextEl = document.getElementById('next-phase');
+  if (nextEl && nextCfg) {
+    nextEl.textContent = '→ 次のフェーズ: ' + nextCfg.name + '・' + (STAGE_LABEL[nextStage]||'');
+    nextEl.style.color = nextCfg.color;
+    nextEl.style.display = 'block';
+  }
+
+  const conf = d.confidence || 0.5;
+  document.getElementById('conf-fill').style.cssText = `width:${conf*100}%;background:${cfg.color}`;
+  document.getElementById('conf-label').textContent = `${Math.round(conf*100)}%`;
+
+  document.getElementById('phase-result').classList.add('show');
+
+  // セクター
+  if (d.sectors && d.sectors.length) {
+    const grid = document.getElementById('sector-grid');
+    grid.innerHTML = '';
+    const rankOrder = { strong:0, neutral:1, weak:2 };
+    d.sectors.sort((a,b) => (rankOrder[a.rank]||1) - (rankOrder[b.rank]||1));
+    d.sectors.forEach(sec => {
+      const color = sec.rank==='strong' ? '#00cc66' : sec.rank==='weak' ? '#ff4455' : '#555577';
+      const div = document.createElement('div');
+      div.className = 'sector-item' + (sec.rank==='strong' ? ' strong' : '');
+      div.style.borderColor = sec.rank==='strong' ? '#00cc66' : sec.rank==='weak' ? '#ff4455' : 'var(--b)';
+      div.innerHTML = `
+        <div class="sector-rank" style="color:${sec.rank==='strong'?'#00cc66':sec.rank==='weak'?'#ff4455':'#555577'}">${sec.rank==='strong'?'▲ 強気':sec.rank==='weak'?'▼ 弱気':'■ 中立'}</div>
+        <div class="sector-name">${sec.name}</div>
+        <div class="sector-reason">${sec.reason||''}</div>
+        <div class="sector-bar" style="background:${color};width:${sec.rank==='strong'?'100':sec.rank==='neutral'?'50':'20'}%;"></div>
+      `;
+      grid.appendChild(div);
+    });
+    document.getElementById('sector-card').style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>
