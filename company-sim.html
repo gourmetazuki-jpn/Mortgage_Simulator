@@ -176,7 +176,7 @@
 
     <!-- 10年予測チャート -->
     <div class="card">
-      <div class="section-title">10年後の売上予測（3シナリオ）</div>
+      <div class="section-title" id="forecast-title">10年後の予測（3シナリオ）</div>
       <div class="scenario-row" id="scenario-row"></div>
       <div class="chart-wrap">
         <canvas id="forecast-chart"></canvas>
@@ -343,11 +343,9 @@ async function run() {
     const data = await res.json();
     if (data.error) { showErr(data.error); return; }
 
-    const { info, financials, debug } = data;
-    console.log('debug:', debug);
+    const { info, financials } = data;
     if (!financials || financials.length < 2) {
-      const dbg = debug ? `（statements:${debug.totalStatements}, annual:${debug.annualCount}, types:${debug.sampleTypes?.join('/')}）` : '';
-      showErr('財務データが不足しています' + dbg);
+      showErr('財務データが不足しています。別の証券コードをお試しください。');
       return;
     }
 
@@ -449,6 +447,12 @@ function renderResult(info, financials) {
     </tbody>
   `;
 
+  // 売上がない場合は純利益または営業利益をベースに
+  const baseValue = last.netSales > 0 ? last.netSales
+    : last.operatingProfit !== 0 ? last.operatingProfit
+    : last.netIncome;
+  const chartLabel = last.netSales > 0 ? '売上高' : last.operatingProfit !== 0 ? '営業利益' : '純利益';
+
   // 3シナリオ計算
   const baseCAGR = weightedCAGR ?? salesCAGR ?? 0.03;
   const scenarios = [
@@ -476,7 +480,7 @@ function renderResult(info, financials) {
 
   const datasets = scenarios.map(s => ({
     label: s.label,
-    data: [last.netSales, ...Array.from({length:10}, (_,i) => last.netSales * Math.pow(1+s.rate, i+1))],
+    data: [baseValue, ...Array.from({length:10}, (_,i) => baseValue * Math.pow(1+s.rate, i+1))],
     borderColor: s.color,
     backgroundColor: s.color + '15',
     borderWidth: 2,
