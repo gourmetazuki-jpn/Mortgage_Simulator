@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIX恐怖指数チャート｜MACDで買いのチャンスを判定 | アズキぷらす</title>
+  <meta name="description" content="VIX恐怖指数のリアルタイムチャートとMACD分析。デッドクロス×VIX30以上で買いのチャンスを自動判定。1ヶ月〜10年の期間切り替え対応。株式投資の参考に。">
+  <meta name="keywords" content="VIX,恐怖指数,MACD,ボラティリティ指数,株式投資,市場心理,デッドクロス,ゴールデンクロス,買いのチャンス,アズキぷらす">
+  <link rel="canonical" href="https://azuki-plus.com/vix.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="VIX恐怖指数チャート｜MACDで買いのチャンスを判定 | アズキぷらす">
+  <meta property="og:description" content="VIX恐怖指数のリアルタイムチャートとMACD分析。デッドクロス×VIX30以上で買いのチャンスを自動判定。1ヶ月〜10年の期間切り替え対応。">
+  <meta property="og:url" content="https://azuki-plus.com/vix.html">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "VIX恐怖指数チャート",
+    "url": "https://azuki-plus.com/vix.html",
+    "description": "VIX恐怖指数のリアルタイムチャートとMACD分析。デッドクロス×VIX30以上で買いのチャンスを自動判定。",
+    "applicationCategory": "FinanceApplication",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
+    "author": { "@type": "Person", "name": "アズキぷらす" }
+  }
+  </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4271655790847344" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#0c0c14;--s:#13131f;--s2:#1c1c2e;--b:rgba(255,255,255,.07);
+      --t:#e8e8f4;--t2:#8888aa;--t3:#444466;
+      --green:#00cc66;--red:#ff4455;--blue:#4488ff;--amber:#ffaa00;--purple:#aa66ff;
+    }
+    body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--t);font-size:14px;line-height:1.7;min-height:100vh;}
+    header{background:linear-gradient(135deg,#0c0c14,#1a1a2e);border-bottom:1px solid var(--b);padding:18px 20px;text-align:center;}
+    header .back a{font-size:12px;color:var(--t3);text-decoration:none;}
+    header h1{font-size:clamp(16px,4vw,22px);font-weight:700;margin:6px 0 4px;}
+    header p{font-size:12px;color:var(--t2);}
+    .breadcrumb{background:var(--s);border-bottom:1px solid var(--b);padding:8px 20px;font-size:11px;color:var(--t3);}
+    .breadcrumb a{color:var(--t3);text-decoration:none;}
+    .ad-slot{background:var(--s);border-bottom:1px solid var(--b);padding:10px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    .container{max-width:960px;margin:0 auto;padding:20px 16px 60px;display:flex;flex-direction:column;gap:16px;}
+    .card{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:18px 20px;}
+    .section-title{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:14px;}
+
+    /* 現在値バナー */
+    .vix-banner{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+    .vix-current{display:flex;flex-direction:column;}
+    .vix-label{font-size:11px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;}
+    .vix-value{font-family:"Lato",sans-serif;font-size:52px;font-weight:900;line-height:1;}
+    .vix-change{font-size:13px;font-weight:700;margin-top:4px;}
+    .fear-meter{flex:1;min-width:200px;}
+    .fear-label{font-size:13px;font-weight:700;margin-bottom:8px;}
+    .fear-bar-wrap{height:12px;background:var(--s2);border-radius:6px;overflow:hidden;position:relative;}
+    .fear-bar-fill{height:100%;border-radius:6px;transition:width .8s ease;}
+    .fear-ticks{display:flex;justify-content:space-between;margin-top:4px;}
+    .fear-tick{font-size:9px;color:var(--t3);}
+    .fear-level{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-top:8px;}
+
+    /* 期間選択 */
+    .period-tabs{display:flex;gap:6px;margin-bottom:14px;}
+    .period-tab{padding:5px 12px;border-radius:6px;font-size:12px;font-family:inherit;border:1px solid var(--b);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s;}
+    .period-tab.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+    .chart-wrap{position:relative;height:220px;margin-bottom:4px;}
+    .chart-wrap canvas{width:100%!important;}
+    .loading-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(13,13,20,.8);border-radius:8px;font-size:13px;color:var(--t2);}
+
+    /* MACD */
+    .macd-wrap{position:relative;height:140px;}
+
+    /* 説明 */
+    .explain-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+    .explain-item{background:var(--s2);border-radius:8px;padding:12px 14px;border-left:3px solid var(--b);}
+    .explain-item h3{font-size:12px;font-weight:700;margin-bottom:4px;}
+    .explain-item p{font-size:11px;color:var(--t2);line-height:1.6;}
+
+    .ad-mid{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:12px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    footer{text-align:center;font-size:12px;color:var(--t3);padding:20px;border-top:1px solid var(--b);}
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="back"><a href="index.html">← アズキぷらす</a></p>
+  <h1>😱 VIX 恐怖指数チャート</h1>
+  <p>市場の恐怖レベルをリアルタイムで可視化</p>
+</header>
+
+<nav class="breadcrumb">
+  <a href="index.html">アズキぷらす</a> › VIX恐怖指数チャート
+</nav>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<div class="container">
+
+  <!-- 現在値 -->
+  <div class="card">
+    <div class="vix-banner">
+      <div class="vix-current">
+        <span class="vix-label">VIX 現在値</span>
+        <span class="vix-value" id="vix-value">--</span>
+        <span class="vix-change" id="vix-change">取得中...</span>
+      </div>
+      <div class="fear-meter">
+        <div class="fear-label" id="fear-label">恐怖レベル: 計算中</div>
+        <div class="fear-bar-wrap">
+          <div class="fear-bar-fill" id="fear-bar" style="width:0%;background:var(--green);"></div>
+        </div>
+        <div class="fear-ticks">
+          <span class="fear-tick">0</span>
+          <span class="fear-tick">楽観(15)</span>
+          <span class="fear-tick">不安(25)</span>
+          <span class="fear-tick">恐怖(35)</span>
+          <span class="fear-tick">50+</span>
+        </div>
+        <span class="fear-level" id="fear-level-badge">--</span>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--t3);margin-top:12px;">※データはYahoo Finance経由。15〜20分遅延の場合があります。</div>
+  </div>
+
+  <!-- VIXチャート -->
+  <div class="card">
+    <div class="section-title">VIX チャート</div>
+    <div class="period-tabs">
+      <button class="period-tab" onclick="loadData('1mo')" data-p="1mo">1ヶ月</button>
+      <button class="period-tab active" onclick="loadData('3mo')" data-p="3mo">3ヶ月</button>
+      <button class="period-tab" onclick="loadData('6mo')" data-p="6mo">6ヶ月</button>
+      <button class="period-tab" onclick="loadData('1y')" data-p="1y">1年</button>
+      <button class="period-tab" onclick="loadData('2y')" data-p="2y">2年</button>
+      <button class="period-tab" onclick="loadData('5y')" data-p="5y">5年</button>
+      <button class="period-tab" onclick="loadData('10y')" data-p="10y">10年</button>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="vix-chart"></canvas>
+      <div class="loading-overlay" id="vix-loading">データを読み込み中...</div>
+    </div>
+  </div>
+
+  <!-- MACDチャート -->
+  <div class="card">
+    <div class="section-title">MACD（12・26・9）</div>
+    <div class="macd-wrap">
+      <canvas id="macd-chart"></canvas>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;">
+      <span style="font-size:11px;color:var(--blue);">■ MACDライン（12EMA - 26EMA）</span>
+      <span style="font-size:11px;color:var(--amber);">■ シグナルライン（9EMA）</span>
+      <span style="font-size:11px;color:var(--t3);">■ ヒストグラム</span>
+    </div>
+    <div style="margin-top:10px;padding:10px 12px;background:var(--s2);border-radius:8px;font-size:12px;color:var(--t2);" id="macd-signal">MACD分析: 計算中...</div>
+  </div>
+
+  <div class="ad-mid">
+    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+  <!-- 恐怖レベル説明 -->
+  <div class="card">
+    <div class="section-title">VIX 恐怖レベルの目安</div>
+    <div class="explain-grid">
+      <div class="explain-item" style="border-color:var(--green);">
+        <h3 style="color:var(--green);">😊 0〜15：極度の楽観</h3>
+        <p>市場が安定・強気。投資家が油断しているサインでもある。</p>
+      </div>
+      <div class="explain-item" style="border-color:#88dd88;">
+        <h3 style="color:#88dd88;">🙂 15〜20：平静</h3>
+        <p>通常の市場環境。大きなリスクは認識されていない。</p>
+      </div>
+      <div class="explain-item" style="border-color:var(--amber);">
+        <h3 style="color:var(--amber);">😟 20〜30：不安</h3>
+        <p>市場に不確実性。慎重な投資家が増えている。</p>
+      </div>
+      <div class="explain-item" style="border-color:#ff8844;">
+        <h3 style="color:#ff8844;">😨 30〜40：恐怖</h3>
+        <p>市場が大きく揺れている。過去の暴落時に多い水準。</p>
+      </div>
+      <div class="explain-item" style="border-color:var(--red);">
+        <h3 style="color:var(--red);">😱 40以上：パニック</h3>
+        <p>リーマンショック・コロナ級の混乱。逆張りの好機とも言える。</p>
+      </div>
+      <div class="explain-item" style="border-color:var(--blue);">
+        <h3 style="color:var(--blue);">📊 MACDの見方</h3>
+        <p>MACDがシグナルを上抜け→恐怖増大の兆候。下抜け→恐怖収まる兆候。</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<footer>© アズキぷらす | 株式投資・決算解説 YouTubeチャンネル</footer>
+
+<script>
+const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
+let vixChart = null, macdChart = null;
+
+// EMA計算
+function calcEMA(data, period) {
+  const k = 2 / (period + 1);
+  const ema = [];
+  let prev = data.slice(0, period).reduce((a,b) => a+b, 0) / period;
+  for (let i = 0; i < data.length; i++) {
+    if (i < period - 1) { ema.push(null); continue; }
+    if (i === period - 1) { ema.push(prev); continue; }
+    prev = data[i] * k + prev * (1 - k);
+    ema.push(Math.round(prev * 100) / 100);
+  }
+  return ema;
+}
+
+// MACD計算
+function calcMACD(prices) {
+  const closes = prices.map(p => p.close);
+  const ema12 = calcEMA(closes, 12);
+  const ema26 = calcEMA(closes, 26);
+  const macdLine = ema12.map((v, i) => v !== null && ema26[i] !== null ? Math.round((v - ema26[i]) * 100) / 100 : null);
+  const validMacd = macdLine.filter(v => v !== null);
+  const signalRaw = calcEMA(validMacd, 9);
+  const signal = new Array(macdLine.length).fill(null);
+  let si = 0;
+  for (let i = 0; i < macdLine.length; i++) {
+    if (macdLine[i] !== null) { signal[i] = signalRaw[si++] ?? null; }
+  }
+  const hist = macdLine.map((v, i) => v !== null && signal[i] !== null ? Math.round((v - signal[i]) * 100) / 100 : null);
+  return { macdLine, signal, hist };
+}
+
+// 恐怖レベル判定
+function fearLevel(vix) {
+  if (vix < 15) return { label:'😊 極度の楽観', color:'#00cc66', pct: vix/50*100 };
+  if (vix < 20) return { label:'🙂 平静',       color:'#88dd88', pct: vix/50*100 };
+  if (vix < 30) return { label:'😟 不安',       color:'#ffaa00', pct: vix/50*100 };
+  if (vix < 40) return { label:'😨 恐怖',       color:'#ff8844', pct: vix/50*100 };
+  return               { label:'😱 パニック',   color:'#ff4455', pct: Math.min(vix/50*100, 100) };
+}
+
+async function loadData(period = '3mo') {
+  // 期間タブ更新
+  document.querySelectorAll('.period-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.p === period);
+  });
+  document.getElementById('vix-loading').style.display = 'flex';
+
+  try {
+    const res = await fetch(`${WORKER}/vix?period=${period}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    const prices = data.prices;
+    if (!prices || prices.length === 0) throw new Error('データなし');
+
+    // 現在値更新
+    const latest = prices[prices.length - 1].close;
+    const prev   = prices[prices.length - 2]?.close;
+    const change = prev ? Math.round((latest - prev) * 100) / 100 : 0;
+    const changePct = prev ? Math.round((change / prev) * 10000) / 100 : 0;
+
+    document.getElementById('vix-value').textContent = latest.toFixed(2);
+    document.getElementById('vix-value').style.color = change >= 0 ? '#ff4455' : '#00cc66';
+    document.getElementById('vix-change').textContent = `${change >= 0 ? '+' : ''}${change} (${changePct >= 0 ? '+' : ''}${changePct}%)`;
+    document.getElementById('vix-change').style.color = change >= 0 ? '#ff4455' : '#00cc66';
+
+    const fl = fearLevel(latest);
+    document.getElementById('fear-label').textContent = `恐怖レベル: ${fl.label}`;
+    document.getElementById('fear-bar').style.width = fl.pct + '%';
+    document.getElementById('fear-bar').style.background = fl.color;
+    const badge = document.getElementById('fear-level-badge');
+    badge.textContent = fl.label;
+    badge.style.background = fl.color + '22';
+    badge.style.color = fl.color;
+    badge.style.border = `1px solid ${fl.color}`;
+
+    const labels = prices.map(p => p.date);
+    const closes = prices.map(p => p.close);
+
+    // VIXチャート
+    const vixCtx = document.getElementById('vix-chart').getContext('2d');
+    if (vixChart) vixChart.destroy();
+
+    // 色付きグラデーション
+    const grad = vixCtx.createLinearGradient(0, 0, 0, 220);
+    grad.addColorStop(0, 'rgba(68,136,255,0.3)');
+    grad.addColorStop(1, 'rgba(68,136,255,0)');
+
+    vixChart = new Chart(vixCtx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'VIX',
+          data: closes,
+          borderColor: '#4488ff',
+          backgroundColor: grad,
+          borderWidth: 2,
+          fill: true,
+          pointRadius: 0,
+          tension: 0.3,
+        }, {
+          label: '恐怖ライン(30)',
+          data: new Array(closes.length).fill(30),
+          borderColor: 'rgba(255,68,85,0.5)',
+          borderWidth: 1,
+          borderDash: [4,4],
+          pointRadius: 0,
+          fill: false,
+        }, {
+          label: '平静ライン(20)',
+          data: new Array(closes.length).fill(20),
+          borderColor: 'rgba(255,170,0,0.4)',
+          borderWidth: 1,
+          borderDash: [4,4],
+          pointRadius: 0,
+          fill: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+        scales: {
+          x: { ticks: { color: '#444466', maxTicksLimit: 8, maxRotation: 0 }, grid: { color: 'rgba(255,255,255,.04)' } },
+          y: { ticks: { color: '#444466' }, grid: { color: 'rgba(255,255,255,.04)' }, min: 0 }
+        }
+      }
+    });
+
+    // MACD計算
+    const { macdLine, signal, hist } = calcMACD(prices);
+    const macdCtx = document.getElementById('macd-chart').getContext('2d');
+    if (macdChart) macdChart.destroy();
+
+    macdChart = new Chart(macdCtx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'ヒストグラム',
+          data: hist,
+          backgroundColor: hist.map(v => v === null ? 'transparent' : v >= 0 ? 'rgba(255,68,85,0.5)' : 'rgba(0,204,102,0.5)'),
+          borderWidth: 0,
+          order: 2,
+        }, {
+          label: 'MACDライン',
+          data: macdLine,
+          type: 'line',
+          borderColor: '#4488ff',
+          borderWidth: 1.5,
+          pointRadius: 0,
+          tension: 0.3,
+          fill: false,
+          order: 1,
+        }, {
+          label: 'シグナルライン',
+          data: signal,
+          type: 'line',
+          borderColor: '#ffaa00',
+          borderWidth: 1.5,
+          pointRadius: 0,
+          tension: 0.3,
+          fill: false,
+          order: 0,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+        scales: {
+          x: { ticks: { color: '#444466', maxTicksLimit: 8, maxRotation: 0 }, grid: { color: 'rgba(255,255,255,.04)' } },
+          y: { ticks: { color: '#444466' }, grid: { color: 'rgba(255,255,255,.04)' } }
+        }
+      }
+    });
+
+    // MACDシグナル分析（VIX専用ロジック：株価と逆解釈）
+    const validMacdArr = macdLine.map((v,i) => ({v, s: signal[i]})).filter(x => x.v !== null && x.s !== null);
+    const last  = validMacdArr.slice(-1)[0];
+    const prev2 = validMacdArr.slice(-2)[0];
+    const last3 = validMacdArr.slice(-3)[0];
+
+    let macdMsg = '';
+    let signalEl = document.getElementById('macd-signal');
+
+    if (last && prev2) {
+      const nowAbove  = last.v  > last.s;   // MACDがシグナル上
+      const prevAbove = prev2.v > prev2.s;  // 1本前
+
+      if (!prevAbove && nowAbove) {
+        // ゴールデンクロス（VIX上昇トレンド開始）
+        macdMsg = '⚠️ ゴールデンクロス発生！VIXの恐怖が高まり始めています。デッドクロスするまで買い控えを推奨。';
+        signalEl.style.background = 'rgba(255,170,0,0.15)';
+        signalEl.style.borderLeft = '3px solid #ffaa00';
+        signalEl.style.color = '#ffaa00';
+      } else if (prevAbove && !nowAbove) {
+        // デッドクロス（VIX下落トレンド開始）- VIX水準で判定を分岐
+        if (latest >= 30) {
+          macdMsg = '🎯 デッドクロス発生！VIXが恐怖水準（30以上）でのクロスのため、恐怖のピーク示唆。買いのチャンスの可能性が高い。';
+          signalEl.style.background = 'rgba(0,204,102,0.15)';
+          signalEl.style.borderLeft = '3px solid #00cc66';
+          signalEl.style.color = '#00cc66';
+        } else {
+          macdMsg = '⚠️ デッドクロス発生。ただしVIXが低水準（30未満）でのクロスのため、まだ恐怖が終わっていない可能性あり。慎重に様子見を。';
+          signalEl.style.background = 'rgba(255,170,0,0.15)';
+          signalEl.style.borderLeft = '3px solid #ffaa00';
+          signalEl.style.color = '#ffaa00';
+        }
+      } else if (nowAbove) {
+        // ゴールデンクロス後・継続中
+        const histTrend = hist.filter(v=>v!==null).slice(-3);
+        const expanding = histTrend.length >= 2 && histTrend[histTrend.length-1] > histTrend[histTrend.length-2];
+        macdMsg = expanding
+          ? '⚠️ VIX上昇トレンド継続中（拡大）。恐怖はまだ高まっています。デッドクロスまで様子見を推奨。'
+          : '👀 VIX上昇トレンド継続中（縮小傾向）。恐怖のピークに近づいている可能性。デッドクロスに注目。';
+        signalEl.style.background = 'rgba(255,170,0,0.1)';
+        signalEl.style.borderLeft = '3px solid #ffaa00';
+        signalEl.style.color = '#ffaa00';
+      } else {
+        // デッドクロス後・継続中
+        if (latest >= 30) {
+          macdMsg = '✅ VIX下落トレンド継続中（高水準から低下中）。恐怖は収まりつつあります。押し目買いの好機が続いています。';
+          signalEl.style.background = 'rgba(0,204,102,0.1)';
+          signalEl.style.borderLeft = '3px solid #00cc66';
+          signalEl.style.color = '#00cc66';
+        } else if (latest >= 20) {
+          macdMsg = '👀 VIX下落トレンド継続中。ただしVIXはまだ不安水準（20〜30）。完全な安心とはいえず、慎重な姿勢を継続。';
+          signalEl.style.background = 'rgba(255,170,0,0.1)';
+          signalEl.style.borderLeft = '3px solid #ffaa00';
+          signalEl.style.color = '#ffaa00';
+        } else {
+          macdMsg = '✅ VIX下落トレンド継続中。VIXも平静水準（20未満）まで低下。市場の恐怖は概ね収まっています。';
+          signalEl.style.background = 'rgba(0,204,102,0.1)';
+          signalEl.style.borderLeft = '3px solid #00cc66';
+          signalEl.style.color = '#00cc66';
+        }
+      }
+    }
+    signalEl.textContent = 'MACD分析（VIX）: ' + macdMsg;
+
+  } catch(e) {
+    document.getElementById('vix-value').textContent = 'Error';
+    document.getElementById('vix-change').textContent = e.message;
+  } finally {
+    document.getElementById('vix-loading').style.display = 'none';
+  }
+}
+
+// 初期ロード
+loadData('3mo');
+</script>
+</body>
+</html>
