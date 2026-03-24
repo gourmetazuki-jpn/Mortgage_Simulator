@@ -199,20 +199,28 @@ function getMetricLabel(metric) {
   }
 }
 
+const GICS_ALL = ['情報技術','金融','ヘルスケア','一般消費財','生活必需品','通信サービス','資本財','素材','エネルギー','公共事業','不動産'];
+
 function render(sectors) {
   const grid = document.getElementById('heatmap-grid');
   const rankList = document.getElementById('rank-list');
   const rankTitle = document.getElementById('rank-title');
 
-  // ヒートマップ
-  grid.innerHTML = sectors.map(s => {
-    const val = getVal(s, currentMetric);
+  // セクターマップ作成
+  const sMap = {};
+  sectors.forEach(s => sMap[s.name] = s);
+
+  // 11セクター全部表示（データなしはグレー）
+  grid.innerHTML = GICS_ALL.map(name => {
+    const s = sMap[name];
+    const val = s ? getVal(s, currentMetric) : null;
     const { bg, text } = getColor(val, currentMetric);
-    const barWidth = val !== null ? Math.min(Math.abs(val) * 5, 100) : 0;
+    const barWidth = val !== null ? Math.min(Math.abs(val) * 4, 100) : 0;
+    const count = s ? s.count : 0;
     return `
       <div class="heatmap-cell" style="background:${bg};color:${text};">
-        <span class="cell-count">${s.count}社</span>
-        <div class="cell-sector">${s.name}</div>
+        <span class="cell-count">${count > 0 ? count + '社' : 'データなし'}</span>
+        <div class="cell-sector">${name}</div>
         <div class="cell-value">${fmtVal(val, currentMetric)}</div>
         <div class="cell-label">${getMetricLabel(currentMetric)}</div>
         <div class="cell-bar" style="width:${barWidth}%;"></div>
