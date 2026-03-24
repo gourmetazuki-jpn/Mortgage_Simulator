@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>決算ヒートマップ｜セクター別決算の良し悪し一覧 | アズキぷらす</title>
+  <meta name="description" content="直近の決算シーズンでどのセクターが好調・不調かをヒートマップで一目表示。売上・営業利益の予想比・上方修正率をセクター別に集計。株式投資の参考に。">
+  <meta name="keywords" content="決算ヒートマップ,セクター別決算,決算良し悪し,上方修正,下方修正,株式投資,アズキぷらす">
+  <link rel="canonical" href="https://azuki-plus.com/heatmap.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="決算ヒートマップ｜セクター別決算の良し悪し一覧 | アズキぷらす">
+  <meta property="og:url" content="https://azuki-plus.com/heatmap.html">
+  <meta property="og:locale" content="ja_JP">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4271655790847344" crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#0c0c14;--s:#13131f;--s2:#1c1c2e;--b:rgba(255,255,255,.07);
+      --t:#e8e8f4;--t2:#8888aa;--t3:#444466;
+      --g1:#1a5c2a;--g2:#2d8a3e;--g3:#52b564;--g4:#8fd4a0;
+      --r1:#7a1515;--r2:#b52020;--r3:#e05555;--r4:#f0a0a0;
+      --y:#d4a20a;
+    }
+    body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--t);font-size:14px;line-height:1.7;min-height:100vh;}
+    header{background:linear-gradient(135deg,#0c0c14,#1a1a2e);border-bottom:1px solid var(--b);padding:18px 20px;text-align:center;}
+    header .back a{font-size:12px;color:var(--t3);text-decoration:none;}
+    header h1{font-size:clamp(16px,4vw,22px);font-weight:700;margin:6px 0 4px;}
+    header p{font-size:12px;color:var(--t2);}
+    .breadcrumb{background:var(--s);border-bottom:1px solid var(--b);padding:8px 20px;font-size:11px;color:var(--t3);}
+    .breadcrumb a{color:var(--t3);text-decoration:none;}
+    .ad-slot{background:var(--s);border-bottom:1px solid var(--b);padding:10px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    .container{max-width:1000px;margin:0 auto;padding:20px 16px 60px;display:flex;flex-direction:column;gap:16px;}
+    .card{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:18px 20px;}
+    .section-title{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:14px;}
+
+    /* メトリクス切り替え */
+    .metric-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+    .metric-tab{padding:6px 14px;border-radius:6px;font-size:12px;font-family:inherit;border:1px solid var(--b);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s;}
+    .metric-tab.active{background:#4488ff;color:#fff;border-color:#4488ff;}
+
+    /* ヒートマップグリッド */
+    .heatmap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
+    .heatmap-cell{border-radius:10px;padding:14px 16px;cursor:pointer;transition:transform .15s,opacity .15s;position:relative;overflow:hidden;}
+    .heatmap-cell:hover{transform:translateY(-2px);opacity:.9;}
+    .cell-sector{font-size:12px;font-weight:700;margin-bottom:6px;}
+    .cell-value{font-family:"Lato",sans-serif;font-size:28px;font-weight:900;line-height:1;}
+    .cell-label{font-size:10px;opacity:.8;margin-top:3px;}
+    .cell-count{position:absolute;top:8px;right:10px;font-size:10px;opacity:.6;}
+    .cell-bar{position:absolute;bottom:0;left:0;height:3px;background:rgba(255,255,255,.3);border-radius:0 0 10px 10px;}
+
+    /* ランキングリスト */
+    .rank-list{display:flex;flex-direction:column;gap:8px;}
+    .rank-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border-radius:8px;border:1px solid var(--b);}
+    .rank-num{font-family:"Lato",sans-serif;font-size:16px;font-weight:900;min-width:28px;color:var(--t3);}
+    .rank-name{flex:1;font-size:13px;font-weight:700;}
+    .rank-val{font-family:"Lato",sans-serif;font-size:15px;font-weight:700;}
+    .rank-bar-wrap{width:100px;height:6px;background:var(--b);border-radius:3px;overflow:hidden;}
+    .rank-bar{height:100%;border-radius:3px;}
+
+    /* 凡例 */
+    .legend{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--t2);}
+    .legend-item{display:flex;align-items:center;gap:5px;}
+    .legend-dot{width:12px;height:12px;border-radius:3px;}
+
+    .loading{text-align:center;padding:40px;color:var(--t2);font-size:13px;}
+    .ad-mid{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:12px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    .notice{font-size:11px;color:var(--t3);line-height:1.7;padding:10px 14px;background:var(--s2);border-radius:8px;}
+    footer{text-align:center;font-size:12px;color:var(--t3);padding:20px;border-top:1px solid var(--b);}
+    .asof{font-size:11px;color:var(--t3);text-align:right;margin-bottom:8px;}
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="back"><a href="index.html">← アズキぷらす</a></p>
+  <h1>📊 決算ヒートマップ</h1>
+  <p>セクター別・直近決算の良し悪しを一目で確認</p>
+</header>
+
+<nav class="breadcrumb">
+  <a href="index.html">アズキぷらす</a> › 決算ヒートマップ
+</nav>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <div class="section-title">表示指標</div>
+    <div class="metric-tabs">
+      <button class="metric-tab active" onclick="setMetric('sales')" data-m="sales">売上 予想比</button>
+      <button class="metric-tab" onclick="setMetric('op')" data-m="op">営業利益 予想比</button>
+      <button class="metric-tab" onclick="setMetric('beat')" data-m="beat">上方修正率</button>
+      <button class="metric-tab" onclick="setMetric('miss')" data-m="miss">下方修正率</button>
+    </div>
+    <div class="asof" id="asof"></div>
+    <div class="legend">
+      <span>色の見方：</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#2d8a3e;"></span>好調（+5%以上）</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#52b564;"></span>やや好調（+2〜5%）</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#555577;"></span>ほぼ予想通り</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#b52020;"></span>不調（-2%以下）</span>
+    </div>
+  </div>
+
+  <div class="loading" id="loading">決算データを読み込み中...</div>
+
+  <!-- ヒートマップ -->
+  <div class="card" id="heatmap-card" style="display:none;">
+    <div class="section-title">セクター別ヒートマップ</div>
+    <div class="heatmap-grid" id="heatmap-grid"></div>
+  </div>
+
+  <!-- ランキング -->
+  <div class="card" id="rank-card" style="display:none;">
+    <div class="section-title" id="rank-title">セクター別ランキング</div>
+    <div class="rank-list" id="rank-list"></div>
+  </div>
+
+  <div class="ad-mid">
+    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+  <div class="notice">
+    ⚠️ データはJ-Quants（日本取引所グループ公式）の無料プランを使用しており、12週間遅延しています。直近の決算シーズンのデータは反映されない場合があります。投資判断の根拠にはなりません。
+  </div>
+
+</div>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<footer>© アズキぷらす | 株式投資・決算解説 YouTubeチャンネル</footer>
+
+<script>
+const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
+let allSectors = [];
+let currentMetric = 'sales';
+
+function setMetric(metric) {
+  currentMetric = metric;
+  document.querySelectorAll('.metric-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.m === metric);
+  });
+  if (allSectors.length > 0) render(allSectors);
+}
+
+function getColor(val, metric) {
+  if (val === null) return { bg:'#222235', text:'#555577' };
+  if (metric === 'miss') {
+    // 下方修正率は高いほど赤
+    if (val >= 30) return { bg:'#7a1515', text:'#f0a0a0' };
+    if (val >= 15) return { bg:'#b52020', text:'#ffcccc' };
+    if (val >= 5)  return { bg:'#e05555', text:'#fff' };
+    return { bg:'#1e6b3c', text:'#8fd4a0' };
+  }
+  if (metric === 'beat') {
+    if (val >= 50) return { bg:'#1a5c2a', text:'#8fd4a0' };
+    if (val >= 30) return { bg:'#2d8a3e', text:'#b0e8b8' };
+    if (val >= 15) return { bg:'#52b564', text:'#fff' };
+    return { bg:'#7a1515', text:'#f0a0a0' };
+  }
+  // sales / op
+  if (val >= 5)   return { bg:'#1a5c2a', text:'#8fd4a0' };
+  if (val >= 2)   return { bg:'#2d8a3e', text:'#b0e8b8' };
+  if (val >= 0)   return { bg:'#1e3a1e', text:'#6db87a' };
+  if (val >= -2)  return { bg:'#3a1e1e', text:'#e08888' };
+  if (val >= -5)  return { bg:'#b52020', text:'#ffcccc' };
+  return { bg:'#7a1515', text:'#f0a0a0' };
+}
+
+function getVal(s, metric) {
+  switch(metric) {
+    case 'sales': return s.avgSalesGrowth;
+    case 'op':    return s.avgOpGrowth;
+    case 'beat':  return s.beatRate;
+    case 'miss':  return s.missRate;
+  }
+}
+
+function fmtVal(val, metric) {
+  if (val === null) return '—';
+  return (val >= 0 ? '+' : '') + val.toFixed(1) + '%';
+}
+
+function getMetricLabel(metric) {
+  switch(metric) {
+    case 'sales': return '売上 予想比';
+    case 'op':    return '営業利益 予想比';
+    case 'beat':  return '上方修正率';
+    case 'miss':  return '下方修正率';
+  }
+}
+
+function render(sectors) {
+  const grid = document.getElementById('heatmap-grid');
+  const rankList = document.getElementById('rank-list');
+  const rankTitle = document.getElementById('rank-title');
+
+  // ヒートマップ
+  grid.innerHTML = sectors.map(s => {
+    const val = getVal(s, currentMetric);
+    const { bg, text } = getColor(val, currentMetric);
+    const barWidth = val !== null ? Math.min(Math.abs(val) * 5, 100) : 0;
+    return `
+      <div class="heatmap-cell" style="background:${bg};color:${text};">
+        <span class="cell-count">${s.count}社</span>
+        <div class="cell-sector">${s.name}</div>
+        <div class="cell-value">${fmtVal(val, currentMetric)}</div>
+        <div class="cell-label">${getMetricLabel(currentMetric)}</div>
+        <div class="cell-bar" style="width:${barWidth}%;"></div>
+      </div>
+    `;
+  }).join('');
+
+  // ランキング
+  const sorted = [...sectors]
+    .filter(s => getVal(s, currentMetric) !== null)
+    .sort((a, b) => {
+      const va = getVal(a, currentMetric);
+      const vb = getVal(b, currentMetric);
+      return currentMetric === 'miss' ? vb - va : vb - va;
+    });
+
+  const maxVal = Math.max(...sorted.map(s => Math.abs(getVal(s, currentMetric) || 0)));
+  rankTitle.textContent = `セクター別ランキング（${getMetricLabel(currentMetric)}）`;
+
+  rankList.innerHTML = sorted.map((s, i) => {
+    const val = getVal(s, currentMetric);
+    const { bg, text } = getColor(val, currentMetric);
+    const barW = maxVal > 0 ? Math.abs(val) / maxVal * 100 : 0;
+    const rankColor = i === 0 ? '#ffd700' : i === 1 ? '#c0c0c0' : i === 2 ? '#cd7f32' : 'var(--t3)';
+    return `
+      <div class="rank-item">
+        <span class="rank-num" style="color:${rankColor};">${i+1}</span>
+        <span class="rank-name">${s.name}</span>
+        <div class="rank-bar-wrap">
+          <div class="rank-bar" style="width:${barW}%;background:${bg === '#222235' ? 'var(--t3)' : bg};"></div>
+        </div>
+        <span class="rank-val" style="color:${val >= 0 && currentMetric !== 'miss' ? '#52b564' : '#e05555'};">${fmtVal(val, currentMetric)}</span>
+        <span style="font-size:11px;color:var(--t3);min-width:35px;text-align:right;">${s.count}社</span>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('heatmap-card').style.display = 'block';
+  document.getElementById('rank-card').style.display = 'block';
+}
+
+async function load() {
+  try {
+    const res = await fetch(WORKER + '/heatmap');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    allSectors = data.sectors || [];
+    document.getElementById('asof').textContent = 
+      `データ取得日: ${data.asOf || '—'}　対象企業数: ${data.targetCount || 0}社`;
+    document.getElementById('loading').style.display = 'none';
+    render(allSectors);
+  } catch(e) {
+    document.getElementById('loading').textContent = 'データの取得に失敗しました: ' + e.message;
+  }
+}
+
+load();
+</script>
+</body>
+</html>
