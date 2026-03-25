@@ -187,6 +187,7 @@ function getVal(s, metric) {
 
 function fmtVal(val, metric) {
   if (val === null) return '—';
+  if (metric === 'miss') return val.toFixed(1) + '%';
   return (val >= 0 ? '+' : '') + val.toFixed(1) + '%';
 }
 
@@ -234,11 +235,12 @@ function render(sectors) {
     .sort((a, b) => {
       const va = getVal(a, currentMetric);
       const vb = getVal(b, currentMetric);
-      return currentMetric === 'miss' ? vb - va : vb - va;
+      // 下方修正率は高い=悪いので降順、それ以外も降順
+      return vb - va;
     });
 
   const maxVal = Math.max(...sorted.map(s => Math.abs(getVal(s, currentMetric) || 0)));
-  rankTitle.textContent = `セクター別ランキング（${getMetricLabel(currentMetric)}）`;
+  rankTitle.textContent = `セクター別ランキング（${getMetricLabel(currentMetric)}${currentMetric === 'miss' ? '・悪い順' : '・良い順'}）`;
 
   rankList.innerHTML = sorted.map((s, i) => {
     const val = getVal(s, currentMetric);
@@ -252,7 +254,7 @@ function render(sectors) {
         <div class="rank-bar-wrap">
           <div class="rank-bar" style="width:${barW}%;background:${bg === '#222235' ? 'var(--t3)' : bg};"></div>
         </div>
-        <span class="rank-val" style="color:${val >= 0 && currentMetric !== 'miss' ? '#52b564' : '#e05555'};">${fmtVal(val, currentMetric)}</span>
+        <span class="rank-val" style="color:${currentMetric === 'miss' ? (val > 30 ? '#e05555' : val > 15 ? '#ffaa00' : '#52b564') : val >= 0 ? '#52b564' : '#e05555'};">${fmtVal(val, currentMetric)}</span>
         <span style="font-size:11px;color:var(--t3);min-width:35px;text-align:right;">${s.count}社</span>
       </div>
     `;
