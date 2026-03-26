@@ -126,7 +126,9 @@
   </div>
 
   <div class="notice">
-    ⚠️ データはJ-Quants（日本取引所グループ公式）の無料プランを使用しており、約12週間遅延しています。「データなし」は取得期間内に決算開示がなかったセクターです（金融・エネルギー・公共事業・通信は決算期が異なるため表示されない場合があります）。投資判断の根拠にはなりません。
+    ⚠️ データはJ-Quants無料プランを使用しており約12週間遅延しています。<br>
+    「データなし」の金融・エネルギー・公共事業・通信サービスは<strong>3月末決算が主流</strong>のため、5月開示→12週後の8月以降に自動表示されます。<br>
+    投資判断の根拠にはなりません。
   </div>
 
 </div>
@@ -264,13 +266,14 @@ function render(sectors) {
 
 async function load() {
   try {
-    const res = await fetch(WORKER + '/heatmap?_=' + Date.now());
+    const res = await fetch(WORKER + '/heatmap');
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 
     allSectors = data.sectors || [];
+    const asofDate = data.asOf || '—';
     document.getElementById('asof').textContent = 
-      `データ取得日: ${data.asOf || '—'}　対象企業数: ${data.targetCount || 0}社`;
+      `集計基準日: ${asofDate}　対象企業数: ${data.targetCount || 0}社　※約12週間遅延`;
     document.getElementById('loading').style.display = 'none';
     render(allSectors);
   } catch(e) {
