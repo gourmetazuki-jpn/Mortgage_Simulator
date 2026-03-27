@@ -72,6 +72,14 @@
 
     .loading-text{text-align:center;padding:30px;color:var(--t2);font-size:13px;}
     .summary-box{background:var(--s2);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--t2);line-height:1.8;margin-top:12px;}
+    .compare-item{background:var(--s2);border-radius:10px;padding:14px 16px;margin-bottom:8px;}
+    .compare-country{font-size:14px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+    .compare-self{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:700;}
+    .compare-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+    .compare-label{font-size:11px;color:var(--t3);min-width:48px;}
+    .compare-bar-wrap{flex:1;height:10px;background:var(--b);border-radius:5px;overflow:hidden;}
+    .compare-bar{height:100%;border-radius:5px;transition:width .6s ease;}
+    .compare-val{font-size:12px;font-family:"Lato",sans-serif;font-weight:700;min-width:60px;text-align:right;}
     .change-up{color:var(--green);}
     .change-down{color:var(--red);}
     .change-flat{color:var(--t3);}
@@ -132,12 +140,17 @@
         </div>
       </div>
 
-      <!-- 産油国タブ -->
+      <!-- 生産・消費・輸入比較タブ -->
       <div id="tab-production" class="tab-content">
-        <div class="section-title">産油国トップ10（千バレル/日）</div>
+        <div class="section-title">生産量・消費量・輸入依存度（千バレル/日）</div>
         <div id="production-loading" class="loading-text"><div class="spinner"></div>データ取得中...</div>
-        <div id="production-list" class="rank-list" style="display:none;"></div>
-        <div id="production-period" style="font-size:11px;color:var(--t3);margin-top:8px;"></div>
+        <div id="production-period" style="font-size:11px;color:var(--t3);margin-bottom:10px;"></div>
+        <div id="production-legend" style="font-size:11px;margin-bottom:12px;display:none;">
+          <span style="color:#ffaa00;">■</span> 生産量　
+          <span style="color:#4488ff;">■</span> 消費量　
+          <span style="color:#ff4455;">■</span> 輸入量（消費-生産）　
+        </div>
+        <div id="production-list" style="display:none;"></div>
       </div>
 
       <!-- 在庫・価格タブ -->
@@ -290,24 +303,60 @@ function renderFlow(data) {
 function renderProduction(data) {
   document.getElementById('production-loading').style.display = 'none';
   const list = document.getElementById('production-list');
-  list.style.display = 'flex';
+  list.style.display = 'block';
+  document.getElementById('production-legend').style.display = 'block';
   const items = data.data || [];
-  const max = items[0]?.value || 1;
-  const colors = ['#ffd700','#c0c0c0','#cd7f32'];
-  list.innerHTML = items.map((item, i) => `
-    <div class="rank-item">
-      <span class="rank-num" style="color:${colors[i]||'var(--t3)'};">${i+1}</span>
-      <span class="rank-country">${item.country}</span>
-      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${item.value/max*100}%;"></div></div>
-      <span class="rank-val">${item.value.toLocaleString()}</span>
-    </div>
-  `).join('');
+  const maxCons = Math.max(...items.map(d => d.consumption || 0), 1);
+
+  list.innerHTML = items.map((item, i) => {
+    const prodW = (item.production / maxCons * 100).toFixed(1);
+    const consW = (item.consumption / maxCons * 100).toFixed(1);
+    const impW  = (item.imports / maxCons * 100).toFixed(1);
+    const selfColor = item.selfSufficiency >= 100 ? '#00cc66' : item.selfSufficiency >= 50 ? '#ffaa00' : '#ff4455';
+    return `
+      <div class="compare-item">
+        <div class="compare-country">
+          <span style="font-size:16px;">${getFlagEmoji(item.country)}</span>
+          <span>${item.country}</span>
+          <span class="compare-self" style="background:${selfColor}22;color:${selfColor};">自給率 ${item.selfSufficiency}%</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">生産量</span>
+          <div class="compare-bar-wrap"><div class="compare-bar" style="width:${prodW}%;background:#ffaa00;"></div></div>
+          <span class="compare-val" style="color:#ffaa00;">${item.production.toLocaleString()}</span>
+        </div>
+        <div class="compare-row">
+          <span class="compare-label">消費量</span>
+          <div class="compare-bar-wrap"><div class="compare-bar" style="width:${consW}%;background:#4488ff;"></div></div>
+          <span class="compare-val" style="color:#4488ff;">${item.consumption.toLocaleString()}</span>
+        </div>
+        ${item.imports > 0 ? `
+        <div class="compare-row">
+          <span class="compare-label">輸入量</span>
+          <div class="compare-bar-wrap"><div class="compare-bar" style="width:${impW}%;background:#ff4455;"></div></div>
+          <span class="compare-val" style="color:#ff4455;">${item.imports.toLocaleString()}</span>
+        </div>` : ''}
+      </div>
+    `;
+  }).join('');
+
   if (items[0]?.period) {
-    const p = items[0].period; // 例: "2025-09"
-    const [py, pm] = p.split('-');
-    const periodLabel = pm ? `${py}年${parseInt(pm)}月` : p;
-    document.getElementById('production-period').textContent = `⏱ データ期間: ${periodLabel}（EIA公式）`;
+    const p = items[0].period;
+    const [py] = p.split('-');
+    document.getElementById('production-period').textContent = `⏱ データ期間: ${py}年（EIA公式・年次データ）`;
   }
+}
+
+function getFlagEmoji(country) {
+  const flags = {
+    'United States':'🇺🇸','China':'🇨🇳','India':'🇮🇳','Japan':'🇯🇵',
+    'Russia':'🇷🇺','Saudi Arabia':'🇸🇦','Brazil':'🇧🇷','South Korea':'🇰🇷',
+    'Canada':'🇨🇦','Germany':'🇩🇪','France':'🇫🇷','United Kingdom':'🇬🇧',
+    'Iran':'🇮🇷','Iraq':'🇮🇶','UAE':'🇦🇪','Mexico':'🇲🇽','Indonesia':'🇮🇩',
+    'Italy':'🇮🇹','Netherlands':'🇳🇱','Australia':'🇦🇺','Spain':'🇪🇸',
+    'Turkey':'🇹🇷','Thailand':'🇹🇭','Singapore':'🇸🇬',
+  };
+  return flags[country] || '🛢️';
 }
 
 function renderStocks(data) {
