@@ -340,11 +340,12 @@ function renderProduction(data) {
     `;
   }).join('');
 
-  if (items[0]?.period) {
-    const p = items[0].period;
-    const [py] = p.split('-');
-    document.getElementById('production-period').textContent = `⏱ データ期間: ${py}年（EIA公式・年次データ）`;
-  }
+  const prodPeriod = items[0]?.period ? items[0].period.split('-')[0]+'年' : '';
+  const consPeriod = data.consPeriod || '';
+  const periodText = prodPeriod && consPeriod 
+    ? `⏱ 生産量: ${prodPeriod}（EIA公式）　消費量・輸入量: ${consPeriod}（AI推定・参考値）`
+    : prodPeriod ? `⏱ データ期間: ${prodPeriod}（EIA公式）` : '';
+  document.getElementById('production-period').textContent = periodText;
 }
 
 function getFlagEmoji(country) {
