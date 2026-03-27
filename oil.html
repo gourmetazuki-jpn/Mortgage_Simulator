@@ -72,6 +72,10 @@
 
     .loading-text{text-align:center;padding:30px;color:var(--t2);font-size:13px;}
     .summary-box{background:var(--s2);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--t2);line-height:1.8;margin-top:12px;}
+    .change-up{color:var(--green);}
+    .change-down{color:var(--red);}
+    .change-flat{color:var(--t3);}
+    .stock-type{font-size:10px;color:var(--t3);margin-left:6px;}
     .notice{font-size:11px;color:var(--t3);line-height:1.7;padding:10px 14px;background:var(--s2);border-radius:8px;}
     .ad-mid{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:12px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
     footer{text-align:center;font-size:12px;color:var(--t3);padding:20px;border-top:1px solid var(--b);}
@@ -120,6 +124,11 @@
           <span style="font-size:11px;color:var(--amber);">■ 高流量</span>
           <span style="font-size:11px;color:var(--t2);margin-left:8px;">■ 低流量</span>
         </div>
+        <!-- 流通ルートランキング -->
+        <div id="flow-ranking" style="display:none;margin-top:16px;">
+          <div class="section-title">流通ルートランキング（万バレル/日）</div>
+          <div id="flow-rank-list" class="rank-list"></div>
+        </div>
       </div>
 
       <!-- 産油国タブ -->
@@ -132,16 +141,21 @@
 
       <!-- 在庫・価格タブ -->
       <div id="tab-stocks" class="tab-content">
-        <div class="section-title">米国原油在庫 × WTI価格</div>
+        <div class="section-title">国別原油備蓄量</div>
         <div id="stocks-loading" class="loading-text"><div class="spinner"></div>データ取得中...</div>
         <div id="stocks-content" style="display:none;">
+          <!-- 国別備蓄ランキング -->
+          <div id="country-stocks-list" class="rank-list" style="margin-bottom:16px;"></div>
+          <div id="stocks-summary" class="summary-box" style="margin-bottom:16px;"></div>
+          <!-- 米国在庫チャート＋WTI -->
+          <div style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;">米国原油在庫 × WTI価格（EIA公式データ）</div>
           <div class="stock-current">
             <div class="stock-val" id="current-stock">--</div>
-            <div class="stock-unit">千バレル（最新週）</div>
+            <div class="stock-unit">千バレル（米国・最新週）</div>
           </div>
           <div class="chart-row">
             <div>
-              <div style="font-size:11px;color:var(--t2);margin-bottom:6px;">原油在庫推移（週次・1年）</div>
+              <div style="font-size:11px;color:var(--t2);margin-bottom:6px;">米国原油在庫（週次・1年）</div>
               <div class="chart-wrap"><canvas id="stock-chart"></canvas></div>
             </div>
             <div>
@@ -247,6 +261,20 @@ function renderFlow(data) {
     document.getElementById('flow-summary').textContent = `📊 ${data.period || ''} ${data.summary}`;
     document.getElementById('flow-summary').style.display = 'block';
   }
+
+  // 流通ルートランキング
+  const sorted = [...flows].sort((a,b) => (b.volume||0) - (a.volume||0));
+  const maxVol2 = sorted[0]?.volume || 1;
+  const colors2 = ['#ffd700','#c0c0c0','#cd7f32'];
+  document.getElementById('flow-rank-list').innerHTML = sorted.map((f,i) => `
+    <div class="rank-item">
+      <span class="rank-num" style="color:${colors2[i]||'var(--t3)'};">${i+1}</span>
+      <span class="rank-country">${f.from} → ${f.to}</span>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${f.volume/maxVol2*100}%;background:var(--amber);"></div></div>
+      <span class="rank-val">${(f.volume||0).toLocaleString()} 万bbl/日</span>
+    </div>
+  `).join('');
+  document.getElementById('flow-ranking').style.display = 'block';
 }
 
 function renderProduction(data) {
@@ -273,12 +301,30 @@ function renderStocks(data) {
   document.getElementById('stocks-loading').style.display = 'none';
   document.getElementById('stocks-content').style.display = 'block';
 
-  const stocks = data.stocks || [];
+  const usStocks = data.usStocks || [];
   const prices = data.prices || [];
+  const cs = data.countryStocks || {};
 
-  // 最新在庫
-  if (stocks.length > 0) {
-    const latest = stocks[stocks.length-1];
+  // 国別備蓄ランキング
+  const countries = cs.countries || [];
+  const maxStock = Math.max(...countries.map(c => c.stock||0), 1);
+  const changeIcon = t => t==='増加'?'<span class="change-up">▲</span>':t==='減少'?'<span class="change-down">▼</span>':'<span class="change-flat">─</span>';
+  document.getElementById('country-stocks-list').innerHTML = countries.map((c,i) => `
+    <div class="rank-item">
+      <span class="rank-num" style="color:${['#ffd700','#c0c0c0','#cd7f32'][i]||'var(--t3)'};">${i+1}</span>
+      <span style="font-size:16px;">${c.flag||'🛢️'}</span>
+      <span class="rank-country">${c.country}<span class="stock-type">${c.type||''}</span></span>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${(c.stock||0)/maxStock*100}%;background:var(--amber);"></div></div>
+      <span class="rank-val">${changeIcon(c.change)} ${(c.stock||0).toLocaleString()}M bbl</span>
+    </div>
+  `).join('');
+  if (cs.summary) {
+    document.getElementById('stocks-summary').textContent = '📊 ' + (cs.period||'') + ' ' + cs.summary;
+  }
+
+  // 米国最新在庫
+  if (usStocks.length > 0) {
+    const latest = usStocks[usStocks.length-1];
     document.getElementById('current-stock').textContent = (latest.value/1000).toFixed(0) + '万';
   }
 
@@ -288,8 +334,8 @@ function renderStocks(data) {
   stockChart = new Chart(sCtx, {
     type: 'line',
     data: {
-      labels: stocks.map(d => d.period),
-      datasets: [{ label: '原油在庫(千バレル)', data: stocks.map(d => d.value), borderColor: '#ffaa00', backgroundColor: 'rgba(255,170,0,.1)', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }]
+      labels: usStocks.map(d => d.period),
+      datasets: [{ label: '在庫(千バレル)', data: usStocks.map(d => d.value), borderColor: '#ffaa00', backgroundColor: 'rgba(255,170,0,.1)', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }]
     },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
       scales: { x: { ticks: { color:'#444466', maxTicksLimit: 6, maxRotation: 0 }, grid: { color:'rgba(255,255,255,.04)' } },
