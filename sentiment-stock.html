@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>銘柄別ミスターマーケット｜個別株センチメント分析 | アズキぷらす</title>
+  <meta name="description" content="証券コードまたは企業名を入力するとAIが最新ニュース・SNS・掲示板を分析して個別株の投資家心理をスコア化。強気・弱気材料も表示。">
+  <meta name="keywords" content="銘柄センチメント,個別株,投資家心理,強気材料,弱気材料,株式分析,アズキぷらす">
+  <link rel="canonical" href="https://azuki-plus.com/sentiment-stock.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="銘柄別ミスターマーケット｜個別株センチメント分析 | アズキぷらす">
+  <meta property="og:description" content="証券コードまたは企業名を入力するとAIが最新ニュース・SNSを分析して個別株の投資家心理をスコア化。">
+  <meta property="og:url" content="https://azuki-plus.com/sentiment-stock.html">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "銘柄別ミスターマーケット",
+    "url": "https://azuki-plus.com/sentiment-stock.html",
+    "description": "個別銘柄の投資家センチメントをAIが分析してスコア化。",
+    "applicationCategory": "FinanceApplication",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
+    "author": { "@type": "Person", "name": "アズキぷらす" }
+  }
+  </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4271655790847344" crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#0c0c14;--s:#13131f;--s2:#1c1c2e;--b:rgba(255,255,255,.07);
+      --t:#e8e8f4;--t2:#8888aa;--t3:#444466;
+      --green:#00cc66;--red:#ff4455;--amber:#ffaa00;--blue:#4488ff;
+    }
+    body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--t);font-size:14px;line-height:1.7;min-height:100vh;}
+    header{background:linear-gradient(135deg,#0c0c14,#1a1a2e);border-bottom:1px solid var(--b);padding:18px 20px;text-align:center;}
+    header .back a{font-size:12px;color:var(--t3);text-decoration:none;}
+    header h1{font-size:clamp(16px,4vw,22px);font-weight:700;margin:6px 0 4px;}
+    header p{font-size:12px;color:var(--t2);}
+    .breadcrumb{background:var(--s);border-bottom:1px solid var(--b);padding:8px 20px;font-size:11px;color:var(--t3);}
+    .breadcrumb a{color:var(--t3);text-decoration:none;}
+    .ad-slot{background:var(--s);border-bottom:1px solid var(--b);padding:10px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    .container{max-width:860px;margin:0 auto;padding:20px 16px 60px;display:flex;flex-direction:column;gap:16px;}
+    .card{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:20px 22px;}
+    .section-title{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:14px;}
+
+    /* 検索 */
+    .search-wrap{position:relative;}
+    .search-row{display:flex;gap:8px;}
+    .search-row input{flex:1;background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:10px 14px;font-size:15px;font-family:inherit;color:var(--t);outline:none;}
+    .search-row input:focus{border-color:var(--blue);}
+    .search-btn{padding:10px 20px;background:var(--blue);color:#fff;font-size:14px;font-weight:700;font-family:inherit;border:none;border-radius:8px;cursor:pointer;}
+    .search-btn:disabled{opacity:.4;cursor:not-allowed;}
+    .hint{font-size:11px;color:var(--t3);margin-top:5px;}
+    .suggest-list{position:absolute;top:100%;left:0;right:0;background:var(--s);border:1px solid var(--b);border-radius:8px;margin-top:4px;max-height:220px;overflow-y:auto;z-index:100;display:none;box-shadow:0 4px 16px rgba(0,0,0,.3);}
+    .suggest-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:10px;}
+    .suggest-item:last-child{border-bottom:none;}
+    .suggest-item:hover{background:var(--s2);}
+    .suggest-code{font-family:"Lato",sans-serif;font-size:12px;font-weight:700;color:var(--t3);min-width:50px;}
+    .suggest-name{font-size:13px;font-weight:700;}
+    .suggest-sector{font-size:11px;color:var(--t3);}
+
+    /* メーター */
+    .meter-wrap{text-align:center;padding:10px 0 16px;}
+    .stock-name-display{font-size:18px;font-weight:700;margin-bottom:12px;}
+    .meter{position:relative;width:260px;height:130px;margin:0 auto;}
+    .meter svg{width:100%;height:100%;}
+    .meter-score{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);text-align:center;}
+    .meter-score-num{font-family:"Lato",sans-serif;font-size:52px;font-weight:900;line-height:1;}
+    .meter-score-label{font-size:13px;font-weight:700;margin-top:2px;}
+    .score-guide{display:flex;gap:0;border-radius:8px;overflow:hidden;margin-top:8px;}
+    .score-guide-item{flex:1;padding:5px 2px;text-align:center;font-size:9px;font-weight:700;}
+
+    /* 指標 */
+    .indicator-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .indicator-item{background:var(--s2);border-radius:10px;padding:12px 14px;}
+    .indicator-label{font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.08em;margin-bottom:4px;}
+    .indicator-value{font-size:14px;font-weight:700;}
+
+    /* 材料 */
+    .factors{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    @media(max-width:500px){.factors{grid-template-columns:1fr;}}
+    .factor-bull{background:rgba(0,204,102,.08);border:1px solid rgba(0,204,102,.3);border-radius:10px;padding:14px 16px;}
+    .factor-bear{background:rgba(255,68,85,.08);border:1px solid rgba(255,68,85,.3);border-radius:10px;padding:14px 16px;}
+    .factor-title{font-size:11px;font-weight:700;margin-bottom:6px;}
+    .factor-text{font-size:13px;line-height:1.6;}
+    .summary-box{background:var(--s2);border-radius:10px;padding:16px 18px;font-size:13px;line-height:1.8;border-left:3px solid var(--blue);}
+    .caution-box{background:rgba(255,170,0,.08);border:1px solid rgba(255,170,0,.3);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--amber);}
+
+    .loading{text-align:center;padding:30px;color:var(--t2);display:none;}
+    .loading.show{display:block;}
+    .ad-mid{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:12px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    .notice{font-size:11px;color:var(--t3);line-height:1.7;padding:10px 14px;background:var(--s2);border-radius:8px;}
+    footer{text-align:center;font-size:12px;color:var(--t3);padding:20px;border-top:1px solid var(--b);}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .spinner{width:28px;height:28px;border:3px solid var(--b);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;}
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="back"><a href="index.html">← アズキぷらす</a></p>
+  <h1>🎭 銘柄別ミスターマーケット</h1>
+  <p>個別銘柄の投資家心理をAIが分析</p>
+</header>
+
+<nav class="breadcrumb">
+  <a href="index.html">アズキぷらす</a> › <a href="sentiment.html">ミスターマーケット</a> › 銘柄別
+</nav>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<div class="container">
+
+  <!-- 検索 -->
+  <div class="card">
+    <div class="section-title">銘柄を検索</div>
+    <div class="search-wrap">
+      <div class="search-row">
+        <input type="text" id="code-input" placeholder="証券コードまたは企業名（例：7203、トヨタ）" maxlength="20" autocomplete="off" oninput="onInput()" onkeydown="if(event.key==='Enter')run()">
+        <button class="search-btn" id="search-btn" onclick="run()">分析する</button>
+      </div>
+      <div class="suggest-list" id="suggest-list"></div>
+    </div>
+    <p class="hint">AIが最新ニュース・SNS・掲示板を検索して投資家心理を分析します（約10〜20秒）</p>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    AIが最新情報を分析中...
+  </div>
+
+  <!-- 結果 -->
+  <div id="result" style="display:none;flex-direction:column;gap:16px;">
+
+    <div class="card">
+      <div class="meter-wrap">
+        <div class="stock-name-display" id="stock-name-display"></div>
+        <div class="meter">
+          <svg viewBox="0 0 260 130" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20,120 A110,110 0 0,1 240,120" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="18" stroke-linecap="round"/>
+            <path id="s-arc-fear"    d="M20,120  A110,110 0 0,1 68,28"   fill="none" stroke="#ff4455" stroke-width="18" stroke-linecap="butt" opacity="0.3"/>
+            <path id="s-arc-bearish" d="M68,28   A110,110 0 0,1 130,10"  fill="none" stroke="#ff8844" stroke-width="18" stroke-linecap="butt" opacity="0.3"/>
+            <path id="s-arc-neutral" d="M130,10  A110,110 0 0,1 192,28"  fill="none" stroke="#ffaa00" stroke-width="18" stroke-linecap="butt" opacity="0.3"/>
+            <path id="s-arc-bullish" d="M192,28  A110,110 0 0,1 228,78"  fill="none" stroke="#88dd88" stroke-width="18" stroke-linecap="butt" opacity="0.3"/>
+            <path id="s-arc-greed"   d="M228,78  A110,110 0 0,1 240,120" fill="none" stroke="#00cc66" stroke-width="18" stroke-linecap="butt" opacity="0.3"/>
+            <line id="s-needle" x1="130" y1="120" x2="130" y2="22" stroke="#fff" stroke-width="2.5" stroke-linecap="round" style="transform-origin:130px 120px;transition:transform 1.2s cubic-bezier(.4,0,.2,1);"/>
+            <circle cx="130" cy="120" r="5" fill="#fff"/>
+            <text x="8"   y="118" font-size="8" fill="#ff4455" font-weight="700">悲観</text>
+            <text x="224" y="118" font-size="8" fill="#00cc66" font-weight="700">楽観</text>
+          </svg>
+          <div class="meter-score">
+            <div class="meter-score-num" id="s-score-num">--</div>
+            <div class="meter-score-label" id="s-score-label">--</div>
+          </div>
+        </div>
+        <div class="score-guide">
+          <div class="score-guide-item" style="background:rgba(255,68,85,.2);color:#ff4455;">0〜20<br>極度の悲観</div>
+          <div class="score-guide-item" style="background:rgba(255,136,68,.2);color:#ff8844;">20〜40<br>悲観</div>
+          <div class="score-guide-item" style="background:rgba(255,170,0,.2);color:#ffaa00;">40〜60<br>中立</div>
+          <div class="score-guide-item" style="background:rgba(136,221,136,.2);color:#88dd88;">60〜80<br>楽観</div>
+          <div class="score-guide-item" style="background:rgba(0,204,102,.2);color:#00cc66;">80〜100<br>極度の楽観</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">銘柄指標</div>
+      <div class="indicator-grid">
+        <div class="indicator-item">
+          <div class="indicator-label">株価トレンド</div>
+          <div class="indicator-value" id="s-trend">--</div>
+        </div>
+        <div class="indicator-item">
+          <div class="indicator-label">直近決算評価</div>
+          <div class="indicator-value" id="s-earnings">--</div>
+        </div>
+        <div class="indicator-item" style="grid-column:1/-1;">
+          <div class="indicator-label">主要材料</div>
+          <div class="indicator-value" id="s-main-factor" style="font-size:13px;">--</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">市場の声</div>
+      <div class="factors">
+        <div class="factor-bull">
+          <div class="factor-title" style="color:#00cc66;">🐂 強気材料</div>
+          <div class="factor-text" id="s-bull">--</div>
+        </div>
+        <div class="factor-bear">
+          <div class="factor-title" style="color:#ff4455;">🐻 弱気材料</div>
+          <div class="factor-text" id="s-bear">--</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">AI総合コメント</div>
+      <div class="summary-box" id="s-summary">--</div>
+      <div class="caution-box" id="s-caution" style="display:none;margin-top:10px;"></div>
+    </div>
+
+    <div class="ad-mid">
+      <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+  </div>
+
+  <div class="notice">
+    ⚠️ このツールはAIによる推定です。投資判断の根拠にはなりません。同一銘柄のデータは1時間キャッシュされます。
+  </div>
+
+</div>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<footer>© アズキぷらす | 株式投資・決算解説 YouTubeチャンネル</footer>
+
+<script>
+const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
+let allStocks = [];
+
+// 全銘柄リスト取得
+async function loadStocks() {
+  try {
+    const res = await fetch(WORKER + '/search');
+    const data = await res.json();
+    allStocks = data.list || [];
+  } catch(e) {}
+}
+loadStocks();
+
+// インクリメンタルサーチ
+function onInput() {
+  const val = document.getElementById('code-input').value.trim();
+  const list = document.getElementById('suggest-list');
+  if (!val || val.length < 2) { list.style.display = 'none'; return; }
+  if (/^\d+$/.test(val) && val.length >= 4) { list.style.display = 'none'; return; }
+  const lower = val.toLowerCase();
+  const matches = allStocks.filter(s =>
+    s.name?.includes(val) || s.nameEn?.toLowerCase().includes(lower) || s.code?.startsWith(val)
+  ).slice(0, 8);
+  if (matches.length === 0) { list.style.display = 'none'; return; }
+  list.innerHTML = matches.map(s => `
+    <div class="suggest-item" onclick="selectStock('${s.code}','${s.name?.replace(/'/g,"\\'")}')">
+      <span class="suggest-code">${s.code}</span>
+      <div>
+        <div class="suggest-name">${s.name}</div>
+        <div class="suggest-sector">${s.sector||''}</div>
+      </div>
+    </div>
+  `).join('');
+  list.style.display = 'block';
+}
+
+function selectStock(code, name) {
+  document.getElementById('code-input').value = code;
+  document.getElementById('suggest-list').style.display = 'none';
+  run();
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap')) document.getElementById('suggest-list').style.display = 'none';
+});
+
+function getColor(score) {
+  if (score >= 80) return '#00cc66';
+  if (score >= 60) return '#88dd88';
+  if (score >= 40) return '#ffaa00';
+  if (score >= 20) return '#ff8844';
+  return '#ff4455';
+}
+
+function setNeedle(score) {
+  const angle = (score / 100) * 180 - 90;
+  document.getElementById('s-needle').style.transform = `rotate(${angle}deg)`;
+}
+
+async function run() {
+  let input = document.getElementById('code-input').value.trim();
+  if (!input) return;
+
+  // 企業名→コード変換
+  let code = input, name = input;
+  if (!/^\d{4,5}[A-Za-z]?$/.test(input) && allStocks.length > 0) {
+    const lower = input.toLowerCase();
+    const match = allStocks.find(s => s.name?.includes(input) || s.nameEn?.toLowerCase().includes(lower));
+    if (match) { code = match.code; name = match.name; document.getElementById('code-input').value = code; }
+  } else if (allStocks.length > 0) {
+    const match = allStocks.find(s => s.code === input || s.code === input + '0');
+    if (match) name = match.name;
+  }
+
+  document.getElementById('search-btn').disabled = true;
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('result').style.display = 'none';
+
+  try {
+    const params = new URLSearchParams({ code, name });
+    const res = await fetch(`${WORKER}/sentiment-stock?${params}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    const score = Math.min(100, Math.max(0, data.score || 50));
+    const color = getColor(score);
+
+    document.getElementById('stock-name-display').textContent = name !== code ? `${name}（${code}）` : code;
+    document.getElementById('s-score-num').textContent = score;
+    document.getElementById('s-score-num').style.color = color;
+    document.getElementById('s-score-label').textContent = data.label || '中立';
+    document.getElementById('s-score-label').style.color = color;
+    setTimeout(() => setNeedle(score), 300);
+
+    const arcs = ['s-arc-fear','s-arc-bearish','s-arc-neutral','s-arc-bullish','s-arc-greed'];
+    const activeIdx = score < 20 ? 0 : score < 40 ? 1 : score < 60 ? 2 : score < 80 ? 3 : 4;
+    arcs.forEach((id, i) => document.getElementById(id).setAttribute('opacity', i === activeIdx ? '1' : '0.2'));
+
+    const trendEl = document.getElementById('s-trend');
+    trendEl.textContent = data.stock_trend === '上昇トレンド' ? '📈 上昇トレンド' : data.stock_trend === '下落トレンド' ? '📉 下落トレンド' : '➡️ 横ばい';
+    trendEl.style.color = data.stock_trend === '上昇トレンド' ? '#00cc66' : data.stock_trend === '下落トレンド' ? '#ff4455' : '#ffaa00';
+
+    const earningsEl = document.getElementById('s-earnings');
+    earningsEl.textContent = data.earnings_eval || '--';
+    earningsEl.style.color = data.earnings_eval === '好決算' ? '#00cc66' : data.earnings_eval === '悪決算' ? '#ff4455' : '#ffaa00';
+
+    document.getElementById('s-main-factor').textContent = data.main_factor || '--';
+    document.getElementById('s-bull').textContent = data.bull_reason || '--';
+    document.getElementById('s-bear').textContent = data.bear_reason || '--';
+    document.getElementById('s-summary').textContent = data.summary || '--';
+
+    const cautionEl = document.getElementById('s-caution');
+    if (data.caution) { cautionEl.textContent = '⚠️ ' + data.caution; cautionEl.style.display = 'block'; }
+    else { cautionEl.style.display = 'none'; }
+
+    document.getElementById('result').style.display = 'flex';
+    document.getElementById('result').style.flexDirection = 'column';
+
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  } finally {
+    document.getElementById('search-btn').disabled = false;
+    document.getElementById('loading').classList.remove('show');
+  }
+}
+</script>
+</body>
+</html>
