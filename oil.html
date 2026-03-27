@@ -260,7 +260,7 @@ function renderFlow(data) {
   });
 
   if (data.summary) {
-    const periodNote = data.period ? `【${data.period}推定・3〜6ヶ月遅延】 ` : '';
+    const periodNote = `【AIによる推定データ・参考値】 `;
     document.getElementById('flow-summary').textContent = periodNote + data.summary;
     document.getElementById('flow-summary').style.display = 'block';
   }
@@ -296,7 +296,10 @@ function renderProduction(data) {
     </div>
   `).join('');
   if (items[0]?.period) {
-    document.getElementById('production-period').textContent = `⏱ データ期間: ${items[0].period}（EIA公式・約3〜6ヶ月遅延）`;
+    const p = items[0].period; // 例: "2025-09"
+    const [py, pm] = p.split('-');
+    const periodLabel = pm ? `${py}年${parseInt(pm)}月` : p;
+    document.getElementById('production-period').textContent = `⏱ データ期間: ${periodLabel}（EIA公式）`;
   }
 }
 
@@ -321,8 +324,14 @@ function renderStocks(data) {
       <span class="rank-val">${changeIcon(c.change)} ${(c.stock||0).toLocaleString()}M bbl</span>
     </div>
   `).join('');
-  if (cs.period) {
-    document.getElementById('stocks-period').textContent = `⏱ データ期間: ${cs.period}（約3ヶ月遅延）`;
+  // 米国在庫の最新週を期間として表示
+  if (usStocks.length > 0) {
+    const latestPeriod = usStocks[usStocks.length-1].period; // 例: "2025-09-06"
+    const d = new Date(latestPeriod);
+    const periodLabel = isNaN(d) ? latestPeriod : `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日週`;
+    document.getElementById('stocks-period').textContent = `⏱ 米国在庫データ: ${periodLabel}（EIA公式）`;
+  } else if (cs.period) {
+    document.getElementById('stocks-period').textContent = `⏱ データ期間: ${cs.period}`;
   }
   if (cs.summary) {
     document.getElementById('stocks-summary').textContent = cs.summary;
