@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ミスターマーケット｜日本株センチメント分析 | アズキぷらす</title>
+  <meta name="description" content="AIが最新ニュース・SNSを分析して日本株市場の投資家心理（センチメント）を0〜100のスコアで判定。楽観・悲観の度合いをリアルタイムで可視化。">
+  <meta name="keywords" content="ミスターマーケット,市場センチメント,投資家心理,日本株,楽観悲観,恐怖指数,株式投資,アズキぷらす">
+  <link rel="canonical" href="https://azuki-plus.com/sentiment.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ミスターマーケット｜日本株センチメント分析 | アズキぷらす">
+  <meta property="og:url" content="https://azuki-plus.com/sentiment.html">
+  <meta property="og:locale" content="ja_JP">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4271655790847344" crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#0c0c14;--s:#13131f;--s2:#1c1c2e;--b:rgba(255,255,255,.07);
+      --t:#e8e8f4;--t2:#8888aa;--t3:#444466;
+      --green:#00cc66;--red:#ff4455;--amber:#ffaa00;--blue:#4488ff;
+    }
+    body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--t);font-size:14px;line-height:1.7;min-height:100vh;}
+    header{background:linear-gradient(135deg,#0c0c14,#1a1a2e);border-bottom:1px solid var(--b);padding:18px 20px;text-align:center;}
+    header .back a{font-size:12px;color:var(--t3);text-decoration:none;}
+    header h1{font-size:clamp(16px,4vw,22px);font-weight:700;margin:6px 0 4px;}
+    header p{font-size:12px;color:var(--t2);}
+    .breadcrumb{background:var(--s);border-bottom:1px solid var(--b);padding:8px 20px;font-size:11px;color:var(--t3);}
+    .breadcrumb a{color:var(--t3);text-decoration:none;}
+    .ad-slot{background:var(--s);border-bottom:1px solid var(--b);padding:10px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    .container{max-width:860px;margin:0 auto;padding:20px 16px 60px;display:flex;flex-direction:column;gap:16px;}
+    .card{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:20px 22px;}
+    .section-title{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:14px;}
+
+    /* メインメーター */
+    .meter-wrap{text-align:center;padding:10px 0 20px;}
+    .meter-label{font-size:13px;color:var(--t2);margin-bottom:16px;}
+    .meter{position:relative;width:280px;height:140px;margin:0 auto;}
+    .meter svg{width:100%;height:100%;}
+    .meter-score{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);text-align:center;}
+    .meter-score-num{font-family:"Lato",sans-serif;font-size:56px;font-weight:900;line-height:1;}
+    .meter-score-label{font-size:14px;font-weight:700;margin-top:2px;}
+    .meter-updated{font-size:11px;color:var(--t3);margin-top:12px;}
+
+    /* 指標グリッド */
+    .indicator-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .indicator-item{background:var(--s2);border-radius:10px;padding:14px 16px;border:1px solid var(--b);}
+    .indicator-label{font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.08em;margin-bottom:6px;}
+    .indicator-value{font-size:15px;font-weight:700;}
+    .indicator-sub{font-size:11px;color:var(--t2);margin-top:3px;line-height:1.5;}
+
+    /* 強気・弱気材料 */
+    .factors{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    @media(max-width:500px){.factors{grid-template-columns:1fr;}}
+    .factor-bull{background:rgba(0,204,102,.08);border:1px solid rgba(0,204,102,.3);border-radius:10px;padding:14px 16px;}
+    .factor-bear{background:rgba(255,68,85,.08);border:1px solid rgba(255,68,85,.3);border-radius:10px;padding:14px 16px;}
+    .factor-title{font-size:11px;font-weight:700;margin-bottom:6px;}
+    .factor-text{font-size:13px;line-height:1.6;}
+
+    /* サマリー */
+    .summary-box{background:var(--s2);border-radius:10px;padding:16px 18px;font-size:13px;line-height:1.8;border-left:3px solid var(--blue);}
+
+    /* スコア説明 */
+    .score-guide{display:flex;gap:0;border-radius:8px;overflow:hidden;margin-top:4px;}
+    .score-guide-item{flex:1;padding:6px 4px;text-align:center;font-size:10px;font-weight:700;}
+
+    .loading{text-align:center;padding:40px;color:var(--t2);}
+    .ad-mid{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:12px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    .notice{font-size:11px;color:var(--t3);line-height:1.7;padding:10px 14px;background:var(--s2);border-radius:8px;}
+    footer{text-align:center;font-size:12px;color:var(--t3);padding:20px;border-top:1px solid var(--b);}
+
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .spinner{width:32px;height:32px;border:3px solid var(--b);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="back"><a href="index.html">← アズキぷらす</a></p>
+  <h1>🎭 ミスターマーケット</h1>
+  <p>AIが今日の日本株市場の投資家心理を分析</p>
+</header>
+
+<nav class="breadcrumb">
+  <a href="index.html">アズキぷらす</a> › ミスターマーケット
+</nav>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<div class="container">
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    AIが最新ニュース・SNSを分析中...
+  </div>
+
+  <div id="result" style="display:none;flex-direction:column;gap:16px;">
+
+    <!-- メインメーター -->
+    <div class="card">
+      <div class="meter-wrap">
+        <div class="meter-label">今日の市場センチメント（投資家心理）</div>
+        <div class="meter">
+          <svg viewBox="0 0 280 140" xmlns="http://www.w3.org/2000/svg">
+            <!-- 背景arc -->
+            <path d="M30,130 A110,110 0 0,1 250,130" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="20" stroke-linecap="round"/>
+            <!-- カラーグラデーションarc（5段階）-->
+            <path id="arc-fear"     d="M30,130 A110,110 0 0,1 80,35"   fill="none" stroke="#ff4455" stroke-width="20" stroke-linecap="butt" opacity="0.4"/>
+            <path id="arc-bearish"  d="M80,35  A110,110 0 0,1 140,20"  fill="none" stroke="#ff8844" stroke-width="20" stroke-linecap="butt" opacity="0.4"/>
+            <path id="arc-neutral"  d="M140,20 A110,110 0 0,1 200,35"  fill="none" stroke="#ffaa00" stroke-width="20" stroke-linecap="butt" opacity="0.4"/>
+            <path id="arc-bullish"  d="M200,35 A110,110 0 0,1 235,85"  fill="none" stroke="#88dd88" stroke-width="20" stroke-linecap="butt" opacity="0.4"/>
+            <path id="arc-greed"    d="M235,85 A110,110 0 0,1 250,130" fill="none" stroke="#00cc66" stroke-width="20" stroke-linecap="butt" opacity="0.4"/>
+            <!-- 針 -->
+            <line id="needle" x1="140" y1="130" x2="140" y2="30" stroke="#fff" stroke-width="2.5" stroke-linecap="round" style="transform-origin:140px 130px;transition:transform 1.2s cubic-bezier(.4,0,.2,1);"/>
+            <circle cx="140" cy="130" r="6" fill="#fff"/>
+            <!-- ラベル -->
+            <text x="18"  y="128" font-size="9" fill="#ff4455" font-weight="700">悲観</text>
+            <text x="240" y="128" font-size="9" fill="#00cc66" font-weight="700">楽観</text>
+          </svg>
+          <div class="meter-score">
+            <div class="meter-score-num" id="score-num">--</div>
+            <div class="meter-score-label" id="score-label">分析中</div>
+          </div>
+        </div>
+        <div class="score-guide">
+          <div class="score-guide-item" style="background:rgba(255,68,85,.2);color:#ff4455;">0〜20<br>極度の悲観</div>
+          <div class="score-guide-item" style="background:rgba(255,136,68,.2);color:#ff8844;">20〜40<br>悲観</div>
+          <div class="score-guide-item" style="background:rgba(255,170,0,.2);color:#ffaa00;">40〜60<br>中立</div>
+          <div class="score-guide-item" style="background:rgba(136,221,136,.2);color:#88dd88;">60〜80<br>楽観</div>
+          <div class="score-guide-item" style="background:rgba(0,204,102,.2);color:#00cc66;">80〜100<br>極度の楽観</div>
+        </div>
+        <div class="meter-updated" id="meter-updated"></div>
+      </div>
+    </div>
+
+    <!-- 指標 -->
+    <div class="card">
+      <div class="section-title">市場指標</div>
+      <div class="indicator-grid">
+        <div class="indicator-item">
+          <div class="indicator-label">日経平均トレンド</div>
+          <div class="indicator-value" id="nikkei-trend">--</div>
+        </div>
+        <div class="indicator-item">
+          <div class="indicator-label">ドル円</div>
+          <div class="indicator-value" id="usdjpy">--</div>
+        </div>
+        <div class="indicator-item" style="grid-column:1/-1;">
+          <div class="indicator-label">主要材料</div>
+          <div class="indicator-value" id="main-factor" style="font-size:14px;">--</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 強気・弱気材料 -->
+    <div class="card">
+      <div class="section-title">市場の声</div>
+      <div class="factors">
+        <div class="factor-bull">
+          <div class="factor-title" style="color:#00cc66;">🐂 強気材料</div>
+          <div class="factor-text" id="bull-reason">--</div>
+        </div>
+        <div class="factor-bear">
+          <div class="factor-title" style="color:#ff4455;">🐻 弱気材料</div>
+          <div class="factor-text" id="bear-reason">--</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AIサマリー -->
+    <div class="card">
+      <div class="section-title">AI総合コメント</div>
+      <div class="summary-box" id="summary">--</div>
+    </div>
+
+    <div class="ad-mid">
+      <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+    <!-- センチメントとは -->
+    <div class="card">
+      <div class="section-title">ミスターマーケットとは？</div>
+      <p style="font-size:13px;color:var(--t2);line-height:1.9;">
+        「ミスターマーケット」は、著名投資家ベンジャミン・グレアムが提唱した概念です。株式市場を毎日感情的に値段を変える「気まぐれな人物」に例えました。<br>
+        このツールはAIが最新ニュース・SNS・市場データを分析して、その日のミスターマーケットの気分（投資家心理）を0〜100のスコアで表示します。<br>
+        <span style="color:var(--t3);">スコアが低い時（悲観）は割安な投資機会かもしれません。高い時（楽観）は過熱のサインかもしれません。</span>
+      </p>
+    </div>
+
+  </div>
+
+  <div class="notice">
+    ⚠️ このツールはAIによる推定です。投資判断の根拠にはなりません。データは1時間ごとに更新されます。
+  </div>
+
+</div>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<footer>© アズキぷらす | 株式投資・決算解説 YouTubeチャンネル</footer>
+
+<script>
+const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
+
+function getColor(score) {
+  if (score >= 80) return '#00cc66';
+  if (score >= 60) return '#88dd88';
+  if (score >= 40) return '#ffaa00';
+  if (score >= 20) return '#ff8844';
+  return '#ff4455';
+}
+
+function setNeedle(score) {
+  // スコア0〜100を針の角度（-90度〜+90度）に変換
+  const angle = (score / 100) * 180 - 90;
+  document.getElementById('needle').style.transform = `rotate(${angle}deg)`;
+}
+
+async function load() {
+  try {
+    const res = await fetch(WORKER + '/sentiment');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    const score = Math.min(100, Math.max(0, data.score || 50));
+    const color = getColor(score);
+
+    // スコア表示
+    document.getElementById('score-num').textContent = score;
+    document.getElementById('score-num').style.color = color;
+    document.getElementById('score-label').textContent = data.label || '中立';
+    document.getElementById('score-label').style.color = color;
+
+    // 針を動かす（少し遅延）
+    setTimeout(() => setNeedle(score), 300);
+
+    // アクティブなarcをハイライト
+    const arcs = ['arc-fear','arc-bearish','arc-neutral','arc-bullish','arc-greed'];
+    const activeIdx = score < 20 ? 0 : score < 40 ? 1 : score < 60 ? 2 : score < 80 ? 3 : 4;
+    arcs.forEach((id, i) => {
+      document.getElementById(id).setAttribute('opacity', i === activeIdx ? '1' : '0.2');
+    });
+
+    // 指標
+    const nikkeiEl = document.getElementById('nikkei-trend');
+    nikkeiEl.textContent = data.nikkei_trend === '上昇' ? '📈 上昇' : data.nikkei_trend === '下落' ? '📉 下落' : '➡️ 横ばい';
+    nikkeiEl.style.color = data.nikkei_trend === '上昇' ? '#00cc66' : data.nikkei_trend === '下落' ? '#ff4455' : '#ffaa00';
+
+    const usdEl = document.getElementById('usdjpy');
+    usdEl.textContent = data.usdjpy === '円安' ? '💴 円安' : data.usdjpy === '円高' ? '💴 円高' : '💴 中立';
+    usdEl.style.color = data.usdjpy === '円安' ? '#ff8844' : data.usdjpy === '円高' ? '#4488ff' : '#ffaa00';
+
+    document.getElementById('main-factor').textContent = data.main_factor || '--';
+    document.getElementById('bull-reason').textContent = data.bull_reason || '--';
+    document.getElementById('bear-reason').textContent = data.bear_reason || '--';
+    document.getElementById('summary').textContent = data.summary || '--';
+    document.getElementById('meter-updated').textContent = `最終更新: ${data.updated || '—'}（1時間ごとに更新）`;
+
+    document.getElementById('loading').style.display = 'none';
+    const result = document.getElementById('result');
+    result.style.display = 'flex';
+    result.style.flexDirection = 'column';
+
+  } catch(e) {
+    document.getElementById('loading').textContent = '分析に失敗しました: ' + e.message;
+  }
+}
+
+load();
+</script>
+</body>
+</html>
