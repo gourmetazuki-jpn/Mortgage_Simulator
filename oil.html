@@ -325,6 +325,7 @@ function renderProduction(data) {
           <div class="compare-bar-wrap"><div class="compare-bar" style="width:${prodW}%;background:#ffaa00;"></div></div>
           <span class="compare-val" style="color:#ffaa00;">${item.production.toLocaleString()}</span>
         </div>
+        ${item.consAvailable ? `
         <div class="compare-row">
           <span class="compare-label">消費量</span>
           <div class="compare-bar-wrap"><div class="compare-bar" style="width:${consW}%;background:#4488ff;"></div></div>
@@ -335,7 +336,13 @@ function renderProduction(data) {
           <span class="compare-label">輸入量</span>
           <div class="compare-bar-wrap"><div class="compare-bar" style="width:${impW}%;background:#ff4455;"></div></div>
           <span class="compare-val" style="color:#ff4455;">${item.imports.toLocaleString()}</span>
+        </div>` : item.imports < 0 ? `
+        <div class="compare-row">
+          <span class="compare-label">輸出超過</span>
+          <div class="compare-bar-wrap"><div class="compare-bar" style="width:${Math.min(Math.abs(item.imports)/maxCons*100,100).toFixed(1)}%;background:#00cc66;"></div></div>
+          <span class="compare-val" style="color:#00cc66;">+${Math.abs(item.imports).toLocaleString()}</span>
         </div>` : ''}
+        ` : '<div style="font-size:11px;color:var(--t3);margin-top:4px;">消費量データなし</div>'}
       </div>
     `;
   }).join('');
