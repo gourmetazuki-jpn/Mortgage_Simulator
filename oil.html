@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="azuki-icon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>原油フロー可視化｜産油国・備蓄・貿易フロー | アズキぷらす</title>
+  <meta name="description" content="世界の原油貿易フローを地図で可視化。主要産油国の生産量ランキング・米国原油在庫・WTI価格推移をリアルタイム表示。株式投資のエネルギーセクター分析に。">
+  <meta name="keywords" content="原油,WTI,原油在庫,産油国,原油価格,エネルギー,石油,アズキぷらす">
+  <link rel="canonical" href="https://azuki-plus.com/oil.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="原油フロー可視化｜産油国・備蓄・貿易フロー | アズキぷらす">
+  <meta property="og:url" content="https://azuki-plus.com/oil.html">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4271655790847344" crossorigin="anonymous"></script>
+  <!-- Leaflet.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#0c0c14;--s:#13131f;--s2:#1c1c2e;--b:rgba(255,255,255,.07);
+      --t:#e8e8f4;--t2:#8888aa;--t3:#444466;
+      --amber:#ffaa00;--blue:#4488ff;--red:#ff4455;--green:#00cc66;
+    }
+    body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--t);font-size:14px;line-height:1.7;min-height:100vh;}
+    header{background:linear-gradient(135deg,#0c0c14,#1a1a2e);border-bottom:1px solid var(--b);padding:18px 20px;text-align:center;}
+    header .back a{font-size:12px;color:var(--t3);text-decoration:none;}
+    header h1{font-size:clamp(16px,4vw,22px);font-weight:700;margin:6px 0 4px;}
+    header p{font-size:12px;color:var(--t2);}
+    .breadcrumb{background:var(--s);border-bottom:1px solid var(--b);padding:8px 20px;font-size:11px;color:var(--t3);}
+    .breadcrumb a{color:var(--t3);text-decoration:none;}
+    .ad-slot{background:var(--s);border-bottom:1px solid var(--b);padding:10px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    .container{max-width:1000px;margin:0 auto;padding:20px 16px 60px;display:flex;flex-direction:column;gap:16px;}
+    .card{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:18px 20px;}
+    .section-title{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:12px;}
+
+    /* タブ */
+    .tab-row{display:flex;gap:6px;margin-bottom:0;}
+    .tab-btn{padding:8px 18px;border-radius:8px 8px 0 0;font-size:13px;font-family:inherit;border:1px solid var(--b);border-bottom:none;background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s;}
+    .tab-btn.active{background:var(--s);color:var(--t);border-color:var(--b);}
+    .tab-content{display:none;}
+    .tab-content.active{display:block;}
+
+    /* 地図 */
+    #map{height:420px;border-radius:10px;overflow:hidden;background:#0a1628;}
+    .leaflet-container{background:#0a1628 !important;}
+    .flow-tooltip{background:rgba(13,13,20,.9);border:1px solid rgba(255,170,0,.4);border-radius:6px;padding:6px 10px;font-size:12px;color:#fff;font-family:"Noto Sans JP",sans-serif;}
+
+    /* 産油国ランキング */
+    .rank-list{display:flex;flex-direction:column;gap:8px;}
+    .rank-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border-radius:8px;}
+    .rank-num{font-family:"Lato",sans-serif;font-size:16px;font-weight:900;min-width:28px;}
+    .rank-country{flex:1;font-size:13px;font-weight:700;}
+    .rank-bar-wrap{width:120px;height:6px;background:var(--b);border-radius:3px;overflow:hidden;}
+    .rank-bar{height:100%;background:var(--amber);border-radius:3px;}
+    .rank-val{font-family:"Lato",sans-serif;font-size:13px;font-weight:700;color:var(--amber);min-width:80px;text-align:right;}
+
+    /* チャート */
+    .chart-wrap{position:relative;height:220px;}
+    .chart-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    @media(max-width:600px){.chart-row{grid-template-columns:1fr;}}
+
+    /* 在庫メーター */
+    .stock-current{text-align:center;padding:10px 0;}
+    .stock-val{font-family:"Lato",sans-serif;font-size:42px;font-weight:900;color:var(--amber);}
+    .stock-unit{font-size:12px;color:var(--t2);margin-top:2px;}
+
+    .loading-text{text-align:center;padding:30px;color:var(--t2);font-size:13px;}
+    .summary-box{background:var(--s2);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--t2);line-height:1.8;margin-top:12px;}
+    .notice{font-size:11px;color:var(--t3);line-height:1.7;padding:10px 14px;background:var(--s2);border-radius:8px;}
+    .ad-mid{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:12px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    footer{text-align:center;font-size:12px;color:var(--t3);padding:20px;border-top:1px solid var(--b);}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .spinner{width:28px;height:28px;border:3px solid var(--b);border-top-color:var(--amber);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 8px;}
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="back"><a href="index.html">← アズキぷらす</a></p>
+  <h1>🛢️ 原油フロー可視化</h1>
+  <p>産油国・貿易フロー・在庫をリアルタイムで表示</p>
+</header>
+
+<nav class="breadcrumb">
+  <a href="index.html">アズキぷらす</a> › 原油フロー可視化
+</nav>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<div class="container">
+
+  <!-- タブ -->
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="padding:16px 20px 0;">
+      <div class="tab-row">
+        <button class="tab-btn active" onclick="switchTab('flow')">🗺️ 貿易フロー</button>
+        <button class="tab-btn" onclick="switchTab('production')">⛽ 産油国</button>
+        <button class="tab-btn" onclick="switchTab('stocks')">🏭 在庫・価格</button>
+      </div>
+    </div>
+    <div style="padding:16px 20px 20px;border-top:1px solid var(--b);">
+
+      <!-- 貿易フロータブ -->
+      <div id="tab-flow" class="tab-content active">
+        <div class="section-title">原油貿易フロー（主要10ルート）</div>
+        <div id="map-loading" class="loading-text"><div class="spinner"></div>AIが最新データを取得中...</div>
+        <div id="map" style="display:none;"></div>
+        <div id="flow-summary" class="summary-box" style="display:none;"></div>
+        <div id="flow-legend" style="display:none;margin-top:10px;">
+          <span style="font-size:11px;color:var(--t2);">矢印の太さ＝流量（万バレル/日）　</span>
+          <span style="font-size:11px;color:var(--amber);">■ 高流量</span>
+          <span style="font-size:11px;color:var(--t2);margin-left:8px;">■ 低流量</span>
+        </div>
+      </div>
+
+      <!-- 産油国タブ -->
+      <div id="tab-production" class="tab-content">
+        <div class="section-title">産油国トップ10（千バレル/日）</div>
+        <div id="production-loading" class="loading-text"><div class="spinner"></div>データ取得中...</div>
+        <div id="production-list" class="rank-list" style="display:none;"></div>
+        <div id="production-period" style="font-size:11px;color:var(--t3);margin-top:8px;"></div>
+      </div>
+
+      <!-- 在庫・価格タブ -->
+      <div id="tab-stocks" class="tab-content">
+        <div class="section-title">米国原油在庫 × WTI価格</div>
+        <div id="stocks-loading" class="loading-text"><div class="spinner"></div>データ取得中...</div>
+        <div id="stocks-content" style="display:none;">
+          <div class="stock-current">
+            <div class="stock-val" id="current-stock">--</div>
+            <div class="stock-unit">千バレル（最新週）</div>
+          </div>
+          <div class="chart-row">
+            <div>
+              <div style="font-size:11px;color:var(--t2);margin-bottom:6px;">原油在庫推移（週次・1年）</div>
+              <div class="chart-wrap"><canvas id="stock-chart"></canvas></div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--t2);margin-bottom:6px;">WTI原油価格（日次・90日）</div>
+              <div class="chart-wrap"><canvas id="price-chart"></canvas></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="ad-mid">
+    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+  <div class="notice">
+    ⚠️ 貿易フローはAIによる推定データです。産油量・在庫データはEIA（米国エネルギー情報局）の公式データを使用しています。数ヶ月の遅延があります。投資判断の根拠にはなりません。
+  </div>
+
+</div>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<footer>© アズキぷらす | 株式投資・決算解説 YouTubeチャンネル</footer>
+
+<script>
+const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
+let map = null;
+let stockChart = null, priceChart = null;
+const loaded = { flow: false, production: false, stocks: false };
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['flow','production','stocks'][i] === tab);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (!loaded[tab]) loadTab(tab);
+  if (tab === 'flow' && map) setTimeout(() => map.invalidateSize(), 100);
+}
+
+async function loadTab(tab) {
+  loaded[tab] = true;
+  try {
+    const res = await fetch(`${WORKER}/oil?type=${tab}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    if (tab === 'flow') renderFlow(data);
+    if (tab === 'production') renderProduction(data);
+    if (tab === 'stocks') renderStocks(data);
+  } catch(e) {
+    document.getElementById(tab + '-loading').textContent = 'データ取得エラー: ' + e.message;
+  }
+}
+
+function renderFlow(data) {
+  document.getElementById('map-loading').style.display = 'none';
+  document.getElementById('map').style.display = 'block';
+  document.getElementById('flow-legend').style.display = 'block';
+
+  // Leaflet地図初期化
+  map = L.map('map', { center: [30, 20], zoom: 2, zoomControl: true });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CARTO', maxZoom: 10
+  }).addTo(map);
+
+  const flows = data.flows || [];
+  const maxVol = Math.max(...flows.map(f => f.volume || 0));
+
+  flows.forEach(flow => {
+    if (!flow.fromLat || !flow.toLat) return;
+    const weight = Math.max(1, Math.round((flow.volume / maxVol) * 8));
+    const opacity = 0.4 + (flow.volume / maxVol) * 0.5;
+    const color = flow.volume > maxVol * 0.6 ? '#ffaa00' : flow.volume > maxVol * 0.3 ? '#ff8844' : '#4488ff';
+
+    // 曲線矢印
+    const from = L.latLng(flow.fromLat, flow.fromLng);
+    const to = L.latLng(flow.toLat, flow.toLng);
+    const midLat = (flow.fromLat + flow.toLat) / 2 + 10;
+    const midLng = (flow.fromLng + flow.toLng) / 2;
+
+    const line = L.polyline([[flow.fromLat, flow.fromLng],[midLat, midLng],[flow.toLat, flow.toLng]], {
+      color, weight, opacity, smoothFactor: 1,
+    }).addTo(map);
+
+    line.bindTooltip(
+      `<div class="flow-tooltip">${flow.from} → ${flow.to}<br>${flow.volume.toLocaleString()} 万バレル/日</div>`,
+      { sticky: true, className: '' }
+    );
+
+    // 到着点マーカー
+    L.circleMarker([flow.toLat, flow.toLng], { radius: 5, color, fillColor: color, fillOpacity: 0.8, weight: 1 }).addTo(map);
+    L.circleMarker([flow.fromLat, flow.fromLng], { radius: 4, color: '#fff', fillColor: '#fff', fillOpacity: 0.6, weight: 1 }).addTo(map);
+  });
+
+  if (data.summary) {
+    document.getElementById('flow-summary').textContent = `📊 ${data.period || ''} ${data.summary}`;
+    document.getElementById('flow-summary').style.display = 'block';
+  }
+}
+
+function renderProduction(data) {
+  document.getElementById('production-loading').style.display = 'none';
+  const list = document.getElementById('production-list');
+  list.style.display = 'flex';
+  const items = data.data || [];
+  const max = items[0]?.value || 1;
+  const colors = ['#ffd700','#c0c0c0','#cd7f32'];
+  list.innerHTML = items.map((item, i) => `
+    <div class="rank-item">
+      <span class="rank-num" style="color:${colors[i]||'var(--t3)'};">${i+1}</span>
+      <span class="rank-country">${item.country}</span>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${item.value/max*100}%;"></div></div>
+      <span class="rank-val">${item.value.toLocaleString()}</span>
+    </div>
+  `).join('');
+  if (items[0]?.period) {
+    document.getElementById('production-period').textContent = `データ期間: ${items[0].period}（EIA）`;
+  }
+}
+
+function renderStocks(data) {
+  document.getElementById('stocks-loading').style.display = 'none';
+  document.getElementById('stocks-content').style.display = 'block';
+
+  const stocks = data.stocks || [];
+  const prices = data.prices || [];
+
+  // 最新在庫
+  if (stocks.length > 0) {
+    const latest = stocks[stocks.length-1];
+    document.getElementById('current-stock').textContent = (latest.value/1000).toFixed(0) + '万';
+  }
+
+  // 在庫チャート
+  const sCtx = document.getElementById('stock-chart').getContext('2d');
+  if (stockChart) stockChart.destroy();
+  stockChart = new Chart(sCtx, {
+    type: 'line',
+    data: {
+      labels: stocks.map(d => d.period),
+      datasets: [{ label: '原油在庫(千バレル)', data: stocks.map(d => d.value), borderColor: '#ffaa00', backgroundColor: 'rgba(255,170,0,.1)', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { x: { ticks: { color:'#444466', maxTicksLimit: 6, maxRotation: 0 }, grid: { color:'rgba(255,255,255,.04)' } },
+                y: { ticks: { color:'#444466' }, grid: { color:'rgba(255,255,255,.04)' } } } }
+  });
+
+  // WTIチャート
+  const pCtx = document.getElementById('price-chart').getContext('2d');
+  if (priceChart) priceChart.destroy();
+  priceChart = new Chart(pCtx, {
+    type: 'line',
+    data: {
+      labels: prices.map(d => d.period),
+      datasets: [{ label: 'WTI($)', data: prices.map(d => d.value), borderColor: '#4488ff', backgroundColor: 'rgba(68,136,255,.1)', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { x: { ticks: { color:'#444466', maxTicksLimit: 6, maxRotation: 0 }, grid: { color:'rgba(255,255,255,.04)' } },
+                y: { ticks: { color:'#444466' }, grid: { color:'rgba(255,255,255,.04)' } } } }
+  });
+}
+
+// 初期ロード
+loadTab('flow');
+</script>
+</body>
+</html>
