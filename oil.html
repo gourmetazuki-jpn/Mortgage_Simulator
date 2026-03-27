@@ -116,6 +116,7 @@
       <!-- 貿易フロータブ -->
       <div id="tab-flow" class="tab-content active">
         <div class="section-title">原油貿易フロー（主要10ルート）</div>
+        <div style="font-size:11px;color:var(--t3);margin-bottom:8px;" id="flow-ai-note">AIによる推定データ（参考値）</div>
         <div id="map-loading" class="loading-text"><div class="spinner"></div>AIが最新データを取得中...</div>
         <div id="map" style="display:none;"></div>
         <div id="flow-summary" class="summary-box" style="display:none;"></div>
@@ -142,6 +143,7 @@
       <!-- 在庫・価格タブ -->
       <div id="tab-stocks" class="tab-content">
         <div class="section-title">国別原油備蓄量</div>
+        <div id="stocks-ai-note" style="font-size:11px;color:var(--t3);margin-bottom:8px;">AIによる推定データ（参考値）</div>
         <div id="stocks-loading" class="loading-text"><div class="spinner"></div>データ取得中...</div>
         <div id="stocks-content" style="display:none;">
           <!-- 国別備蓄ランキング -->
@@ -225,6 +227,11 @@ function renderFlow(data) {
   document.getElementById('flow-legend').style.display = 'block';
 
   // Leaflet地図初期化
+  // AI推定の期間をタイトルに表示
+  if (data.period) {
+    document.getElementById('flow-ai-note').textContent = `AIによる推定データ（${data.period}・参考値）`;
+  }
+
   map = L.map('map', { center: [30, 20], zoom: 2, zoomControl: true });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '© OpenStreetMap © CARTO', maxZoom: 10
@@ -260,7 +267,8 @@ function renderFlow(data) {
   });
 
   if (data.summary) {
-    document.getElementById('flow-summary').innerHTML = `<strong style="color:var(--amber);">📰 今日の原油市場トピック</strong><br>${data.summary}<br><span style="font-size:10px;color:var(--t3);">※貿易フローはAI推定データ（参考値）です</span>`;
+    const periodNote = data.period ? `${data.period}推定` : 'AI推定';
+    document.getElementById('flow-summary').innerHTML = `<strong style="color:var(--amber);">📰 今日の原油市場トピック</strong><br>${data.summary}<br><span style="font-size:10px;color:var(--t3);">※貿易フローは${periodNote}データ（参考値）</span>`;
     document.getElementById('flow-summary').style.display = 'block';
   }
 
@@ -323,6 +331,11 @@ function renderStocks(data) {
       <span class="rank-val">${changeIcon(c.change)} ${(c.stock||0).toLocaleString()}M bbl</span>
     </div>
   `).join('');
+  // 国別備蓄のAI推定期間を表示
+  if (cs.period) {
+    document.getElementById('stocks-ai-note').textContent = `AIによる推定データ（${cs.period}・参考値）`;
+  }
+
   // 米国在庫の最新週を期間として表示
   if (usStocks.length > 0) {
     const latestPeriod = usStocks[usStocks.length-1].period; // 例: "2025-09-06"
@@ -333,7 +346,8 @@ function renderStocks(data) {
     document.getElementById('stocks-period').textContent = `⏱ データ期間: ${cs.period}`;
   }
   if (cs.summary) {
-    document.getElementById('stocks-summary').innerHTML = `<strong style="color:var(--amber);">📰 今日の備蓄市場トピック</strong><br>${cs.summary}<br><span style="font-size:10px;color:var(--t3);">※国別備蓄量はAI推定データ（参考値）です</span>`;
+    const csPeriod = cs.period ? `${cs.period}推定` : 'AI推定';
+    document.getElementById('stocks-summary').innerHTML = `<strong style="color:var(--amber);">📰 今日の備蓄市場トピック</strong><br>${cs.summary}<br><span style="font-size:10px;color:var(--t3);">※国別備蓄量は${csPeriod}データ（参考値）</span>`;
   }
 
   // 米国最新在庫
