@@ -260,8 +260,7 @@ function renderFlow(data) {
   });
 
   if (data.summary) {
-    const periodNote = `【AIによる推定データ・参考値】 `;
-    document.getElementById('flow-summary').textContent = periodNote + data.summary;
+    document.getElementById('flow-summary').innerHTML = `<strong style="color:var(--amber);">📰 今日の原油市場トピック</strong><br>${data.summary}<br><span style="font-size:10px;color:var(--t3);">※貿易フローはAI推定データ（参考値）です</span>`;
     document.getElementById('flow-summary').style.display = 'block';
   }
 
@@ -334,7 +333,7 @@ function renderStocks(data) {
     document.getElementById('stocks-period').textContent = `⏱ データ期間: ${cs.period}`;
   }
   if (cs.summary) {
-    document.getElementById('stocks-summary').textContent = cs.summary;
+    document.getElementById('stocks-summary').innerHTML = `<strong style="color:var(--amber);">📰 今日の備蓄市場トピック</strong><br>${cs.summary}<br><span style="font-size:10px;color:var(--t3);">※国別備蓄量はAI推定データ（参考値）です</span>`;
   }
 
   // 米国最新在庫
