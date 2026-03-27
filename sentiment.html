@@ -239,7 +239,8 @@ function setNeedle(score) {
 
 async function load() {
   try {
-    const res = await fetch(WORKER + '/sentiment');
+    const res = await const dayKey = new Date().toISOString().split('T')[0];
+    const res = await fetch(`${WORKER}/sentiment?_=${dayKey}`, { cache: 'no-store' });;
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 

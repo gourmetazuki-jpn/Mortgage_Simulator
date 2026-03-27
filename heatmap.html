@@ -283,7 +283,7 @@ function render(sectors) {
 
 async function load() {
   try {
-    const res = await fetch(WORKER + '/heatmap');
+    const res = await fetch(`${WORKER}/heatmap?_=${new Date().toISOString().split('T')[0]}`, { cache: 'no-store' });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 

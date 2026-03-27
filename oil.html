@@ -206,7 +206,8 @@ function switchTab(tab) {
 async function loadTab(tab) {
   loaded[tab] = true;
   try {
-    const res = await fetch(`${WORKER}/oil?type=${tab}`);
+    const dayKey = new Date().toISOString().split('T')[0]; // 1日単位
+    const res = await fetch(`${WORKER}/oil?type=${tab}&_=${dayKey}`, { cache: 'no-store' });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     if (tab === 'flow') renderFlow(data);
