@@ -484,8 +484,32 @@ function renderHoldingsList(items) {
     const gold = item.gold_tons || item.tons || 0;
     // goldUsdは上のnormalizeToBで計算済み
     let debt = item.debt_usd || 0;
-    if (debt > 0 && debt < 100) debt = debt * 1000;
-    if (debt > 1000000) debt = Math.round(debt / 1000);
+    let goldUsd = item.gold_usd || 0;
+
+    // 単位正規化（目標：十億USD）
+    const toB = v => {
+      if (!v||v<=0) return 0;
+      if (v>1e12) return Math.round(v/1e9);   // ドル単位
+      if (v>1e9)  return Math.round(v/1e9);   // ドル単位
+      if (v>1e6)  return Math.round(v/1e3);   // 百万ドル単位
+      if (v<1)    return Math.round(v*1000);  // 兆ドル単位
+      return Math.round(v);
+    };
+    debt = toB(debt);
+    goldUsd = toB(goldUsd);
+
+    // 国別の国債上限チェック（十億USD）
+    const DEBT_CAP = {
+      'United States':40000,'China':20000,'Japan':10000,'United Kingdom':4000,
+      'France':4000,'Italy':4000,'Germany':3500,'India':3000,'Canada':2500,
+      'Brazil':2000,'Spain':1800,'South Korea':1000,'Australia':800,
+      'Mexico':700,'Saudi Arabia':500,'Russia':500,'Turkey':400,'Indonesia':400,
+      'Switzerland':300,'Poland':400,'Netherlands':600,'Sweden':300,
+      'Kazakhstan':100,'Uzbekistan':50,'Qatar':200,'UAE':300,'Singapore':600,
+    };
+    const cap = DEBT_CAP[item.country];
+    if (cap && debt > cap * 2) debt = 0; // 上限2倍超は誤り
+    if (debt > 200000) debt = 0;         // 絶対上限
     // 金裏付け率 = 金時価 ÷ 国債残高 × 100（正しい計算）
     // AIが返したgold_backingも念のため検証（100%超は疑わしい）
     let backing = 0;
