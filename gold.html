@@ -276,34 +276,73 @@ async function loadPrice(period) {
   }
 }
 
+let currentPrices = [];
+let currentEvents = [];
+
 function renderPrice(data) {
   document.getElementById('price-loading').style.display = 'none';
   document.getElementById('price-chart-wrap').style.display = 'block';
-  const prices = data.prices || [];
-  if (!prices.length) return;
+  currentPrices = data.prices || [];
+  currentEvents = data.events || [];
+  if (!currentPrices.length) return;
 
-  const vals = prices.map(p => p.price);
+  const vals = currentPrices.map(p => p.price);
   const current = vals[vals.length-1];
-  const high = Math.max(...vals);
-  const low = Math.min(...vals);
   document.getElementById('price-current').textContent = '$' + current.toLocaleString();
-  document.getElementById('price-high').textContent = '$' + high.toLocaleString();
-  document.getElementById('price-low').textContent = '$' + low.toLocaleString();
+  document.getElementById('price-high').textContent = '$' + Math.max(...vals).toLocaleString();
+  document.getElementById('price-low').textContent = '$' + Math.min(...vals).toLocaleString();
 
-  // チャート
+  drawPriceChart();
+
+  // イベントリスト
+  const colors = { '上昇':'event-up', '下落':'event-down', '変動':'' };
+  document.getElementById('event-list').innerHTML = currentEvents.map((e,i) => `
+    <div class="event-item ${colors[e.impact]||''}" style="cursor:pointer;" onclick="highlightEvent(${i})">
+      <span class="event-date">${e.date}</span>
+      <span class="event-text">${e.event}</span>
+      <span style="font-size:11px;color:${e.impact==='上昇'?'var(--green)':e.impact==='下落'?'var(--red)':'var(--t3)'};">${e.impact} 🔍</span>
+    </div>
+  `).join('');
+}
+
+function drawPriceChart(highlightIdx = -1) {
+  const vals = currentPrices.map(p => p.price);
+  const labels = currentPrices.map(p => p.date);
+  const eventDates = new Set(currentEvents.map(e => e.date));
+  const pointColors = currentPrices.map(p => eventDates.has(p.date) ? '#ffd700' : 'transparent');
+  const pointSizes = currentPrices.map(p => eventDates.has(p.date) ? 7 : 0);
+
+  // ハイライトイベントの縦線プラグイン
+  const highlightDate = highlightIdx >= 0 ? currentEvents[highlightIdx]?.date : null;
+  const highlightPlugin = {
+    id: 'highlightLine',
+    afterDraw(chart) {
+      if (!highlightDate) return;
+      const idx = labels.indexOf(highlightDate);
+      if (idx < 0) return;
+      const meta = chart.getDatasetMeta(0);
+      const pt = meta.data[idx];
+      if (!pt) return;
+      const ctx2 = chart.ctx;
+      ctx2.save();
+      ctx2.beginPath();
+      ctx2.moveTo(pt.x, chart.chartArea.top);
+      ctx2.lineTo(pt.x, chart.chartArea.bottom);
+      ctx2.strokeStyle = 'rgba(255,215,0,0.8)';
+      ctx2.lineWidth = 2;
+      ctx2.setLineDash([4,3]);
+      ctx2.stroke();
+      ctx2.restore();
+    }
+  };
+
   const ctx = document.getElementById('price-chart').getContext('2d');
   if (priceChart) priceChart.destroy();
-
-  // イベントの日付をマーク
-  const events = data.events || [];
-  const eventDates = new Set(events.map(e => e.date));
-  const pointColors = prices.map(p => eventDates.has(p.date) ? '#ffd700' : 'transparent');
-  const pointSizes = prices.map(p => eventDates.has(p.date) ? 6 : 0);
-
   priceChart = new Chart(ctx, {
     type: 'line',
+    plugins: [highlightPlugin],
     data: {
-      labels: prices.map(p => p.date),
+      labels,
       datasets: [{
         label: 'Gold (USD/oz)',
         data: vals,
@@ -318,23 +357,27 @@ function renderPrice(data) {
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: ctx => '$' + ctx.parsed.y.toLocaleString() } }
+      },
       scales: {
         x: { ticks: { color:'#444466', maxTicksLimit: 8, maxRotation: 0 }, grid: { color:'rgba(255,255,255,.04)' } },
         y: { ticks: { color:'#444466', callback: v => '$'+v.toLocaleString() }, grid: { color:'rgba(255,255,255,.04)' } }
       }
     }
   });
+}
 
-  // イベントリスト
-  const colors = { '上昇':'event-up', '下落':'event-down', '変動':'' };
-  document.getElementById('event-list').innerHTML = events.map(e => `
-    <div class="event-item ${colors[e.impact]||''}">
-      <span class="event-date">${e.date}</span>
-      <span class="event-text">${e.event}</span>
-      <span style="font-size:11px;color:${e.impact==='上昇'?'var(--green)':e.impact==='下落'?'var(--red)':'var(--t3)'};">${e.impact}</span>
-    </div>
-  `).join('');
+function highlightEvent(idx) {
+  // イベントアイテムのハイライト
+  document.querySelectorAll('.event-item').forEach((el,i) => {
+    el.style.background = i === idx ? 'rgba(255,215,0,.15)' : '';
+    el.style.borderLeftColor = i === idx ? '#ffd700' : '';
+  });
+  // チャートに縦線を描画
+  drawPriceChart(idx);
+  // スクロールしてチャートを表示
+  document.getElementById('price-chart-wrap').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 function renderRankList(items, container, periodEl, summaryEl, valKey, unit, extra) {
@@ -361,8 +404,47 @@ function renderHoldings(data) {
 }
 
 function renderProduction(data) {
+  document.getElementById('production-loading').style.display = 'none';
+  document.getElementById('production-content').style.display = 'block';
   const items = data.countries || [];
-  renderRankList(items, 'production-list', 'production-period', 'production-content', 'tons', 't/年');
+  const maxProd = Math.max(...items.map(d => d.production||d.tons||0), 1);
+  const rankColors = ['#ffd700','#c0c0c0','#cd7f32'];
+  const hoardingColor = h => h==='高'?'#ff4455':h==='中'?'#ffaa00':h==='低'?'#00cc66':'var(--t3)';
+
+  document.getElementById('production-list').innerHTML = items.map((item,i) => {
+    const prod = item.production || item.tons || 0;
+    const exp = item.exports || 0;
+    const expRate = prod > 0 ? Math.round(exp/prod*100) : 0;
+    const retainRate = prod > 0 ? Math.round((prod-exp)/prod*100) : 0;
+    return `
+    <div class="rank-item" style="flex-direction:column;align-items:stretch;gap:6px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="rank-num" style="color:${rankColors[i]||'var(--t3)'};">${i+1}</span>
+        <span class="rank-flag">${item.flag||'⛏️'}</span>
+        <span class="rank-name" style="flex:1;">${item.country}</span>
+        ${item.hoarding && item.hoarding !== '不明' ? `<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${hoardingColor(item.hoarding)}22;color:${hoardingColor(item.hoarding)};">備蓄傾向${item.hoarding}</span>` : ''}
+        <span class="rank-val">${prod.toLocaleString()}t</span>
+      </div>
+      <div style="padding-left:52px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+          <span style="font-size:10px;color:var(--t3);min-width:40px;">産出量</span>
+          <div style="flex:1;height:8px;background:var(--b);border-radius:4px;overflow:hidden;">
+            <div style="width:100%;height:100%;background:var(--gold2);border-radius:4px;"></div>
+          </div>
+          <span style="font-size:11px;color:var(--gold);min-width:55px;text-align:right;">${prod.toLocaleString()}t</span>
+        </div>
+        ${exp > 0 ? `
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:10px;color:var(--t3);min-width:40px;">輸出量</span>
+          <div style="flex:1;height:8px;background:var(--b);border-radius:4px;overflow:hidden;">
+            <div style="width:${expRate}%;height:100%;background:#4488ff;border-radius:4px;"></div>
+          </div>
+          <span style="font-size:11px;color:#4488ff;min-width:55px;text-align:right;">${exp.toLocaleString()}t（${expRate}%）</span>
+        </div>` : '<div style="font-size:10px;color:var(--t3);margin-top:2px;">輸出量データなし</div>'}
+      </div>
+    </div>`;
+  }).join('');
+
   document.getElementById('production-period').textContent = `⏱ データ期間: ${data.period||'—'}（AIによる推定・参考値）`;
   document.getElementById('production-summary').innerHTML = `<strong style="color:var(--gold);">📰 金産出の最新トピック</strong><br>${data.summary||'—'}`;
 }
