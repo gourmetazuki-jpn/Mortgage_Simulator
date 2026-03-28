@@ -486,7 +486,14 @@ function renderHoldingsList(items) {
     let debt = item.debt_usd || 0;
     if (debt > 0 && debt < 100) debt = debt * 1000;
     if (debt > 1000000) debt = Math.round(debt / 1000);
-    const backing = item.gold_backing || (debt > 0 ? Math.round(goldUsd/debt*100*10)/10 : 0);
+    // 金裏付け率 = 金時価 ÷ 国債残高 × 100（正しい計算）
+    // AIが返したgold_backingも念のため検証（100%超は疑わしい）
+    let backing = 0;
+    if (debt > 0 && goldUsd > 0) {
+      backing = Math.round(goldUsd / debt * 100 * 10) / 10;
+    } else if (item.gold_backing && item.gold_backing <= 100) {
+      backing = item.gold_backing;
+    }
     const backingColor = backing >= 10 ? '#00cc66' : backing >= 3 ? '#ffaa00' : '#ff4455';
     const changeIcon = item.change==='増加'?'<span style="color:#00cc66;">▲</span>':item.change==='減少'?'<span style="color:#ff4455;">▼</span>':'<span style="color:var(--t3);">─</span>';
 
