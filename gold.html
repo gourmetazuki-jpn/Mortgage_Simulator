@@ -418,8 +418,50 @@ function renderRankList(items, container, periodEl, summaryEl, valKey, unit, ext
 }
 
 function renderHoldings(data) {
+  document.getElementById('holdings-loading').style.display = 'none';
+  document.getElementById('holdings-content').style.display = 'block';
   const items = data.countries || [];
-  renderRankList(items, 'holdings-list', 'holdings-period', 'holdings-content', 'tons', 't');
+  const maxGold = Math.max(...items.map(d => d.gold_tons||d.tons||0), 1);
+  const maxDebt = Math.max(...items.map(d => d.debt_usd||0), 1);
+  const rankColors = ['#ffd700','#c0c0c0','#cd7f32'];
+
+  document.getElementById('holdings-list').innerHTML = items.map((item, i) => {
+    const gold = item.gold_tons || item.tons || 0;
+    const goldUsd = item.gold_usd || 0;
+    const debt = item.debt_usd || 0;
+    const backing = item.gold_backing || (debt > 0 ? Math.round(goldUsd/debt*100) : 0);
+    const backingColor = backing >= 10 ? '#00cc66' : backing >= 3 ? '#ffaa00' : '#ff4455';
+    const changeIcon = item.change==='増加'?'<span style="color:#00cc66;">▲</span>':item.change==='減少'?'<span style="color:#ff4455;">▼</span>':'<span style="color:var(--t3);">─</span>';
+
+    return `
+    <div class="rank-item" style="flex-direction:column;align-items:stretch;gap:6px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="rank-num" style="color:${rankColors[i]||'var(--t3)'};">${i+1}</span>
+        <span class="rank-flag">${item.flag||'🏅'}</span>
+        <span class="rank-name" style="flex:1;">${item.country} ${changeIcon}</span>
+        <span style="font-size:11px;padding:2px 7px;border-radius:4px;background:${backingColor}22;color:${backingColor};font-weight:700;">金裏付け率 ${backing}%</span>
+      </div>
+      <div style="padding-left:52px;display:flex;flex-direction:column;gap:3px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:10px;color:var(--t3);min-width:52px;">金保有量</span>
+          <div style="flex:1;height:8px;background:var(--b);border-radius:4px;overflow:hidden;">
+            <div style="width:${(gold/maxGold*100).toFixed(1)}%;height:100%;background:var(--gold2);border-radius:4px;"></div>
+          </div>
+          <span style="font-size:11px;color:var(--gold);min-width:80px;text-align:right;">${gold.toLocaleString()}t${goldUsd?` / $${goldUsd}B`:''}</span>
+        </div>
+        ${debt > 0 ? `
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:10px;color:var(--t3);min-width:52px;">国債残高</span>
+          <div style="flex:1;height:8px;background:var(--b);border-radius:4px;overflow:hidden;">
+            <div style="width:${Math.min(debt/maxDebt*100,100).toFixed(1)}%;height:100%;background:#4488ff;border-radius:4px;"></div>
+          </div>
+          <span style="font-size:11px;color:#4488ff;min-width:80px;text-align:right;">$${debt.toLocaleString()}B</span>
+        </div>` : '<div style="font-size:10px;color:var(--t3);">国債データなし</div>'}
+        ${item.note ? `<div style="font-size:10px;color:var(--t3);">${item.note}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
   document.getElementById('holdings-period').textContent = `⏱ データ期間: ${data.period||'—'}（AIによる推定・参考値）`;
   document.getElementById('holdings-summary').innerHTML = `<strong style="color:var(--gold);">📰 今日の金市場トピック</strong><br>${data.summary||'—'}`;
 }
