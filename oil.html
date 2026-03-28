@@ -331,12 +331,12 @@ function renderProduction(data) {
           <div class="compare-bar-wrap"><div class="compare-bar" style="width:${consW}%;background:#4488ff;"></div></div>
           <span class="compare-val" style="color:#4488ff;">${item.consumption.toLocaleString()}</span>
         </div>
-        ${item.imports > 0 ? `
+        ${item.imports > 100 ? `
         <div class="compare-row">
           <span class="compare-label">輸入量</span>
-          <div class="compare-bar-wrap"><div class="compare-bar" style="width:${impW}%;background:#ff4455;"></div></div>
+          <div class="compare-bar-wrap"><div class="compare-bar" style="width:${Math.min(Math.abs(item.imports)/maxCons*100,100).toFixed(1)}%;background:#ff4455;"></div></div>
           <span class="compare-val" style="color:#ff4455;">${item.imports.toLocaleString()}</span>
-        </div>` : item.imports < 0 ? `
+        </div>` : item.imports < -100 ? `
         <div class="compare-row">
           <span class="compare-label">輸出超過</span>
           <div class="compare-bar-wrap"><div class="compare-bar" style="width:${Math.min(Math.abs(item.imports)/maxCons*100,100).toFixed(1)}%;background:#00cc66;"></div></div>
