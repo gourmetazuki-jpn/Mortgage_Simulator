@@ -135,14 +135,17 @@
       <!-- 相場タブ -->
       <div id="tab-price" class="tab-content active">
         <div class="section-title">金価格チャート（USD/oz）</div>
-        <div class="period-tabs">
-          <button class="period-tab" onclick="loadPrice('1m')">1ヶ月</button>
-          <button class="period-tab" onclick="loadPrice('3m')">3ヶ月</button>
-          <button class="period-tab" onclick="loadPrice('6m')">6ヶ月</button>
-          <button class="period-tab active" onclick="loadPrice('1y')">1年</button>
-          <button class="period-tab" onclick="loadPrice('3y')">3年</button>
-          <button class="period-tab" onclick="loadPrice('5y')">5年</button>
-          <button class="period-tab" onclick="loadPrice('10y')">10年</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+          <div class="period-tabs" style="margin-bottom:0;">
+            <button class="period-tab" onclick="loadPrice('1m')">1ヶ月</button>
+            <button class="period-tab" onclick="loadPrice('3m')">3ヶ月</button>
+            <button class="period-tab" onclick="loadPrice('6m')">6ヶ月</button>
+            <button class="period-tab active" onclick="loadPrice('1y')">1年</button>
+            <button class="period-tab" onclick="loadPrice('3y')">3年</button>
+            <button class="period-tab" onclick="loadPrice('5y')">5年</button>
+            <button class="period-tab" onclick="loadPrice('10y')">10年</button>
+          </div>
+          <button class="period-tab" id="overlay-btn" onclick="toggleOverlay()" style="border-color:rgba(255,215,0,.4);">🏦 中銀保有量を重ねる</button>
         </div>
         <div class="price-summary">
           <div class="price-item">
@@ -179,6 +182,14 @@
         <div id="holdings-loading" class="loading-text"><div class="spinner"></div>データ取得中...</div>
         <div id="holdings-content" style="display:none;">
           <div class="period-note" id="holdings-period"></div>
+          <!-- 時系列グラフ -->
+          <div style="margin-bottom:16px;">
+            <div style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">主要国別 保有量推移（トン）</div>
+            <div id="ts-loading" class="loading-text" style="padding:16px;"><div class="spinner"></div></div>
+            <div id="ts-chart-wrap" style="display:none;">
+              <div style="position:relative;height:220px;"><canvas id="ts-chart"></canvas></div>
+            </div>
+          </div>
           <div id="holdings-list"></div>
           <div id="holdings-summary" class="summary-box"></div>
         </div>
@@ -257,6 +268,77 @@ async function fetchGold(type, extra='') {
   const res = await fetch(`${WORKER}/gold?type=${type}${extra}&_=${dayKey}`, { cache: 'no-store' });
   return res.json();
 }
+
+async function toggleOverlay() {
+  overlayEnabled = !overlayEnabled;
+  const btn = document.getElementById('overlay-btn');
+  btn.classList.toggle('active', overlayEnabled);
+  if (overlayEnabled && !timeSeriesData) {
+    btn.textContent = '🏦 読み込み中...';
+    try {
+      const dayKey = new Date().toISOString().split('T')[0];
+      const res = await fetch(`${WORKER}/gold?type=time_series&_=${dayKey}`, { cache: 'no-store' });
+      timeSeriesData = await res.json();
+    } catch(e) { overlayEnabled = false; btn.classList.remove('active'); return; }
+  }
+  btn.textContent = overlayEnabled ? '🏦 中銀保有量を非表示' : '🏦 中銀保有量を重ねる';
+  drawPriceChart(currentHighlightIdx);
+}
+
+async function loadTimeSeries() {
+  if (timeSeriesData) { renderTimeSeries(timeSeriesData); return; }
+  try {
+    const dayKey = new Date().toISOString().split('T')[0];
+    const res = await fetch(`${WORKER}/gold?type=time_series&_=${dayKey}`, { cache: 'no-store' });
+    timeSeriesData = await res.json();
+    renderTimeSeries(timeSeriesData);
+  } catch(e) {
+    document.getElementById('ts-loading').textContent = 'データ取得エラー';
+  }
+}
+
+function renderTimeSeries(data) {
+  document.getElementById('ts-loading').style.display = 'none';
+  document.getElementById('ts-chart-wrap').style.display = 'block';
+  const countries = data.countries || [];
+  const colors = ['#ffd700','#4488ff','#ff4455','#00cc66','#ff8844','#aa44ff','#00aaff','#ff44aa'];
+  const ctx = document.getElementById('ts-chart').getContext('2d');
+  if (tsChart) tsChart.destroy();
+
+  // 全年を収集
+  const allYears = new Set();
+  countries.forEach(c => (c.series||[]).forEach(s => allYears.add(s.year)));
+  const years = [...allYears].sort();
+
+  tsChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: years,
+      datasets: countries.map((c, i) => ({
+        label: `${c.flag||''} ${c.country}`,
+        data: years.map(y => (c.series||[]).find(s=>s.year===y)?.tons || null),
+        borderColor: colors[i % colors.length],
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        pointRadius: 3,
+        tension: 0.3,
+        spanGaps: true,
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#8888aa', font: { size: 11 }, padding: 10 } },
+      },
+      scales: {
+        x: { ticks: { color:'#444466' }, grid: { color:'rgba(255,255,255,.04)' } },
+        y: { ticks: { color:'#444466', callback: v => v.toLocaleString()+'t' }, grid: { color:'rgba(255,255,255,.04)' } }
+      }
+    }
+  });
+}
+
+let currentHighlightIdx = -1;
 
 function sortHoldings(key) {
   document.querySelectorAll('[id^="sort-hold-"]').forEach(b => b.classList.remove('active'));
@@ -350,6 +432,9 @@ let currentPrices = [];
 let currentEvents = [];
 let holdingsData = [];
 let productionData = [];
+let timeSeriesData = null;
+let overlayEnabled = false;
+let tsChart = null;
 
 function renderPrice(data) {
   document.getElementById('price-loading').style.display = 'none';
@@ -381,6 +466,7 @@ function renderPrice(data) {
 }
 
 function drawPriceChart(highlightIdx = -1) {
+  currentHighlightIdx = highlightIdx;
   const vals = currentPrices.map(p => p.price);
   const labels = currentPrices.map(p => p.date);
   const eventDates = new Set(currentEvents.map(e => e.date));
@@ -435,17 +521,41 @@ function drawPriceChart(highlightIdx = -1) {
     plugins: [highlightPlugin],
     data: {
       labels,
-      datasets: [{
-        label: 'Gold (USD/oz)',
-        data: vals,
-        borderColor: '#ffd700',
-        backgroundColor: 'rgba(255,215,0,.08)',
-        borderWidth: 2,
-        pointRadius: pointSizes,
-        pointBackgroundColor: pointColors,
-        fill: true,
-        tension: 0.2,
-      }]
+      datasets: [
+        {
+          label: 'Gold (USD/oz)',
+          data: vals,
+          borderColor: '#ffd700',
+          backgroundColor: 'rgba(255,215,0,.08)',
+          borderWidth: 2,
+          pointRadius: pointSizes,
+          pointBackgroundColor: pointColors,
+          fill: true,
+          tension: 0.2,
+          yAxisID: 'y',
+        },
+        ...(overlayEnabled && timeSeriesData?.central_bank_total ? [{
+          label: '中銀総保有量(t)',
+          data: (() => {
+            const cbData = timeSeriesData.central_bank_total;
+            return labels.map(date => {
+              const year = parseInt(date.slice(0,4));
+              // 最も近い年のデータを使用
+              const sorted = [...cbData].sort((a,b)=>Math.abs(a.year-year)-Math.abs(b.year-year));
+              return sorted[0]?.tons || null;
+            });
+          })(),
+          borderColor: '#4488ff',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: false,
+          tension: 0.3,
+          yAxisID: 'y2',
+          borderDash: [5,3],
+          spanGaps: true,
+        }] : [])
+      ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -454,13 +564,15 @@ function drawPriceChart(highlightIdx = -1) {
       },
       scales: {
         x: { ticks: { color:'#444466', maxTicksLimit: 8, maxRotation: 0 }, grid: { color:'rgba(255,255,255,.04)' } },
-        y: { ticks: { color:'#444466', callback: v => '$'+v.toLocaleString() }, grid: { color:'rgba(255,255,255,.04)' } }
+        y: { ticks: { color:'#444466', callback: v => '$'+v.toLocaleString() }, grid: { color:'rgba(255,255,255,.04)' } },
+        y2: { display: overlayEnabled, position: 'right', ticks: { color:'#4488ff', callback: v => v.toLocaleString()+'t' }, grid: { drawOnChartArea: false } }
       }
     }
   });
 }
 
 function highlightEvent(idx) {
+  currentHighlightIdx = idx;
   // イベントアイテムのハイライト
   document.querySelectorAll('.event-item').forEach((el,i) => {
     el.style.background = i === idx ? 'rgba(255,215,0,.15)' : '';
@@ -493,6 +605,7 @@ function renderHoldings(data) {
   document.getElementById('holdings-content').style.display = 'block';
   holdingsData = data.countries || [];
   renderHoldingsList(holdingsData);
+  loadTimeSeries(); // 時系列グラフも同時に読み込む
   document.getElementById('holdings-period').textContent = `⏱ データ期間: ${data.period||'—'}（AIによる推定・参考値）`;
   document.getElementById('holdings-summary').innerHTML = `<strong style="color:var(--gold);">📰 今日の金市場トピック</strong><br>${data.summary||'—'}`;
 }
