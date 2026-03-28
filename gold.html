@@ -316,26 +316,43 @@ function drawPriceChart(highlightIdx = -1) {
   const pointColors = currentPrices.map(p => eventDates.has(p.date) ? '#ffd700' : 'transparent');
   const pointSizes = currentPrices.map(p => eventDates.has(p.date) ? 7 : 0);
 
+  // 最も近い取引日を探す（週末・祝日対策）
+  function findNearestIdx(targetDate, labels) {
+    if (!targetDate) return -1;
+    const exact = labels.indexOf(targetDate);
+    if (exact >= 0) return exact;
+    const target = new Date(targetDate).getTime();
+    let bestIdx = -1, bestDiff = Infinity;
+    labels.forEach((d, i) => {
+      const diff = Math.abs(new Date(d).getTime() - target);
+      if (diff < bestDiff && diff <= 7 * 86400000) { bestDiff = diff; bestIdx = i; }
+    });
+    return bestIdx;
+  }
+
   // ハイライトイベントの縦線プラグイン
   const highlightDate = highlightIdx >= 0 ? currentEvents[highlightIdx]?.date : null;
   const highlightPlugin = {
     id: 'highlightLine',
     afterDraw(chart) {
       if (!highlightDate) return;
-      const idx = labels.indexOf(highlightDate);
-      if (idx < 0) return;
+      const nearIdx = findNearestIdx(highlightDate, labels);
+      if (nearIdx < 0) return;
       const meta = chart.getDatasetMeta(0);
-      const pt = meta.data[idx];
+      const pt = meta.data[nearIdx];
       if (!pt) return;
       const ctx2 = chart.ctx;
       ctx2.save();
       ctx2.beginPath();
       ctx2.moveTo(pt.x, chart.chartArea.top);
       ctx2.lineTo(pt.x, chart.chartArea.bottom);
-      ctx2.strokeStyle = 'rgba(255,215,0,0.8)';
+      ctx2.strokeStyle = 'rgba(255,215,0,0.9)';
       ctx2.lineWidth = 2;
-      ctx2.setLineDash([4,3]);
+      ctx2.setLineDash([5,3]);
       ctx2.stroke();
+      ctx2.fillStyle = 'rgba(255,215,0,0.9)';
+      ctx2.font = '11px sans-serif';
+      ctx2.fillText(highlightDate, pt.x + 4, chart.chartArea.top + 14);
       ctx2.restore();
     }
   };
