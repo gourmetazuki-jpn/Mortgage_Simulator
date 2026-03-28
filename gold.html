@@ -500,12 +500,27 @@ function renderHoldingsList(items) {
 
     // 国別の国債上限チェック（十億USD）
     const DEBT_CAP = {
+      // G20・主要国
       'United States':40000,'China':20000,'Japan':10000,'United Kingdom':4000,
       'France':4000,'Italy':4000,'Germany':3500,'India':3000,'Canada':2500,
       'Brazil':2000,'Spain':1800,'South Korea':1000,'Australia':800,
       'Mexico':700,'Saudi Arabia':500,'Russia':500,'Turkey':400,'Indonesia':400,
+      // 欧州
       'Switzerland':300,'Poland':400,'Netherlands':600,'Sweden':300,
-      'Kazakhstan':100,'Uzbekistan':50,'Qatar':200,'UAE':300,'Singapore':600,
+      'Belgium':600,'Austria':300,'Denmark':200,'Finland':200,'Norway':200,
+      'Portugal':300,'Greece':400,'Czech Republic':200,'Romania':150,'Hungary':150,
+      // 中東・中央アジア
+      'Kazakhstan':100,'Uzbekistan':50,'Qatar':200,'UAE':300,
+      'Iran':200,'Iraq':150,'Kuwait':150,'Bahrain':50,'Oman':80,
+      // アジア
+      'Singapore':600,'Thailand':300,'Malaysia':200,'Philippines':200,
+      'Pakistan':150,'Bangladesh':100,'Vietnam':200,'Taiwan':300,
+      // アフリカ・その他
+      'South Africa':200,'Egypt':200,'Nigeria':150,'Algeria':100,
+      'Morocco':100,'Libya':50,'Ghana':50,'Tanzania':30,'Kenya':50,
+      // 中南米
+      'Argentina':300,'Colombia':200,'Chile':200,'Peru':100,'Venezuela':100,
+      'Bolivia':30,'Ecuador':80,
     };
     const cap = DEBT_CAP[item.country];
     if (cap && debt > cap * 2) debt = 0; // 上限2倍超は誤り
