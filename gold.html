@@ -168,22 +168,36 @@
 
       <!-- 保有量タブ -->
       <div id="tab-holdings" class="tab-content">
-        <div class="section-title">中央銀行 金保有量ランキング（トン）</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <div class="section-title" style="margin-bottom:0;">中央銀行 金保有量ランキング（トン）</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <button class="period-tab active" onclick="sortHoldings('gold')" id="sort-hold-gold">金保有量順</button>
+            <button class="period-tab" onclick="sortHoldings('debt')" id="sort-hold-debt">国債残高順</button>
+            <button class="period-tab" onclick="sortHoldings('backing')" id="sort-hold-backing">金裏付け率順</button>
+          </div>
+        </div>
         <div id="holdings-loading" class="loading-text"><div class="spinner"></div>データ取得中...</div>
         <div id="holdings-content" style="display:none;">
           <div class="period-note" id="holdings-period"></div>
-          <div id="holdings-list" class="rank-list"></div>
+          <div id="holdings-list"></div>
           <div id="holdings-summary" class="summary-box"></div>
         </div>
       </div>
 
       <!-- 産出国タブ -->
       <div id="tab-production" class="tab-content">
-        <div class="section-title">産金国ランキング（トン/年）</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <div class="section-title" style="margin-bottom:0;">産金国ランキング（トン/年）</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <button class="period-tab active" onclick="sortProduction('production')" id="sort-prod-production">産出量順</button>
+            <button class="period-tab" onclick="sortProduction('exports')" id="sort-prod-exports">輸出量順</button>
+            <button class="period-tab" onclick="sortProduction('hoarding')" id="sort-prod-hoarding">備蓄傾向順</button>
+          </div>
+        </div>
         <div id="production-loading" class="loading-text"><div class="spinner"></div>データ取得中...</div>
         <div id="production-content" style="display:none;">
           <div class="period-note" id="production-period"></div>
-          <div id="production-list" class="rank-list"></div>
+          <div id="production-list"></div>
           <div id="production-summary" class="summary-box"></div>
         </div>
       </div>
@@ -244,6 +258,35 @@ async function fetchGold(type, extra='') {
   return res.json();
 }
 
+function sortHoldings(key) {
+  document.querySelectorAll('[id^="sort-hold-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('sort-hold-'+key).classList.add('active');
+  const sorted = [...holdingsData].sort((a,b) => {
+    if (key === 'gold') return (b.gold_tons||b.tons||0) - (a.gold_tons||a.tons||0);
+    if (key === 'debt') {
+      let da = a.debt_usd||0, db = b.debt_usd||0;
+      if (da>0&&da<100) da*=1000; if (db>0&&db<100) db*=1000;
+      return db - da;
+    }
+    if (key === 'backing') return (b.gold_backing||0) - (a.gold_backing||0);
+    return 0;
+  });
+  renderHoldingsList(sorted);
+}
+
+function sortProduction(key) {
+  document.querySelectorAll('[id^="sort-prod-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('sort-prod-'+key).classList.add('active');
+  const hoardingOrder = {'高':3,'中':2,'低':1,'不明':0};
+  const sorted = [...productionData].sort((a,b) => {
+    if (key === 'production') return (b.production||b.tons||0) - (a.production||a.tons||0);
+    if (key === 'exports') return (b.exports||0) - (a.exports||0);
+    if (key === 'hoarding') return (hoardingOrder[b.hoarding]||0) - (hoardingOrder[a.hoarding]||0);
+    return 0;
+  });
+  renderProductionList(sorted);
+}
+
 async function loadTab(tab) {
   loaded[tab] = true;
   try {
@@ -282,6 +325,8 @@ async function loadPrice(period) {
 
 let currentPrices = [];
 let currentEvents = [];
+let holdingsData = [];
+let productionData = [];
 
 function renderPrice(data) {
   document.getElementById('price-loading').style.display = 'none';
@@ -423,20 +468,25 @@ function renderRankList(items, container, periodEl, summaryEl, valKey, unit, ext
 function renderHoldings(data) {
   document.getElementById('holdings-loading').style.display = 'none';
   document.getElementById('holdings-content').style.display = 'block';
-  const items = data.countries || [];
-  const maxGold = Math.max(...items.map(d => d.gold_tons||d.tons||0), 1);
-  const maxDebt = Math.max(...items.map(d => d.debt_usd||0), 1);
+  holdingsData = data.countries || [];
+  renderHoldingsList(holdingsData);
+  document.getElementById('holdings-period').textContent = `⏱ データ期間: ${data.period||'—'}（AIによる推定・参考値）`;
+  document.getElementById('holdings-summary').innerHTML = `<strong style="color:var(--gold);">📰 今日の金市場トピック</strong><br>${data.summary||'—'}`;
+}
+
+function renderHoldingsList(items) {
+  const maxGold = Math.max(...(holdingsData.length?holdingsData:[items[0]||{}]).map(d => d.gold_tons||d.tons||0), 1);
+  const maxDebtArr = (holdingsData.length?holdingsData:[items[0]||{}]).map(d => { let v=d.debt_usd||0; if(v>0&&v<100)v*=1000; return v; });
+  const maxDebt = Math.max(...maxDebtArr, 1);
   const rankColors = ['#ffd700','#c0c0c0','#cd7f32'];
 
   document.getElementById('holdings-list').innerHTML = items.map((item, i) => {
     const gold = item.gold_tons || item.tons || 0;
     const goldUsd = item.gold_usd || 0;
     let debt = item.debt_usd || 0;
-    // 単位が兆USDで入ってきた場合（1000超で異常に大きい）は十億USDに換算
-    if (debt > 0 && debt < 100) debt = debt * 1000; // 兆→十億に換算
-    // 逆に大きすぎる場合（100万超）は百万→十億に換算
+    if (debt > 0 && debt < 100) debt = debt * 1000;
     if (debt > 1000000) debt = Math.round(debt / 1000);
-    const backing = item.gold_backing || (debt > 0 ? Math.round(goldUsd/debt*100) : 0);
+    const backing = item.gold_backing || (debt > 0 ? Math.round(goldUsd/debt*100*10)/10 : 0);
     const backingColor = backing >= 10 ? '#00cc66' : backing >= 3 ? '#ffaa00' : '#ff4455';
     const changeIcon = item.change==='増加'?'<span style="color:#00cc66;">▲</span>':item.change==='減少'?'<span style="color:#ff4455;">▼</span>':'<span style="color:var(--t3);">─</span>';
 
@@ -468,16 +518,20 @@ function renderHoldings(data) {
       </div>
     </div>`;
   }).join('');
-
-  document.getElementById('holdings-period').textContent = `⏱ データ期間: ${data.period||'—'}（AIによる推定・参考値）`;
-  document.getElementById('holdings-summary').innerHTML = `<strong style="color:var(--gold);">📰 今日の金市場トピック</strong><br>${data.summary||'—'}`;
 }
+
 
 function renderProduction(data) {
   document.getElementById('production-loading').style.display = 'none';
   document.getElementById('production-content').style.display = 'block';
-  const items = data.countries || [];
-  const maxProd = Math.max(...items.map(d => d.production||d.tons||0), 1);
+  productionData = data.countries || [];
+  renderProductionList(productionData);
+  document.getElementById('production-period').textContent = `⏱ データ期間: ${data.period||'—'}（AIによる推定・参考値）`;
+  document.getElementById('production-summary').innerHTML = `<strong style="color:var(--gold);">📰 金産出の最新トピック</strong><br>${data.summary||'—'}`;
+}
+
+function renderProductionList(items) {
+  const maxProd = Math.max(...(productionData.length?productionData:items).map(d => d.production||d.tons||0), 1);
   const rankColors = ['#ffd700','#c0c0c0','#cd7f32'];
   const hoardingColor = h => h==='高'?'#ff4455':h==='中'?'#ffaa00':h==='低'?'#00cc66':'var(--t3)';
 
@@ -485,7 +539,6 @@ function renderProduction(data) {
     const prod = item.production || item.tons || 0;
     const exp = item.exports || 0;
     const expRate = prod > 0 ? Math.round(exp/prod*100) : 0;
-    const retainRate = prod > 0 ? Math.round((prod-exp)/prod*100) : 0;
     return `
     <div class="rank-item" style="flex-direction:column;align-items:stretch;gap:6px;">
       <div style="display:flex;align-items:center;gap:8px;">
@@ -514,10 +567,8 @@ function renderProduction(data) {
       </div>
     </div>`;
   }).join('');
-
-  document.getElementById('production-period').textContent = `⏱ データ期間: ${data.period||'—'}（AIによる推定・参考値）`;
-  document.getElementById('production-summary').innerHTML = `<strong style="color:var(--gold);">📰 金産出の最新トピック</strong><br>${data.summary||'—'}`;
 }
+
 
 function renderFlow(data) {
   document.getElementById('flow-loading').style.display = 'none';
