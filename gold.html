@@ -304,7 +304,14 @@ const selectedCountries = new Set();
 function renderTimeSeries(data) {
   document.getElementById('ts-loading').style.display = 'none';
   document.getElementById('ts-chart-wrap').style.display = 'block';
-  drawTsChart();
+  // 初回は必ずメッセージ表示（selectedCountriesが空のため）
+  selectedCountries.clear();
+  if (tsChart) { tsChart.destroy(); tsChart = null; }
+  const wrap = document.getElementById('ts-chart-wrap');
+  wrap.innerHTML = `<div style="position:relative;height:220px;"><canvas id="ts-chart"></canvas></div>
+    <div id="ts-hint" style="text-align:center;padding:16px 0 0;color:var(--t3);font-size:12px;">
+      👆 下の国名をクリックするとグラフに追加されます（複数比較可）
+    </div>`;
 }
 
 function toggleTsCountry(country) {
