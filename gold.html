@@ -143,7 +143,8 @@
             <button class="period-tab" onclick="loadPrice('1y')">1年</button>
             <button class="period-tab" onclick="loadPrice('3y')">3年</button>
             <button class="period-tab" onclick="loadPrice('5y')">5年</button>
-            <button class="period-tab active" onclick="loadPrice('10y')">10年</button>
+            <button class="period-tab" onclick="loadPrice('10y')">10年</button>
+            <button class="period-tab active" onclick="loadPrice('20y')">20年</button>
           </div>
           <button class="period-tab" id="overlay-btn" onclick="toggleOverlay()" style="border-color:rgba(255,215,0,.4);">🏦 中銀保有量を重ねる</button>
         </div>
@@ -251,7 +252,7 @@ const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
 const loaded = { price: false, holdings: false, production: false, flow: false };
 let priceChart = null;
 let goldMap = null;
-let currentPeriod = '10y';
+let currentPeriod = '20y';
 
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => {
@@ -462,7 +463,7 @@ async function loadTab(tab) {
 async function loadPrice(period) {
   currentPeriod = period;
   document.querySelectorAll('.period-tab').forEach(b => {
-    const labelMap = {'1m':'1ヶ月','3m':'3ヶ月','6m':'6ヶ月','1y':'1年','3y':'3年','5y':'5年','10y':'10年'};
+    const labelMap = {'1m':'1ヶ月','3m':'3ヶ月','6m':'6ヶ月','1y':'1年','3y':'3年','5y':'5年','10y':'10年','20y':'20年'};
     b.classList.toggle('active', b.textContent === labelMap[period]);
   });
   document.getElementById('price-loading').style.display = 'block';
