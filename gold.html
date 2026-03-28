@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="azuki-icon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>金（ゴールド）フロー可視化｜保有量・産出量・相場・貿易フロー | アズキぷらす</title>
+  <meta name="description" content="世界の金（ゴールド）を可視化。国別中央銀行保有量・産金国ランキング・貿易フロー地図・金相場チャートと重要イベントを一画面で確認。">
+  <meta name="keywords" content="金,ゴールド,金相場,金価格,中央銀行,金保有量,産金国,金貿易,アズキぷらす">
+  <link rel="canonical" href="https://azuki-plus.com/gold.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="金（ゴールド）フロー可視化｜保有量・産出量・相場・貿易フロー | アズキぷらす">
+  <meta property="og:description" content="国別金保有量・産金国・貿易フロー・金相場チャートを一画面で確認。">
+  <meta property="og:url" content="https://azuki-plus.com/gold.html">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "金（ゴールド）フロー可視化",
+    "url": "https://azuki-plus.com/gold.html",
+    "description": "国別金保有量・産金国・貿易フロー・金相場チャートを可視化。",
+    "applicationCategory": "FinanceApplication",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
+    "author": { "@type": "Person", "name": "アズキぷらす" }
+  }
+  </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4271655790847344" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#0c0c14;--s:#13131f;--s2:#1c1c2e;--b:rgba(255,255,255,.07);
+      --t:#e8e8f4;--t2:#8888aa;--t3:#444466;
+      --gold:#ffd700;--gold2:#b8960c;--green:#00cc66;--red:#ff4455;--blue:#4488ff;
+    }
+    body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--t);font-size:14px;line-height:1.7;min-height:100vh;}
+    header{background:linear-gradient(135deg,#0c0c14,#1a1510);border-bottom:1px solid rgba(255,215,0,.15);padding:18px 20px;text-align:center;}
+    header .back a{font-size:12px;color:var(--t3);text-decoration:none;}
+    header h1{font-size:clamp(16px,4vw,22px);font-weight:700;margin:6px 0 4px;color:var(--gold);}
+    header p{font-size:12px;color:var(--t2);}
+    .breadcrumb{background:var(--s);border-bottom:1px solid var(--b);padding:8px 20px;font-size:11px;color:var(--t3);}
+    .breadcrumb a{color:var(--t3);text-decoration:none;}
+    .ad-slot{background:var(--s);border-bottom:1px solid var(--b);padding:10px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    .container{max-width:1000px;margin:0 auto;padding:20px 16px 60px;display:flex;flex-direction:column;gap:16px;}
+    .card{background:var(--s);border:1px solid rgba(255,215,0,.1);border-radius:14px;padding:18px 20px;}
+    .section-title{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:12px;}
+
+    /* タブ */
+    .tab-row{display:flex;gap:6px;flex-wrap:wrap;}
+    .tab-btn{padding:8px 16px;border-radius:8px 8px 0 0;font-size:13px;font-family:inherit;border:1px solid rgba(255,215,0,.2);border-bottom:none;background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s;}
+    .tab-btn.active{background:var(--s);color:var(--gold);border-color:rgba(255,215,0,.3);}
+    .tab-content{display:none;}
+    .tab-content.active{display:block;}
+
+    /* 相場チャート */
+    .period-tabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;}
+    .period-tab{padding:4px 10px;border-radius:5px;font-size:11px;font-family:inherit;border:1px solid var(--b);background:var(--s2);color:var(--t2);cursor:pointer;}
+    .period-tab.active{background:var(--gold2);color:#fff;border-color:var(--gold2);}
+    .chart-wrap{position:relative;height:280px;}
+    .price-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+    .price-item{background:var(--s2);border-radius:8px;padding:10px 12px;text-align:center;}
+    .price-label{font-size:10px;color:var(--t3);margin-bottom:3px;}
+    .price-val{font-family:"Lato",sans-serif;font-size:18px;font-weight:900;}
+
+    /* イベントリスト */
+    .event-list{display:flex;flex-direction:column;gap:6px;margin-top:12px;}
+    .event-item{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;background:var(--s2);border-radius:8px;border-left:3px solid var(--gold2);}
+    .event-date{font-size:11px;color:var(--t3);min-width:80px;font-family:"Lato",sans-serif;}
+    .event-text{font-size:12px;flex:1;}
+    .event-up{border-left-color:var(--green);}
+    .event-down{border-left-color:var(--red);}
+
+    /* ランキング */
+    .rank-list{display:flex;flex-direction:column;gap:7px;}
+    .rank-item{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--s2);border-radius:8px;}
+    .rank-num{font-family:"Lato",sans-serif;font-size:15px;font-weight:900;min-width:26px;}
+    .rank-flag{font-size:18px;}
+    .rank-name{flex:1;font-size:13px;font-weight:700;}
+    .rank-bar-wrap{width:100px;height:6px;background:var(--b);border-radius:3px;overflow:hidden;}
+    .rank-bar{height:100%;background:var(--gold2);border-radius:3px;}
+    .rank-val{font-family:"Lato",sans-serif;font-size:13px;font-weight:700;color:var(--gold);min-width:70px;text-align:right;}
+    .rank-sub{font-size:10px;color:var(--t3);}
+    .trend-up{color:var(--green);}
+    .trend-down{color:var(--red);}
+    .trend-flat{color:var(--t3);}
+
+    /* 地図 */
+    #gold-map{height:400px;border-radius:10px;overflow:hidden;}
+    .leaflet-container{background:#0a1628 !important;}
+
+    .summary-box{background:var(--s2);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--t2);line-height:1.8;margin-top:10px;border-left:3px solid var(--gold2);}
+    .period-note{font-size:11px;color:var(--t3);margin-bottom:8px;}
+    .loading-text{text-align:center;padding:30px;color:var(--t2);font-size:13px;}
+    .notice{font-size:11px;color:var(--t3);line-height:1.7;padding:10px 14px;background:var(--s2);border-radius:8px;}
+    .ad-mid{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:12px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    footer{text-align:center;font-size:12px;color:var(--t3);padding:20px;border-top:1px solid var(--b);}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .spinner{width:28px;height:28px;border:3px solid var(--b);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 8px;}
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="back"><a href="index.html">← アズキぷらす</a></p>
+  <h1>🥇 金（ゴールド）フロー可視化</h1>
+  <p>保有量・産出量・貿易フロー・相場を一画面で確認</p>
+</header>
+
+<nav class="breadcrumb">
+  <a href="index.html">アズキぷらす</a> › 金フロー可視化
+</nav>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<div class="container">
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="padding:16px 20px 0;">
+      <div class="tab-row">
+        <button class="tab-btn active" onclick="switchTab('price')">📈 金相場</button>
+        <button class="tab-btn" onclick="switchTab('holdings')">🏦 国別保有量</button>
+        <button class="tab-btn" onclick="switchTab('production')">⛏️ 産出国</button>
+        <button class="tab-btn" onclick="switchTab('flow')">🗺️ 貿易フロー</button>
+      </div>
+    </div>
+    <div style="padding:16px 20px 20px;border-top:1px solid rgba(255,215,0,.1);">
+
+      <!-- 相場タブ -->
+      <div id="tab-price" class="tab-content active">
+        <div class="section-title">金価格チャート（USD/oz）</div>
+        <div class="period-tabs">
+          <button class="period-tab" onclick="loadPrice('1m')">1ヶ月</button>
+          <button class="period-tab" onclick="loadPrice('3m')">3ヶ月</button>
+          <button class="period-tab" onclick="loadPrice('6m')">6ヶ月</button>
+          <button class="period-tab active" onclick="loadPrice('1y')">1年</button>
+          <button class="period-tab" onclick="loadPrice('3y')">3年</button>
+          <button class="period-tab" onclick="loadPrice('5y')">5年</button>
+          <button class="period-tab" onclick="loadPrice('10y')">10年</button>
+        </div>
+        <div class="price-summary">
+          <div class="price-item">
+            <div class="price-label">現在値（USD/oz）</div>
+            <div class="price-val" id="price-current" style="color:var(--gold);">--</div>
+          </div>
+          <div class="price-item">
+            <div class="price-label">期間高値</div>
+            <div class="price-val" id="price-high" style="color:var(--green);">--</div>
+          </div>
+          <div class="price-item">
+            <div class="price-label">期間安値</div>
+            <div class="price-val" id="price-low" style="color:var(--red);">--</div>
+          </div>
+        </div>
+        <div id="price-loading" class="loading-text"><div class="spinner"></div>データ取得中...</div>
+        <div id="price-chart-wrap" style="display:none;">
+          <div class="chart-wrap"><canvas id="price-chart"></canvas></div>
+          <div class="section-title" style="margin-top:16px;">重要イベント</div>
+          <div id="event-list" class="event-list"></div>
+        </div>
+      </div>
+
+      <!-- 保有量タブ -->
+      <div id="tab-holdings" class="tab-content">
+        <div class="section-title">中央銀行 金保有量ランキング（トン）</div>
+        <div id="holdings-loading" class="loading-text"><div class="spinner"></div>データ取得中...</div>
+        <div id="holdings-content" style="display:none;">
+          <div class="period-note" id="holdings-period"></div>
+          <div id="holdings-list" class="rank-list"></div>
+          <div id="holdings-summary" class="summary-box"></div>
+        </div>
+      </div>
+
+      <!-- 産出国タブ -->
+      <div id="tab-production" class="tab-content">
+        <div class="section-title">産金国ランキング（トン/年）</div>
+        <div id="production-loading" class="loading-text"><div class="spinner"></div>データ取得中...</div>
+        <div id="production-content" style="display:none;">
+          <div class="period-note" id="production-period"></div>
+          <div id="production-list" class="rank-list"></div>
+          <div id="production-summary" class="summary-box"></div>
+        </div>
+      </div>
+
+      <!-- 貿易フロータブ -->
+      <div id="tab-flow" class="tab-content">
+        <div class="section-title">金貿易フロー（主要ルート）</div>
+        <div style="font-size:11px;color:var(--t3);margin-bottom:8px;" id="flow-ai-note">AIによる推定データ（参考値）</div>
+        <div id="flow-loading" class="loading-text"><div class="spinner"></div>AIが最新データを取得中...</div>
+        <div id="gold-map" style="display:none;"></div>
+        <div id="flow-rank-wrap" style="display:none;margin-top:12px;">
+          <div class="section-title">流通ルートランキング（トン/年）</div>
+          <div id="flow-rank-list" class="rank-list"></div>
+        </div>
+        <div id="flow-summary" class="summary-box" style="display:none;"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="ad-mid">
+    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+  <div class="notice">
+    ⚠️ 金相場はYahoo Finance経由のデータです。保有量・産出量・貿易フローはAIによる推定データ（参考値）です。投資判断の根拠にはなりません。
+  </div>
+</div>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<footer>© アズキぷらす | 株式投資・決算解説 YouTubeチャンネル</footer>
+
+<script>
+const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
+const loaded = { price: false, holdings: false, production: false, flow: false };
+let priceChart = null;
+let goldMap = null;
+let currentPeriod = '1y';
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['price','holdings','production','flow'][i] === tab);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (!loaded[tab]) loadTab(tab);
+  if (tab === 'flow' && goldMap) setTimeout(() => goldMap.invalidateSize(), 100);
+}
+
+async function fetchGold(type, extra='') {
+  const dayKey = new Date().toISOString().split('T')[0];
+  const res = await fetch(`${WORKER}/gold?type=${type}${extra}&_=${dayKey}`, { cache: 'no-store' });
+  return res.json();
+}
+
+async function loadTab(tab) {
+  loaded[tab] = true;
+  try {
+    const data = await fetchGold(tab, tab==='price'?`&period=${currentPeriod}`:'');
+    if (data.error) throw new Error(data.error);
+    if (tab==='price') renderPrice(data);
+    if (tab==='holdings') renderHoldings(data);
+    if (tab==='production') renderProduction(data);
+    if (tab==='flow') renderFlow(data);
+  } catch(e) {
+    document.getElementById(tab+'-loading').textContent = 'データ取得エラー: ' + e.message;
+  }
+}
+
+async function loadPrice(period) {
+  currentPeriod = period;
+  document.querySelectorAll('.period-tab').forEach(b => {
+    b.classList.toggle('active', b.textContent === {
+      '1m':'1ヶ月','3m':'3ヶ月','6m':'6ヶ月','1y':'1年','3y':'3年','5y':'5年','10y':'10年'
+    }[period]);
+  });
+  document.getElementById('price-loading').style.display = 'block';
+  document.getElementById('price-chart-wrap').style.display = 'none';
+  try {
+    const data = await fetchGold('price', `&period=${period}`);
+    if (data.error) throw new Error(data.error);
+    renderPrice(data);
+  } catch(e) {
+    document.getElementById('price-loading').textContent = 'エラー: ' + e.message;
+  }
+}
+
+function renderPrice(data) {
+  document.getElementById('price-loading').style.display = 'none';
+  document.getElementById('price-chart-wrap').style.display = 'block';
+  const prices = data.prices || [];
+  if (!prices.length) return;
+
+  const vals = prices.map(p => p.price);
+  const current = vals[vals.length-1];
+  const high = Math.max(...vals);
+  const low = Math.min(...vals);
+  document.getElementById('price-current').textContent = '$' + current.toLocaleString();
+  document.getElementById('price-high').textContent = '$' + high.toLocaleString();
+  document.getElementById('price-low').textContent = '$' + low.toLocaleString();
+
+  // チャート
+  const ctx = document.getElementById('price-chart').getContext('2d');
+  if (priceChart) priceChart.destroy();
+
+  // イベントの日付をマーク
+  const events = data.events || [];
+  const eventDates = new Set(events.map(e => e.date));
+  const pointColors = prices.map(p => eventDates.has(p.date) ? '#ffd700' : 'transparent');
+  const pointSizes = prices.map(p => eventDates.has(p.date) ? 6 : 0);
+
+  priceChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: prices.map(p => p.date),
+      datasets: [{
+        label: 'Gold (USD/oz)',
+        data: vals,
+        borderColor: '#ffd700',
+        backgroundColor: 'rgba(255,215,0,.08)',
+        borderWidth: 2,
+        pointRadius: pointSizes,
+        pointBackgroundColor: pointColors,
+        fill: true,
+        tension: 0.2,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color:'#444466', maxTicksLimit: 8, maxRotation: 0 }, grid: { color:'rgba(255,255,255,.04)' } },
+        y: { ticks: { color:'#444466', callback: v => '$'+v.toLocaleString() }, grid: { color:'rgba(255,255,255,.04)' } }
+      }
+    }
+  });
+
+  // イベントリスト
+  const colors = { '上昇':'event-up', '下落':'event-down', '変動':'' };
+  document.getElementById('event-list').innerHTML = events.map(e => `
+    <div class="event-item ${colors[e.impact]||''}">
+      <span class="event-date">${e.date}</span>
+      <span class="event-text">${e.event}</span>
+      <span style="font-size:11px;color:${e.impact==='上昇'?'var(--green)':e.impact==='下落'?'var(--red)':'var(--t3)'};">${e.impact}</span>
+    </div>
+  `).join('');
+}
+
+function renderRankList(items, container, periodEl, summaryEl, valKey, unit, extra) {
+  document.getElementById(container.replace('-list','-loading')).style.display = 'none';
+  document.getElementById(container.replace('-list','-content')).style.display = 'block';
+  const max = Math.max(...items.map(d => d[valKey]||0), 1);
+  const rankColors = ['#ffd700','#c0c0c0','#cd7f32'];
+  document.getElementById(container).innerHTML = items.map((item,i) => `
+    <div class="rank-item">
+      <span class="rank-num" style="color:${rankColors[i]||'var(--t3)'};">${i+1}</span>
+      <span class="rank-flag">${item.flag||'🏅'}</span>
+      <span class="rank-name">${item.country}${item.note?`<br><span class="rank-sub">${item.note}</span>`:''}</span>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${(item[valKey]/max*100).toFixed(1)}%;"></div></div>
+      <span class="rank-val">${(item[valKey]||0).toLocaleString()}${unit}${extra?extra(item):''}</span>
+    </div>
+  `).join('');
+}
+
+function renderHoldings(data) {
+  const items = data.countries || [];
+  renderRankList(items, 'holdings-list', 'holdings-period', 'holdings-content', 'tons', 't');
+  document.getElementById('holdings-period').textContent = `⏱ データ期間: ${data.period||'—'}（AIによる推定・参考値）`;
+  document.getElementById('holdings-summary').innerHTML = `<strong style="color:var(--gold);">📰 今日の金市場トピック</strong><br>${data.summary||'—'}`;
+}
+
+function renderProduction(data) {
+  const items = data.countries || [];
+  renderRankList(items, 'production-list', 'production-period', 'production-content', 'tons', 't/年');
+  document.getElementById('production-period').textContent = `⏱ データ期間: ${data.period||'—'}（AIによる推定・参考値）`;
+  document.getElementById('production-summary').innerHTML = `<strong style="color:var(--gold);">📰 金産出の最新トピック</strong><br>${data.summary||'—'}`;
+}
+
+function renderFlow(data) {
+  document.getElementById('flow-loading').style.display = 'none';
+  document.getElementById('gold-map').style.display = 'block';
+
+  if (!goldMap) {
+    goldMap = L.map('gold-map', { center: [30, 20], zoom: 2 });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap © CARTO', maxZoom: 10
+    }).addTo(goldMap);
+  }
+
+  const flows = data.flows || [];
+  const maxTons = Math.max(...flows.map(f => f.tons||0), 1);
+
+  flows.forEach(flow => {
+    if (!flow.fromLat || !flow.toLat) return;
+    const weight = Math.max(1, Math.round((flow.tons/maxTons)*8));
+    const color = flow.tons > maxTons*0.6 ? '#ffd700' : flow.tons > maxTons*0.3 ? '#b8960c' : '#8b6914';
+    const midLat = (flow.fromLat + flow.toLat) / 2 + 8;
+    const midLng = (flow.fromLng + flow.toLng) / 2;
+    L.polyline([[flow.fromLat,flow.fromLng],[midLat,midLng],[flow.toLat,flow.toLng]], {
+      color, weight, opacity: 0.7, smoothFactor: 1,
+    }).bindTooltip(`<div style="background:rgba(13,13,20,.9);border:1px solid #ffd700;border-radius:6px;padding:6px 10px;font-size:12px;color:#fff;">${flow.from} → ${flow.to}<br>${(flow.tons||0).toLocaleString()} トン/年</div>`, { sticky: true }).addTo(goldMap);
+    L.circleMarker([flow.toLat,flow.toLng],{radius:5,color,fillColor:color,fillOpacity:.8,weight:1}).addTo(goldMap);
+    L.circleMarker([flow.fromLat,flow.fromLng],{radius:4,color:'#fff',fillColor:'#fff',fillOpacity:.5,weight:1}).addTo(goldMap);
+  });
+
+  // ランキング
+  const sorted = [...flows].sort((a,b)=>(b.tons||0)-(a.tons||0));
+  const rankColors = ['#ffd700','#c0c0c0','#cd7f32'];
+  document.getElementById('flow-rank-list').innerHTML = sorted.map((f,i) => `
+    <div class="rank-item">
+      <span class="rank-num" style="color:${rankColors[i]||'var(--t3)'};">${i+1}</span>
+      <span class="rank-name">${f.from} → ${f.to}</span>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${((f.tons||0)/maxTons*100).toFixed(1)}%;"></div></div>
+      <span class="rank-val">${(f.tons||0).toLocaleString()} t</span>
+    </div>
+  `).join('');
+  document.getElementById('flow-rank-wrap').style.display = 'block';
+
+  if (data.period) document.getElementById('flow-ai-note').textContent = `AIによる推定データ（${data.period}・参考値）`;
+  if (data.summary) {
+    document.getElementById('flow-summary').innerHTML = `<strong style="color:var(--gold);">📰 今日の金フロートピック</strong><br>${data.summary}`;
+    document.getElementById('flow-summary').style.display = 'block';
+  }
+}
+
+// 初期ロード
+loadTab('price');
+</script>
+</body>
+</html>
