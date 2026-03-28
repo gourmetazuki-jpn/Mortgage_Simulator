@@ -299,7 +299,12 @@ function sortProduction(key) {
   const sorted = [...productionData].sort((a,b) => {
     if (key === 'production') return (b.production||b.tons||0) - (a.production||a.tons||0);
     if (key === 'exports') return (b.exports||0) - (a.exports||0);
-    if (key === 'hoarding') return (hoardingOrder[b.hoarding]||0) - (hoardingOrder[a.hoarding]||0);
+    if (key === 'hoarding') {
+      // 輸出率が低い（備蓄傾向高）順にソート
+      const expRateA = (a.production||a.tons||0) > 0 ? (a.exports||0)/(a.production||a.tons||1)*100 : 100;
+      const expRateB = (b.production||b.tons||0) > 0 ? (b.exports||0)/(b.production||b.tons||1)*100 : 100;
+      return expRateA - expRateB; // 輸出率低い順（備蓄傾向高い順）
+    }
     return 0;
   });
   renderProductionList(sorted);
@@ -609,7 +614,18 @@ function renderProductionList(items) {
         <span class="rank-num" style="color:${rankColors[i]||'var(--t3)'};">${i+1}</span>
         <span class="rank-flag">${item.flag||'⛏️'}</span>
         <span class="rank-name" style="flex:1;">${item.country}</span>
-        ${item.hoarding && item.hoarding !== '不明' ? `<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${hoardingColor(item.hoarding)}22;color:${hoardingColor(item.hoarding)};">備蓄傾向${item.hoarding}</span>` : ''}
+        ${(() => {
+      // 輸出率から備蓄傾向を自動計算（AIのhoardingは信用しない）
+      const prod2 = item.production || item.tons || 0;
+      const exp2 = item.exports || 0;
+      if (!prod2) return '';
+      const expRate2 = exp2 / prod2 * 100;
+      let hoarding, hcolor;
+      if (expRate2 >= 90) { hoarding = '低'; hcolor = '#00cc66'; }      // 90%以上輸出→国内備蓄少
+      else if (expRate2 >= 60) { hoarding = '中'; hcolor = '#ffaa00'; } // 60〜90%輸出
+      else { hoarding = '高'; hcolor = '#ff4455'; }                     // 60%未満輸出→国内備蓄多
+      return `<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${hcolor}22;color:${hcolor};">備蓄傾向${hoarding}</span>`;
+    })()}
         <span class="rank-val">${prod.toLocaleString()}t</span>
       </div>
       <div style="padding-left:52px;">
