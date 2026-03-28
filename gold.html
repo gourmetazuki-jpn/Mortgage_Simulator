@@ -261,14 +261,32 @@ async function fetchGold(type, extra='') {
 function sortHoldings(key) {
   document.querySelectorAll('[id^="sort-hold-"]').forEach(b => b.classList.remove('active'));
   document.getElementById('sort-hold-'+key).classList.add('active');
+  // 正規化関数（renderHoldingsListと同じロジック）
+  const toB2 = v => {
+    if (!v||v<=0) return 0;
+    if (v>1e12) return Math.round(v/1e9);
+    if (v>1e9)  return Math.round(v/1e9);
+    if (v>1e6)  return Math.round(v/1e3);
+    if (v<1)    return Math.round(v*1000);
+    return Math.round(v);
+  };
+  const getDebt = item => {
+    let d = toB2(item.debt_usd||0);
+    const cap = {'United States':40000,'China':20000,'Japan':10000,'United Kingdom':4000,'France':4000,'Italy':4000,'Germany':3500,'India':3000,'Canada':2500,'Brazil':2000,'Spain':1800,'South Korea':1000,'Australia':800,'Mexico':700,'Saudi Arabia':500,'Russia':500,'Turkey':400,'Indonesia':400,'Switzerland':300,'Poland':400,'Netherlands':600,'Sweden':300,'Kazakhstan':100,'Uzbekistan':50,'Qatar':200,'UAE':300,'Singapore':600,'Argentina':300,'Colombia':200,'Chile':200,'South Africa':200,'Egypt':200}[item.country];
+    if (cap && d > cap * 2) d = 0;
+    if (d > 200000) d = 0;
+    return d;
+  };
+  const getBacking = item => {
+    const gold = item.gold_usd || 0;
+    const debt = getDebt(item);
+    return debt > 0 && gold > 0 ? Math.round(toB2(gold) / debt * 100 * 10) / 10 : (item.gold_backing||0);
+  };
+
   const sorted = [...holdingsData].sort((a,b) => {
     if (key === 'gold') return (b.gold_tons||b.tons||0) - (a.gold_tons||a.tons||0);
-    if (key === 'debt') {
-      let da = a.debt_usd||0, db = b.debt_usd||0;
-      if (da>0&&da<100) da*=1000; if (db>0&&db<100) db*=1000;
-      return db - da;
-    }
-    if (key === 'backing') return (b.gold_backing||0) - (a.gold_backing||0);
+    if (key === 'debt') return getDebt(b) - getDebt(a);
+    if (key === 'backing') return getBacking(b) - getBacking(a);
     return 0;
   });
   renderHoldingsList(sorted);
