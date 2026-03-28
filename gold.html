@@ -140,10 +140,10 @@
             <button class="period-tab" onclick="loadPrice('1m')">1ヶ月</button>
             <button class="period-tab" onclick="loadPrice('3m')">3ヶ月</button>
             <button class="period-tab" onclick="loadPrice('6m')">6ヶ月</button>
-            <button class="period-tab active" onclick="loadPrice('1y')">1年</button>
+            <button class="period-tab" onclick="loadPrice('1y')">1年</button>
             <button class="period-tab" onclick="loadPrice('3y')">3年</button>
             <button class="period-tab" onclick="loadPrice('5y')">5年</button>
-            <button class="period-tab" onclick="loadPrice('10y')">10年</button>
+            <button class="period-tab active" onclick="loadPrice('10y')">10年</button>
           </div>
           <button class="period-tab" id="overlay-btn" onclick="toggleOverlay()" style="border-color:rgba(255,215,0,.4);">🏦 中銀保有量を重ねる</button>
         </div>
@@ -251,7 +251,7 @@ const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
 const loaded = { price: false, holdings: false, production: false, flow: false };
 let priceChart = null;
 let goldMap = null;
-let currentPeriod = '1y';
+let currentPeriod = '10y';
 
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => {
@@ -297,42 +297,89 @@ async function loadTimeSeries() {
   }
 }
 
+const TS_COLORS = ['#ffd700','#4488ff','#ff4455','#00cc66','#ff8844','#aa44ff','#00aaff','#ff44aa','#ffcc00','#44ffcc'];
+const selectedCountries = new Set();
+
 function renderTimeSeries(data) {
   document.getElementById('ts-loading').style.display = 'none';
   document.getElementById('ts-chart-wrap').style.display = 'block';
+  drawTsChart();
+}
+
+function toggleTsCountry(country) {
+  if (selectedCountries.has(country)) {
+    selectedCountries.delete(country);
+  } else {
+    selectedCountries.add(country);
+  }
+  drawTsChart();
+  // ランキングリストのハイライトを更新
+  document.querySelectorAll('.holdings-item').forEach(el => {
+    const c = el.dataset.country;
+    el.style.borderColor = selectedCountries.has(c) ? TS_COLORS[getCountryColorIdx(c)] : 'transparent';
+    el.style.borderWidth = selectedCountries.has(c) ? '2px' : '0';
+    el.style.borderStyle = 'solid';
+  });
+}
+
+function getCountryColorIdx(country) {
+  const countries = (timeSeriesData?.countries||[]).map(c=>c.country);
+  return countries.indexOf(country) % TS_COLORS.length;
+}
+
+function drawTsChart() {
+  const data = timeSeriesData;
+  if (!data) return;
   const countries = data.countries || [];
-  const colors = ['#ffd700','#4488ff','#ff4455','#00cc66','#ff8844','#aa44ff','#00aaff','#ff44aa'];
   const ctx = document.getElementById('ts-chart').getContext('2d');
   if (tsChart) tsChart.destroy();
 
-  // 全年を収集
   const allYears = new Set();
   countries.forEach(c => (c.series||[]).forEach(s => allYears.add(s.year)));
   const years = [...allYears].sort();
+
+  const activeCountries = selectedCountries.size > 0
+    ? countries.filter(c => selectedCountries.has(c.country))
+    : [];
+
+  if (activeCountries.length === 0) {
+    // 何も選択されていない場合はメッセージを表示
+    document.getElementById('ts-chart-wrap').innerHTML =
+      `<div style="text-align:center;padding:40px;color:var(--t3);font-size:13px;">
+        👆 下の国名をクリックするとグラフに追加されます<br>
+        複数の国を同時に比較できます
+      </div>`;
+    return;
+  }
 
   tsChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: years,
-      datasets: countries.map((c, i) => ({
-        label: `${c.flag||''} ${c.country}`,
-        data: years.map(y => (c.series||[]).find(s=>s.year===y)?.tons || null),
-        borderColor: colors[i % colors.length],
-        backgroundColor: 'transparent',
-        borderWidth: 2,
-        pointRadius: 3,
-        tension: 0.3,
-        spanGaps: true,
-      }))
+      datasets: activeCountries.map(c => {
+        const colorIdx = getCountryColorIdx(c.country);
+        return {
+          label: `${c.flag||''} ${c.country}`,
+          data: years.map(y => (c.series||[]).find(s=>s.year===y)?.tons || null),
+          borderColor: TS_COLORS[colorIdx],
+          backgroundColor: TS_COLORS[colorIdx] + '15',
+          borderWidth: 2.5,
+          pointRadius: 4,
+          tension: 0.3,
+          spanGaps: true,
+          fill: false,
+        };
+      })
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { color: '#8888aa', font: { size: 11 }, padding: 10 } },
+        legend: { position: 'bottom', labels: { color:'#8888aa', font:{size:11}, padding:10 } },
+        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y?.toLocaleString()}t` } }
       },
       scales: {
-        x: { ticks: { color:'#444466' }, grid: { color:'rgba(255,255,255,.04)' } },
-        y: { ticks: { color:'#444466', callback: v => v.toLocaleString()+'t' }, grid: { color:'rgba(255,255,255,.04)' } }
+        x: { ticks:{color:'#444466'}, grid:{color:'rgba(255,255,255,.04)'} },
+        y: { ticks:{color:'#444466', callback: v=>v.toLocaleString()+'t'}, grid:{color:'rgba(255,255,255,.04)'} }
       }
     }
   });
@@ -673,11 +720,12 @@ function renderHoldingsList(items) {
     const changeIcon = item.change==='増加'?'<span style="color:#00cc66;">▲</span>':item.change==='減少'?'<span style="color:#ff4455;">▼</span>':'<span style="color:var(--t3);">─</span>';
 
     return `
-    <div class="rank-item" style="flex-direction:column;align-items:stretch;gap:6px;">
+    <div class="rank-item holdings-item" data-country="${item.country}" style="flex-direction:column;align-items:stretch;gap:6px;cursor:pointer;transition:border .15s;" onclick="toggleTsCountry('${item.country}')">
       <div style="display:flex;align-items:center;gap:8px;">
         <span class="rank-num" style="color:${rankColors[i]||'var(--t3)'};">${i+1}</span>
         <span class="rank-flag">${item.flag||'🏅'}</span>
         <span class="rank-name" style="flex:1;">${item.country} ${changeIcon}</span>
+        <span style="font-size:10px;color:var(--t3);">📈 クリックで時系列</span>
         <span style="font-size:11px;padding:2px 7px;border-radius:4px;background:${backingColor}22;color:${backingColor};font-weight:700;">金裏付け率 ${backing}%</span>
       </div>
       <div style="padding-left:52px;display:flex;flex-direction:column;gap:3px;">
