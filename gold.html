@@ -331,9 +331,6 @@ function drawTsChart() {
   const data = timeSeriesData;
   if (!data) return;
   const countries = data.countries || [];
-  const ctx = document.getElementById('ts-chart').getContext('2d');
-  if (tsChart) tsChart.destroy();
-
   const allYears = new Set();
   countries.forEach(c => (c.series||[]).forEach(s => allYears.add(s.year)));
   const years = [...allYears].sort();
@@ -342,9 +339,11 @@ function drawTsChart() {
     ? countries.filter(c => selectedCountries.has(c.country))
     : [];
 
+  const wrap = document.getElementById('ts-chart-wrap');
+
   if (activeCountries.length === 0) {
-    // 何も選択されていない場合はメッセージを表示
-    document.getElementById('ts-chart-wrap').innerHTML =
+    if (tsChart) { tsChart.destroy(); tsChart = null; }
+    wrap.innerHTML =
       `<div style="text-align:center;padding:40px;color:var(--t3);font-size:13px;">
         👆 下の国名をクリックするとグラフに追加されます<br>
         複数の国を同時に比較できます
@@ -352,7 +351,14 @@ function drawTsChart() {
     return;
   }
 
-  tsChart = new Chart(ctx, {
+  // canvasが消えていたら再作成
+  if (!document.getElementById('ts-chart')) {
+    wrap.innerHTML = '<div style="position:relative;height:220px;"><canvas id="ts-chart"></canvas></div>';
+  }
+  const ctx2 = document.getElementById('ts-chart').getContext('2d');
+  if (tsChart) { tsChart.destroy(); tsChart = null; }
+
+  tsChart = new Chart(ctx2, {
     type: 'line',
     data: {
       labels: years,
