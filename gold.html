@@ -261,14 +261,18 @@ async function loadTab(tab) {
 async function loadPrice(period) {
   currentPeriod = period;
   document.querySelectorAll('.period-tab').forEach(b => {
-    b.classList.toggle('active', b.textContent === {
-      '1m':'1ヶ月','3m':'3ヶ月','6m':'6ヶ月','1y':'1年','3y':'3年','5y':'5年','10y':'10年'
-    }[period]);
+    const labelMap = {'1m':'1ヶ月','3m':'3ヶ月','6m':'6ヶ月','1y':'1年','3y':'3年','5y':'5年','10y':'10年'};
+    b.classList.toggle('active', b.textContent === labelMap[period]);
   });
   document.getElementById('price-loading').style.display = 'block';
+  document.getElementById('price-loading').innerHTML = '<div class="spinner"></div>データ取得中...';
   document.getElementById('price-chart-wrap').style.display = 'none';
+  document.getElementById('event-list').innerHTML = '';
   try {
-    const data = await fetchGold('price', `&period=${period}`);
+    // 期間ごとに異なるキャッシュキーで取得（短期→短期ニュース、長期→長期ニュース）
+    const dayKey = new Date().toISOString().split('T')[0];
+    const res = await fetch(`${WORKER}/gold?type=price&period=${period}&_=${dayKey}-${period}`, { cache: 'no-store' });
+    const data = await res.json();
     if (data.error) throw new Error(data.error);
     renderPrice(data);
   } catch(e) {
