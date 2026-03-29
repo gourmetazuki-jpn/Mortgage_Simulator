@@ -74,6 +74,9 @@
     .range-label{font-size:10px;color:var(--t3);margin-bottom:3px;}
     .range-val{font-family:"Lato",sans-serif;font-size:15px;font-weight:700;}
 
+    .macd-wrap{position:relative;height:120px;margin-top:8px;}
+    .macd-toggle{padding:5px 14px;border-radius:6px;font-size:12px;font-family:inherit;border:1px solid var(--b);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s;}
+    .macd-toggle.active{background:var(--blue);color:#fff;border-color:var(--blue);}
     .summary-box{background:var(--s2);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--t2);line-height:1.8;border-left:3px solid var(--red);}
     .notice{font-size:11px;color:var(--t3);line-height:1.7;padding:10px 14px;background:var(--s2);border-radius:8px;}
     .loading-text{text-align:center;padding:30px;color:var(--t2);font-size:13px;}
@@ -191,7 +194,14 @@
         <span><span class="legend-dot" style="background:#4488ff;"></span>IG OAS（ICE BofA）</span>
       </div>
       <div class="chart-wrap"><canvas id="spread-chart"></canvas></div>
-      <div style="font-size:11px;color:var(--t3);">⏱ データ：FRED（Federal Reserve Bank of St. Louis）公式</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
+        <div style="font-size:11px;color:var(--t3);">⏱ データ：FRED（Federal Reserve Bank of St. Louis）公式</div>
+        <button class="macd-toggle" id="macd-btn" onclick="toggleMACD()">📈 MACD表示</button>
+      </div>
+      <div id="macd-panel" style="display:none;margin-top:10px;">
+        <div style="font-size:10px;color:var(--t3);margin-bottom:4px;">MACD（12・26・9）― MACDライン <span style="color:#4488ff;">━</span> シグナル <span style="color:#ff8844;">━</span> ヒストグラム</div>
+        <div class="macd-wrap"><canvas id="macd-chart"></canvas></div>
+      </div>
     </div>
 
     <!-- AIコメント -->
@@ -222,8 +232,107 @@
 <script>
 const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
 let spreadChart = null;
+let macdChart = null;
 let currentData = null;
 let currentPeriod = '5y';
+let macdVisible = false;
+
+// EMA計算
+function calcEMA(data, period) {
+  const k = 2 / (period + 1);
+  const ema = [];
+  let prev = null;
+  for (const v of data) {
+    if (v === null || isNaN(v)) { ema.push(null); continue; }
+    if (prev === null) { prev = v; ema.push(v); continue; }
+    prev = v * k + prev * (1 - k);
+    ema.push(prev);
+  }
+  return ema;
+}
+
+// MACD計算（12・26・9）
+function calcMACD(values) {
+  const ema12 = calcEMA(values, 12);
+  const ema26 = calcEMA(values, 26);
+  const macdLine = ema12.map((v, i) => (v !== null && ema26[i] !== null) ? v - ema26[i] : null);
+  const signal = calcEMA(macdLine.filter(v => v !== null), 9);
+  // シグナルをmacdLineの長さに合わせて後ろに詰める
+  const signalFull = new Array(macdLine.length).fill(null);
+  let si = 0;
+  for (let i = 0; i < macdLine.length; i++) {
+    if (macdLine[i] !== null) { signalFull[i] = signal[si++] ?? null; }
+  }
+  const hist = macdLine.map((v, i) => (v !== null && signalFull[i] !== null) ? v - signalFull[i] : null);
+  return { macdLine, signal: signalFull, hist };
+}
+
+function toggleMACD() {
+  macdVisible = !macdVisible;
+  const btn = document.getElementById('macd-btn');
+  const panel = document.getElementById('macd-panel');
+  btn.classList.toggle('active', macdVisible);
+  btn.textContent = macdVisible ? '📈 MACD非表示' : '📈 MACD表示';
+  panel.style.display = macdVisible ? 'block' : 'none';
+  if (macdVisible && currentData) drawMACD(currentData.hy, 'macd-chart');
+}
+
+function drawMACD(seriesData, canvasId) {
+  const values = seriesData.map(d => d.value);
+  const labels = seriesData.map(d => d.date);
+  const { macdLine, signal, hist } = calcMACD(values);
+  const ctx = document.getElementById(canvasId)?.getContext('2d');
+  if (!ctx) return;
+  if (macdChart) { macdChart.destroy(); macdChart = null; }
+  macdChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          type: 'bar',
+          label: 'ヒストグラム',
+          data: hist,
+          backgroundColor: hist.map(v => v === null ? 'transparent' : v >= 0 ? 'rgba(0,204,102,.6)' : 'rgba(255,68,85,.6)'),
+          borderWidth: 0,
+          yAxisID: 'y',
+        },
+        {
+          type: 'line',
+          label: 'MACD',
+          data: macdLine,
+          borderColor: '#4488ff',
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: false,
+          tension: 0.2,
+          yAxisID: 'y',
+          spanGaps: true,
+        },
+        {
+          type: 'line',
+          label: 'シグナル',
+          data: signal,
+          borderColor: '#ff8844',
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: false,
+          tension: 0.2,
+          yAxisID: 'y',
+          spanGaps: true,
+        },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color:'#444466', maxTicksLimit: 8, maxRotation: 0 }, grid: { color:'rgba(255,255,255,.04)' } },
+        y: { ticks: { color:'#444466', callback: v => v.toFixed(1) }, grid: { color:'rgba(255,255,255,.04)' } }
+      }
+    }
+  });
+}
 
 async function loadSpread(period) {
   currentPeriod = period;
