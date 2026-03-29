@@ -396,15 +396,32 @@ function render(data) {
     const mSafe = document.getElementById('meter-safe');
     const mWarn = document.getElementById('meter-warning');
     const mDang = document.getElementById('meter-danger');
-    mSafe.className = 'meter-item'; mWarn.className = 'meter-item'; mDang.className = 'meter-item';
-    if (latestHY < 300) mSafe.classList.add('active-safe');
-    else if (latestHY < 500) mWarn.classList.add('active-warning');
-    else mDang.classList.add('active-danger');
-  }
+    // クラスをリセット
+    [mSafe, mWarn, mDang].forEach(el => {
+      el.className = 'meter-item';
+      el.style.borderColor = '';
+      el.style.background = '';
+    });
+    let zone = '';
+    if (latestHY < 300) {
+      mSafe.style.borderColor = 'var(--green)';
+      mSafe.style.background = 'rgba(0,204,102,.12)';
+      zone = '安全';
+    } else if (latestHY < 500) {
+      mWarn.style.borderColor = 'var(--amber)';
+      mWarn.style.background = 'rgba(255,170,0,.12)';
+      zone = '注意';
+    } else {
+      mDang.style.borderColor = 'var(--red)';
+      mDang.style.background = 'rgba(255,68,85,.12)';
+      zone = '危険';
+    }
 
-  // リスクコメント
-  if (cdx.risk_comment) {
-    document.getElementById('risk-comment').textContent = cdx.risk_comment;
+    // リスクコメントをFRED値ベースで生成
+    const igStr = latestIG ? `IG ${latestIG.toFixed(0)}bp` : '';
+    const riskText = cdx.risk_comment ||
+      `現在HY OAS ${latestHY.toFixed(0)}bp・${igStr}。リスクゾーン：${zone}。`;
+    document.getElementById('risk-comment').textContent = riskText;
     document.getElementById('risk-comment').style.display = 'block';
   }
 
