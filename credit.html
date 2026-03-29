@@ -74,7 +74,7 @@
     .range-label{font-size:10px;color:var(--t3);margin-bottom:3px;}
     .range-val{font-family:"Lato",sans-serif;font-size:15px;font-weight:700;}
 
-    .macd-wrap{position:relative;height:120px;margin-top:8px;}
+    .macd-wrap{position:relative;height:180px;margin-top:8px;}
     .pc-btn{padding:7px 14px;border-radius:8px;font-size:12px;font-family:inherit;border:1px solid var(--b);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s;text-align:left;line-height:1.4;}
     .pc-btn:hover{border-color:rgba(255,255,255,.2);}
     .pc-btn .pc-ticker{font-family:"Lato",sans-serif;font-size:13px;font-weight:900;display:block;}
@@ -201,7 +201,8 @@
       </div>
       <div class="chart-wrap"><canvas id="spread-chart"></canvas></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
-        <div style="font-size:11px;color:var(--t3);">⏱ データ：FRED（Federal Reserve Bank of St. Louis）公式</div>
+        <div id="macd-trend-comment" style="display:none;margin-top:10px;padding:10px 14px;border-radius:8px;font-size:12px;line-height:1.7;"></div>
+      <div style="font-size:11px;color:var(--t3);margin-top:8px;">⏱ データ：FRED（Federal Reserve Bank of St. Louis）公式</div>
         <button class="macd-toggle" id="macd-btn" onclick="toggleMACD()">📈 MACD表示</button>
       </div>
       <div id="macd-panel" style="display:none;margin-top:10px;">
@@ -238,6 +239,7 @@
         <div id="pc-macd-panel" style="display:none;margin-top:8px;">
           <div style="font-size:10px;color:var(--t3);margin-bottom:2px;">MACD（12・26・9）※最後に選択した銘柄</div>
           <div class="macd-wrap"><canvas id="pc-macd-chart"></canvas></div>
+          <div id="pc-macd-trend" style="display:none;margin-top:8px;padding:10px 14px;border-radius:8px;font-size:12px;line-height:1.7;"></div>
         </div>
         <div style="font-size:11px;color:var(--t3);margin-top:8px;">⏱ データ：Yahoo Finance（前日比は終値ベース）</div>
       </div>
@@ -294,6 +296,74 @@ function calcMACD(values) {
   return { macdLine, signal: signalFull, hist };
 }
 
+// MACDトレンド評価
+function evaluateMacdTrend(values, seriesName) {
+  const { macdLine, signal, hist } = calcMACD(values);
+  // 有効な値だけ取得
+  const validHist = hist.filter(v => v !== null);
+  const validMacd = macdLine.filter(v => v !== null);
+  const validSignal = signal.filter(v => v !== null);
+  if (validHist.length < 10) return null;
+
+  // 直近5本のヒストグラム
+  const recentHist = validHist.slice(-5);
+  const prevHist = validHist.slice(-10, -5);
+  const recentAvg = recentHist.reduce((a,b)=>a+b,0)/recentHist.length;
+  const prevAvg = prevHist.reduce((a,b)=>a+b,0)/prevHist.length;
+
+  // MACDとシグナルの位置関係
+  const latestMacd = validMacd[validMacd.length-1];
+  const latestSignal = validSignal[validSignal.length-1];
+  const macdAboveSignal = latestMacd > latestSignal;
+
+  // ゴールデン/デッドクロス判定（直近10本）
+  let crossType = null;
+  for (let i = validMacd.length-1; i > Math.max(0, validMacd.length-10); i--) {
+    const prev = validMacd[i-1] - validSignal[i-1];
+    const curr = validMacd[i] - validSignal[i];
+    if (prev < 0 && curr >= 0) { crossType = 'golden'; break; }
+    if (prev > 0 && curr <= 0) { crossType = 'dead'; break; }
+  }
+
+  // ヒストグラムのトレンド
+  const histTrend = recentAvg > prevAvg ? '拡大' : '縮小';
+  const histPositive = recentAvg > 0;
+
+  // 総合判定
+  let judgment, color, icon;
+  if (histPositive && histTrend === '拡大') {
+    judgment = `上昇モメンタムが強まっている（${seriesName}は拡大傾向・リスク上昇中）`;
+    color = '#ff4455'; icon = '⚠️';
+  } else if (histPositive && histTrend === '縮小') {
+    judgment = `上昇は続いているがモメンタムは鈍化（${seriesName}の拡大ペースが落ちてきた）`;
+    color = '#ffaa00'; icon = '🔶';
+  } else if (!histPositive && histTrend === '縮小') {
+    judgment = `下降トレンドが強まっている（${seriesName}は縮小傾向・リスク低下中）`;
+    color = '#00cc66'; icon = '✅';
+  } else {
+    judgment = `下降しているがモメンタムは弱まっている（${seriesName}の縮小ペースが鈍化）`;
+    color = '#ffaa00'; icon = '🔶';
+  }
+
+  const crossComment = crossType === 'golden'
+    ? '　📈 直近でゴールデンクロス発生（上昇転換シグナル）'
+    : crossType === 'dead'
+    ? '　📉 直近でデッドクロス発生（下降転換シグナル）'
+    : '';
+
+  return { judgment, color, icon, crossComment, macdAboveSignal };
+}
+
+function showMacdTrend(values, seriesName, commentElId) {
+  const eval_ = evaluateMacdTrend(values, seriesName);
+  const el = document.getElementById(commentElId);
+  if (!el || !eval_) return;
+  el.style.display = 'block';
+  el.style.background = eval_.color + '15';
+  el.style.borderLeft = `3px solid ${eval_.color}`;
+  el.innerHTML = `<strong style="color:${eval_.color};">${eval_.icon} MACDトレンド評価：</strong>${eval_.judgment}${eval_.crossComment}`;
+}
+
 function toggleMACD() {
   macdVisible = !macdVisible;
   const btn = document.getElementById('macd-btn');
@@ -301,7 +371,12 @@ function toggleMACD() {
   btn.classList.toggle('active', macdVisible);
   btn.textContent = macdVisible ? '📈 MACD非表示' : '📈 MACD表示';
   panel.style.display = macdVisible ? 'block' : 'none';
-  if (macdVisible && currentData) drawMACD(currentData.hy, 'macd-chart');
+  if (macdVisible && currentData) {
+    drawMACD(currentData.hy, 'macd-chart');
+    showMacdTrend(currentData.hy.map(d=>d.value), 'HYスプレッド', 'macd-trend-comment');
+  } else {
+    document.getElementById('macd-trend-comment').style.display = 'none';
+  }
 }
 
 function drawMACD(seriesData, canvasId) {
@@ -625,7 +700,13 @@ function togglePcMACD() {
   panel.style.display = pcMacdVisible ? 'block' : 'none';
   if (pcMacdVisible && lastPcTicker && selectedPcTickers.has(lastPcTicker)) {
     const s = pcStocksData.find(s=>s.ticker===lastPcTicker);
-    if (s) drawPcMACD(s);
+    if (s) {
+      drawPcMACD(s);
+      showMacdTrend(s.prices.map(d=>d.price), `${s.ticker}株価`, 'pc-macd-trend');
+    }
+  } else {
+    const el = document.getElementById('pc-macd-trend');
+    if (el) el.style.display = 'none';
   }
 }
 

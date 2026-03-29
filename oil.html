@@ -99,7 +99,7 @@
     .notice{font-size:11px;color:var(--t3);line-height:1.7;padding:10px 14px;background:var(--s2);border-radius:8px;}
     .ad-mid{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:12px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
     footer{text-align:center;font-size:12px;color:var(--t3);padding:20px;border-top:1px solid var(--b);}
-    .macd-wrap{position:relative;height:100px;margin-top:6px;}
+    .macd-wrap{position:relative;height:180px;margin-top:6px;}
     .macd-toggle{padding:4px 12px;border-radius:6px;font-size:11px;font-family:inherit;border:1px solid var(--b);background:var(--s2);color:var(--t2);cursor:pointer;}
     .macd-toggle.active{background:var(--blue);color:#fff;border-color:var(--blue);}
     @keyframes spin{to{transform:rotate(360deg);}}
@@ -198,6 +198,7 @@
               <div id="oil-macd-panel" style="display:none;">
                 <div style="font-size:10px;color:var(--t3);margin:4px 0 2px;">MACD（12・26・9）</div>
                 <div class="macd-wrap"><canvas id="oil-macd-chart"></canvas></div>
+                <div id="oil-macd-trend" style="display:none;margin-top:8px;padding:10px 14px;border-radius:8px;font-size:12px;line-height:1.7;"></div>
               </div>
             </div>
           </div>
@@ -257,13 +258,73 @@ function calcMACD(values) {
   return { macdLine, signal: signalFull, hist };
 }
 
+// MACDトレンド評価（oil用）
+function evaluateMacdTrend(values, seriesName) {
+  const { macdLine, signal, hist } = calcMACD(values);
+  const validHist = hist.filter(v => v !== null);
+  const validMacd = macdLine.filter(v => v !== null);
+  const validSignal = signal.filter(v => v !== null);
+  if (validHist.length < 10) return null;
+  const recentHist = validHist.slice(-5);
+  const prevHist = validHist.slice(-10, -5);
+  const recentAvg = recentHist.reduce((a,b)=>a+b,0)/recentHist.length;
+  const prevAvg = prevHist.reduce((a,b)=>a+b,0)/prevHist.length;
+  const latestMacd = validMacd[validMacd.length-1];
+  const latestSignal = validSignal[validSignal.length-1];
+  let crossType = null;
+  for (let i = validMacd.length-1; i > Math.max(0, validMacd.length-10); i--) {
+    const prev = validMacd[i-1] - validSignal[i-1];
+    const curr = validMacd[i] - validSignal[i];
+    if (prev < 0 && curr >= 0) { crossType = 'golden'; break; }
+    if (prev > 0 && curr <= 0) { crossType = 'dead'; break; }
+  }
+  const histTrend = recentAvg > prevAvg ? '拡大' : '縮小';
+  const histPositive = recentAvg > 0;
+  let judgment, color, icon;
+  if (histPositive && histTrend === '拡大') {
+    judgment = `上昇モメンタムが強まっている（${seriesName}は上昇トレンド継続中）`;
+    color = '#ff4455'; icon = '⚠️';
+  } else if (histPositive && histTrend === '縮小') {
+    judgment = `上昇は続いているがモメンタムは鈍化（${seriesName}の上昇ペースが落ちてきた）`;
+    color = '#ffaa00'; icon = '🔶';
+  } else if (!histPositive && histTrend === '縮小') {
+    judgment = `下降トレンドが強まっている（${seriesName}は下落継続中）`;
+    color = '#00cc66'; icon = '📉';
+  } else {
+    judgment = `下降しているがモメンタムは弱まっている（${seriesName}の下落ペースが鈍化）`;
+    color = '#ffaa00'; icon = '🔶';
+  }
+  const crossComment = crossType === 'golden'
+    ? '　📈 直近でゴールデンクロス発生（上昇転換シグナル）'
+    : crossType === 'dead'
+    ? '　📉 直近でデッドクロス発生（下降転換シグナル）'
+    : '';
+  return { judgment, color, icon, crossComment };
+}
+
+function showMacdTrend(values, seriesName, commentElId) {
+  const eval_ = evaluateMacdTrend(values, seriesName);
+  const el = document.getElementById(commentElId);
+  if (!el || !eval_) return;
+  el.style.display = 'block';
+  el.style.background = eval_.color + '15';
+  el.style.borderLeft = `3px solid ${eval_.color}`;
+  el.innerHTML = `<strong style="color:${eval_.color};">${eval_.icon} MACDトレンド評価：</strong>${eval_.judgment}${eval_.crossComment}`;
+}
+
 function toggleOilMACD() {
   oilMacdVisible = !oilMacdVisible;
   const btn = document.getElementById('oil-macd-btn');
   const panel = document.getElementById('oil-macd-panel');
   btn.classList.toggle('active', oilMacdVisible);
   panel.style.display = oilMacdVisible ? 'block' : 'none';
-  if (oilMacdVisible && latestPrices.length) drawOilMACD();
+  if (oilMacdVisible && latestPrices.length) {
+    drawOilMACD();
+    showMacdTrend(latestPrices.map(d=>d.value), 'WTI原油価格', 'oil-macd-trend');
+  } else {
+    const el = document.getElementById('oil-macd-trend');
+    if (el) el.style.display = 'none';
+  }
 }
 
 function drawOilMACD() {
