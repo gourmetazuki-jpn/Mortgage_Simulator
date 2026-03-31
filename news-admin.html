@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ニュース管理画面 | アズキぷらす</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{--bg:#0c0c14;--s:#13131f;--s2:#1c1c2e;--b:rgba(255,255,255,.07);--t:#e8e8f4;--t2:#8888aa;--t3:#444466;--blue:#4488ff;--green:#00cc66;--amber:#ffaa00;--red:#ff4455;}
+    body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--t);font-size:14px;line-height:1.7;min-height:100vh;}
+    .container{max-width:900px;margin:0 auto;padding:20px 16px 60px;}
+    h1{font-size:20px;font-weight:700;margin-bottom:4px;color:var(--blue);}
+    .subtitle{font-size:12px;color:var(--t2);margin-bottom:20px;}
+
+    /* 認証 */
+    #auth-section{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:24px;max-width:400px;margin:40px auto;}
+    #auth-section h2{font-size:16px;margin-bottom:16px;}
+    input[type=password]{width:100%;background:var(--s2);border:1px solid var(--b);color:var(--t);border-radius:8px;padding:10px 14px;font-size:14px;font-family:inherit;margin-bottom:12px;}
+    .btn{padding:10px 20px;border-radius:8px;font-size:13px;font-family:inherit;border:none;cursor:pointer;font-weight:700;transition:opacity .15s;}
+    .btn:hover{opacity:.85;}
+    .btn-primary{background:var(--blue);color:#fff;}
+    .btn-success{background:var(--green);color:#fff;}
+    .btn-danger{background:var(--red);color:#fff;}
+    .btn-sm{padding:5px 12px;font-size:12px;}
+
+    /* メイン */
+    #main-section{display:none;}
+    .section{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:20px;margin-bottom:16px;}
+    .section-title{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:12px;}
+
+    /* 生成パネル */
+    .gen-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .week-label{font-size:13px;color:var(--t2);}
+    #week-display{font-family:"Lato",sans-serif;font-weight:700;font-size:15px;color:var(--blue);}
+
+    /* ニュース編集エリア */
+    .cat-block{border:1px solid var(--b);border-radius:10px;margin-bottom:12px;overflow:hidden;}
+    .cat-header{background:var(--s2);padding:10px 16px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px;}
+    .news-edit-item{padding:14px 16px;border-top:1px solid var(--b);}
+    .field-label{font-size:11px;color:var(--t3);margin-bottom:4px;}
+    textarea, input[type=text]{width:100%;background:var(--bg);border:1px solid var(--b);color:var(--t);border-radius:6px;padding:8px 10px;font-size:13px;font-family:inherit;resize:vertical;margin-bottom:8px;}
+    textarea{min-height:80px;}
+    select.field-select{background:var(--bg);border:1px solid var(--b);color:var(--t);border-radius:6px;padding:6px 10px;font-size:12px;font-family:inherit;}
+
+    .status-bar{padding:10px 16px;background:var(--s2);border-radius:8px;font-size:12px;color:var(--t2);margin-bottom:12px;}
+    .status-ok{color:var(--green);}
+    .status-err{color:var(--red);}
+
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .spinner{width:16px;height:16px;border:2px solid var(--b);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px;}
+  </style>
+</head>
+<body>
+<div class="container">
+  <!-- 認証 -->
+  <div id="auth-section">
+    <h2>🔐 管理者ログイン</h2>
+    <p style="font-size:12px;color:var(--t2);margin-bottom:16px;">管理者キーを入力してください</p>
+    <input type="password" id="admin-key" placeholder="Admin Key" onkeydown="if(event.key==='Enter')login()">
+    <button class="btn btn-primary" onclick="login()">ログイン</button>
+    <div id="auth-error" style="font-size:12px;color:var(--red);margin-top:8px;display:none;">キーが違います</div>
+  </div>
+
+  <!-- メイン -->
+  <div id="main-section">
+    <h1>📰 ニュース管理画面</h1>
+    <p class="subtitle">AIでニュースを生成 → ファクトチェック・編集 → 公開</p>
+
+    <!-- 生成パネル -->
+    <div class="section">
+      <div class="section-title">ニュース生成</div>
+      <div class="gen-row">
+        <span class="week-label">対象週：</span>
+        <span id="week-display"></span>
+        <button class="btn btn-primary" id="gen-btn" onclick="generateNews()">🤖 AIでニュース生成</button>
+        <span id="gen-status" style="font-size:12px;color:var(--t2);"></span>
+      </div>
+    </div>
+
+    <!-- ステータス -->
+    <div id="status-bar" class="status-bar" style="display:none;"></div>
+
+    <!-- 編集エリア -->
+    <div id="edit-section" style="display:none;">
+      <div class="section">
+        <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>ニュース確認・編集</span>
+          <button class="btn btn-success" onclick="publishNews()">✅ ファクトチェック済み・公開する</button>
+        </div>
+        <div id="edit-area"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
+const CAT_ORDER = ['politics','economy','society','tech','world'];
+const CAT_LABELS = {politics:'🏛️ 政治',economy:'💹 経済・ビジネス',society:'🌏 社会・事件・災害',tech:'🔬 科学・技術・テクノロジー',world:'🌐 国際'};
+let adminKey = '';
+let currentDraft = null;
+let currentWeek = '';
+
+function getWeekLabel() {
+  const today = new Date();
+  const d = new Date(today);
+  d.setDate(today.getDate() - today.getDay() + 1);
+  return d.toISOString().split('T')[0];
+}
+
+function login() {
+  const key = document.getElementById('admin-key').value.trim();
+  if (!key) return;
+  adminKey = key;
+  // 簡易確認（実際の認証はWorker側）
+  document.getElementById('auth-section').style.display = 'none';
+  document.getElementById('main-section').style.display = 'block';
+  currentWeek = getWeekLabel();
+  document.getElementById('week-display').textContent = currentWeek + 'の週';
+}
+
+async function generateNews() {
+  const btn = document.getElementById('gen-btn');
+  const status = document.getElementById('gen-status');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>生成中（1〜2分かかります）...';
+  status.textContent = '';
+  document.getElementById('status-bar').style.display = 'none';
+
+  try {
+    const res = await fetch(`${WORKER}/news-generate`, {
+      method: 'POST',
+      headers: { 'X-Admin-Key': adminKey, 'Content-Type': 'application/json' }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'エラー');
+    currentDraft = data.draft;
+    currentWeek = data.week;
+    showStatus('✓ 生成完了。内容を確認して公開してください。', 'ok');
+    renderEditArea(data.draft);
+  } catch(e) {
+    showStatus('エラー: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🤖 AIでニュース生成';
+  }
+}
+
+function showStatus(msg, type) {
+  const bar = document.getElementById('status-bar');
+  bar.style.display = 'block';
+  bar.className = 'status-bar ' + (type==='ok'?'status-ok':type==='err'?'status-err':'');
+  bar.textContent = msg;
+}
+
+function renderEditArea(draft) {
+  document.getElementById('edit-section').style.display = 'block';
+  const area = document.getElementById('edit-area');
+  area.innerHTML = CAT_ORDER.map(key => {
+    const cat = draft[key] || { label: key, news: [] };
+    const newsHtml = (cat.news||[]).map((n, ni) => `
+      <div class="news-edit-item">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:6px;">ニュース ${ni+1}</div>
+        <div class="field-label">タイトル</div>
+        <input type="text" id="${key}-${ni}-title" value="${escHtml(n.title||'')}">
+        <div class="field-label">解説</div>
+        <textarea id="${key}-${ni}-summary">${escHtml(n.summary||'')}</textarea>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <div>
+            <div class="field-label">情報源</div>
+            <input type="text" id="${key}-${ni}-source" value="${escHtml(n.source||'')}" style="width:200px;">
+          </div>
+          <div>
+            <div class="field-label">日付</div>
+            <input type="text" id="${key}-${ni}-date" value="${escHtml(n.date||'')}" style="width:130px;">
+          </div>
+          <div>
+            <div class="field-label">重要度</div>
+            <select class="field-select" id="${key}-${ni}-importance">
+              <option value="高" ${n.importance==='高'?'selected':''}>高</option>
+              <option value="中" ${n.importance!=='高'?'selected':''}>中</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    `).join('');
+    return `
+    <div class="cat-block">
+      <div class="cat-header">${CAT_LABELS[key]||key}</div>
+      ${newsHtml || '<div style="padding:12px 16px;font-size:12px;color:var(--t3);">ニュースなし</div>'}
+    </div>`;
+  }).join('');
+}
+
+function collectEdits() {
+  const categories = {};
+  CAT_ORDER.forEach(key => {
+    const cat = currentDraft[key] || { label: key, news: [] };
+    const news = (cat.news||[]).map((n, ni) => ({
+      title: document.getElementById(`${key}-${ni}-title`)?.value || n.title,
+      summary: document.getElementById(`${key}-${ni}-summary`)?.value || n.summary,
+      source: document.getElementById(`${key}-${ni}-source`)?.value || n.source,
+      date: document.getElementById(`${key}-${ni}-date`)?.value || n.date,
+      importance: document.getElementById(`${key}-${ni}-importance`)?.value || n.importance,
+      tags: n.tags || [],
+    }));
+    categories[key] = { label: cat.label, news, generated_at: cat.generated_at };
+  });
+  return categories;
+}
+
+async function publishNews() {
+  if (!currentDraft) { showStatus('まず生成してください', 'err'); return; }
+  if (!confirm('ファクトチェック済みですか？公開しますか？')) return;
+  showStatus('公開中...', '');
+  try {
+    const categories = collectEdits();
+    const res = await fetch(`${WORKER}/news-publish`, {
+      method: 'POST',
+      headers: { 'X-Admin-Key': adminKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ week: currentWeek, categories })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'エラー');
+    showStatus(`✅ 公開完了！${data.published_at?.slice(0,16)}に公開されました`, 'ok');
+  } catch(e) {
+    showStatus('エラー: ' + e.message, 'err');
+  }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
