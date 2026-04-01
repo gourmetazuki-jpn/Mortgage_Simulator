@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <link rel="icon" type="image/png" href="azuki-icon.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>今週の重要ニュース解説｜政治・経済・社会・テクノロジー・国際 | アズキぷらす</title>
-  <meta name="description" content="今週の重要ニュースを5カテゴリで解説。政治・経済・ビジネス・社会・テクノロジー・国際情勢をわかりやすく解説します。">
+  <title>今日の重要ニュース解説｜政治・経済・テクノロジー・国際 | アズキぷらす</title>
+  <meta name="description" content="今日の重要ニュースを4カテゴリで解説。政治・経済・テクノロジー・国際情勢をわかりやすく解説します。毎日自動更新。">
   <meta name="keywords" content="週次ニュース,ニュース解説,政治,経済,社会,テクノロジー,国際,アズキぷらす">
   <link rel="canonical" href="https://azuki-plus.com/news.html">
   <meta property="og:type" content="website">
@@ -71,8 +71,8 @@
 <body>
 <header>
   <p class="back"><a href="index.html">← アズキぷらす</a></p>
-  <h1>📰 今週の重要ニュース</h1>
-  <p>政治・経済・社会・テクノロジー・国際の主要ニュースを解説</p>
+  <h1>📰 今日の重要ニュース</h1>
+  <p>政治・経済・テクノロジー・国際の主要ニュースを毎日自動更新</p>
 </header>
 <nav class="breadcrumb"><a href="index.html">アズキぷらす</a> › 今週の重要ニュース</nav>
 <div class="ad-slot">
@@ -82,7 +82,7 @@
 <div class="container">
   <div class="card">
     <div class="week-bar">
-      <span class="week-label">📅 掲載週：</span>
+      <span class="week-label">📅 掲載日：</span>
       <select class="week-select" id="week-select" onchange="loadWeek(this.value)"></select>
       <span id="published-at" style="font-size:11px;color:var(--t3);margin-left:auto;"></span>
     </div>
@@ -122,7 +122,7 @@ async function init() {
 
 function buildWeekSelect(weeks) {
   const sel = document.getElementById('week-select');
-  sel.innerHTML = weeks.map(w => `<option value="${w}">${w}の週</option>`).join('');
+  sel.innerHTML = weeks.map(w => `<option value="${w}">${w}</option>`).join('');
 }
 
 async function loadWeek(week) {
@@ -141,7 +141,7 @@ function renderNews(data) {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('news-body').style.display = 'block';
   if (data.published_at) {
-    document.getElementById('published-at').textContent = '公開: ' + data.published_at.slice(0,10);
+    document.getElementById('published-at').textContent = '更新: ' + data.published_at.slice(0,16).replace('T',' ');
   }
 
   const cats = data.categories || {};
