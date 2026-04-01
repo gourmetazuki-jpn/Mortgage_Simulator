@@ -141,7 +141,7 @@ function renderNews(data) {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('news-body').style.display = 'block';
   if (data.published_at) {
-    document.getElementById('published-at').textContent = '更新: ' + data.published_at.slice(0,16).replace('T',' ');
+    document.getElementById('published-at').textContent = '掲載日: ' + (data.week || data.published_at.slice(0,10));
   }
 
   const cats = data.categories || {};
