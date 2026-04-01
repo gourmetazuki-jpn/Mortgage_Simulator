@@ -122,17 +122,17 @@
             <!-- 背景arc -->
             <path d="M30,130 A110,110 0 0,1 250,130" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="20" stroke-linecap="round"/>
             <!-- カラーグラデーションarc（5段階）-->
-            <path id="arc-fear"     d="M30,130 A110,110 0 0,1 80,35"   fill="none" stroke="#ff4455" stroke-width="20" stroke-linecap="butt" opacity="0.4"/>
-            <path id="arc-bearish"  d="M80,35  A110,110 0 0,1 140,20"  fill="none" stroke="#ff8844" stroke-width="20" stroke-linecap="butt" opacity="0.4"/>
-            <path id="arc-neutral"  d="M140,20 A110,110 0 0,1 200,35"  fill="none" stroke="#ffaa00" stroke-width="20" stroke-linecap="butt" opacity="0.4"/>
-            <path id="arc-bullish"  d="M200,35 A110,110 0 0,1 235,85"  fill="none" stroke="#88dd88" stroke-width="20" stroke-linecap="butt" opacity="0.4"/>
-            <path id="arc-greed"    d="M235,85 A110,110 0 0,1 250,130" fill="none" stroke="#00cc66" stroke-width="20" stroke-linecap="butt" opacity="0.4"/>
+            <path id="arc-fear"     d="M30,130 A110,110 0 0,1 80,35"   fill="none" stroke="#aa2233" stroke-width="20" stroke-linecap="butt" opacity="0.7"/>
+            <path id="arc-bearish"  d="M80,35  A110,110 0 0,1 140,20"  fill="none" stroke="#cc5533" stroke-width="20" stroke-linecap="butt" opacity="0.7"/>
+            <path id="arc-neutral"  d="M140,20 A110,110 0 0,1 200,35"  fill="none" stroke="#ffaa00" stroke-width="20" stroke-linecap="butt" opacity="0.7"/>
+            <path id="arc-bullish"  d="M200,35 A110,110 0 0,1 235,85"  fill="none" stroke="#66bb66" stroke-width="20" stroke-linecap="butt" opacity="0.7"/>
+            <path id="arc-greed"    d="M235,85 A110,110 0 0,1 250,130" fill="none" stroke="#00cc66" stroke-width="20" stroke-linecap="butt" opacity="0.7"/>
             <!-- 針 -->
             <line id="needle" x1="140" y1="130" x2="140" y2="30" stroke="#fff" stroke-width="2.5" stroke-linecap="round" style="transform-origin:140px 130px;transition:transform 1.2s cubic-bezier(.4,0,.2,1);"/>
             <circle cx="140" cy="130" r="6" fill="#fff"/>
             <!-- ラベル -->
-            <text x="18"  y="128" font-size="9" fill="#ff4455" font-weight="700">悲観</text>
-            <text x="240" y="128" font-size="9" fill="#00cc66" font-weight="700">楽観</text>
+            <text x="5"   y="128" font-size="8" fill="#aa2233" font-weight="700">極度の悲観</text>
+            <text x="220" y="128" font-size="8" fill="#00cc66" font-weight="700">極度の楽観</text>
           </svg>
           <div class="meter-score">
             <div class="meter-score-num" id="score-num">--</div>
@@ -140,10 +140,10 @@
           </div>
         </div>
         <div class="score-guide">
-          <div class="score-guide-item" style="background:rgba(255,68,85,.2);color:#ff4455;">0〜20<br>極度の悲観</div>
-          <div class="score-guide-item" style="background:rgba(255,136,68,.2);color:#ff8844;">20〜40<br>悲観</div>
-          <div class="score-guide-item" style="background:rgba(255,170,0,.2);color:#ffaa00;">40〜60<br>中立</div>
-          <div class="score-guide-item" style="background:rgba(136,221,136,.2);color:#88dd88;">60〜80<br>楽観</div>
+          <div class="score-guide-item" style="background:rgba(170,34,51,.2);color:#aa2233;">0〜19<br>極度の悲観</div>
+          <div class="score-guide-item" style="background:rgba(204,85,51,.2);color:#cc5533;">20〜39<br>悲観</div>
+          <div class="score-guide-item" style="background:rgba(255,170,0,.2);color:#ffaa00;">40〜59<br>中立</div>
+          <div class="score-guide-item" style="background:rgba(102,187,102,.2);color:#66bb66;">60〜79<br>楽観</div>
           <div class="score-guide-item" style="background:rgba(0,204,102,.2);color:#00cc66;">80〜100<br>極度の楽観</div>
         </div>
         <div class="meter-updated" id="meter-updated"></div>
@@ -224,19 +224,19 @@
 const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
 
 function getColor(score) {
-  if (score >= 80) return '#00cc66';
-  if (score >= 60) return '#88dd88';
-  if (score >= 40) return '#ffaa00';
-  if (score >= 20) return '#ff8844';
-  return '#ff4455';
+  if (score >= 80) return '#00cc66';   // 極度の楽観
+  if (score >= 60) return '#66bb66';   // 楽観
+  if (score >= 40) return '#ffaa00';   // 中立
+  if (score >= 20) return '#cc5533';   // 悲観
+  return '#aa2233';                    // 極度の悲観
 }
 
 function getLabel(score) {
-  if (score >= 80) return '極度の楽観';
-  if (score >= 60) return '楽観';
-  if (score >= 40) return '中立';
-  if (score >= 20) return '悲観';
-  return '極度の悲観';
+  if (score >= 80) return '極度の楽観';  // 80〜100
+  if (score >= 60) return '楽観';        // 60〜79
+  if (score >= 40) return '中立';        // 40〜59
+  if (score >= 20) return '悲観';        // 20〜39
+  return '極度の悲観';                   // 0〜19
 }
 
 function setNeedle(score) {
