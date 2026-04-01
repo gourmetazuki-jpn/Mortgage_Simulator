@@ -231,6 +231,14 @@ function getColor(score) {
   return '#ff4455';
 }
 
+function getLabel(score) {
+  if (score >= 80) return '極度の楽観';
+  if (score >= 60) return '楽観';
+  if (score >= 40) return '中立';
+  if (score >= 20) return '悲観';
+  return '極度の悲観';
+}
+
 function setNeedle(score) {
   // スコア0〜100を針の角度（-90度〜+90度）に変換
   const angle = (score / 100) * 180 - 90;
@@ -250,7 +258,7 @@ async function load() {
     // スコア表示
     document.getElementById('score-num').textContent = score;
     document.getElementById('score-num').style.color = color;
-    document.getElementById('score-label').textContent = data.label || '中立';
+    document.getElementById('score-label').textContent = getLabel(score);
     document.getElementById('score-label').style.color = color;
 
     // 針を動かす（少し遅延）
