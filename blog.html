@@ -95,6 +95,17 @@
     @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.7;}}
     .loading-text{font-size:13px;}
 
+    /* 解説セクション */
+    .blog-section{background:var(--s);border:1px solid var(--b);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:10px;}
+    .section-heading{font-size:16px;font-weight:900;color:var(--t);padding-bottom:10px;border-bottom:2px solid rgba(94,196,94,.3);display:flex;align-items:center;gap:8px;}
+    .section-heading::before{content:'📌';font-size:14px;}
+    .section-body{font-size:14px;color:var(--t2);line-height:2;white-space:pre-line;}
+    .zunda-comment{display:flex;align-items:flex-start;gap:10px;background:rgba(94,196,94,.08);border:1px solid rgba(94,196,94,.2);border-radius:12px;padding:10px 14px;margin-top:4px;}
+    .zunda-comment img{width:36px;flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));}
+    .zunda-comment .comment-text{font-size:13px;color:var(--zunda);line-height:1.7;}
+    .closing-box{background:linear-gradient(135deg,rgba(94,196,94,.1),rgba(200,126,200,.1));border:1px solid var(--b);border-radius:16px;padding:18px 20px;display:flex;align-items:flex-start;gap:12px;}
+    .closing-box img{width:52px;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3));}
+    .closing-text{font-size:14px;color:var(--t);line-height:1.8;font-weight:500;}
     .notice{font-size:11px;color:var(--t3);padding:10px 14px;background:var(--s);border-radius:8px;}
     footer{text-align:center;font-size:12px;color:var(--t3);padding:20px;border-top:1px solid var(--b);}
   </style>
@@ -217,10 +228,11 @@ function renderBlog(data) {
   document.getElementById('blog-title').textContent = data.title || '';
   document.getElementById('blog-summary').textContent = data.summary || '';
 
-  // 会話
   const chatArea = document.getElementById('chat-area');
   chatArea.innerHTML = '';
-  (data.conversation || []).forEach((msg, i) => {
+
+  // 導入会話（3〜4往復）
+  (data.intro || data.conversation || []).forEach((msg, i) => {
     const isZunda = msg.speaker === 'ずんだもん';
     const div = document.createElement('div');
     div.className = `chat-bubble ${isZunda ? 'zunda' : 'metan'}`;
@@ -234,9 +246,36 @@ function renderBlog(data) {
     chatArea.appendChild(div);
   });
 
+  // 解説セクション
+  const sections = data.sections || [];
+  sections.forEach((sec, i) => {
+    const div = document.createElement('div');
+    div.className = 'blog-section';
+    div.style.animationDelay = `${(data.intro||[]).length * 0.05 + i * 0.1}s`;
+    div.innerHTML = `
+      <div class="section-heading">${sec.heading}</div>
+      <div class="section-body">${sec.body}</div>
+      ${sec.zunda_comment ? `
+      <div class="zunda-comment">
+        <img src="zundamon.jpeg" alt="ずんだもん">
+        <div class="comment-text">💬 ${sec.zunda_comment}</div>
+      </div>` : ''}`;
+    chatArea.appendChild(div);
+  });
+
+  // まとめ
+  if (data.closing) {
+    const div = document.createElement('div');
+    div.className = 'closing-box';
+    div.innerHTML = `
+      <img src="zundamon.jpeg" alt="ずんだもん">
+      <div class="closing-text">🎯 ${data.closing}</div>`;
+    chatArea.appendChild(div);
+  }
+
   // キーワード
-  const kwList = document.getElementById('keyword-list');
-  kwList.innerHTML = (data.keywords || []).map(k => `<span class="keyword">${k}</span>`).join('');
+  document.getElementById('keyword-list').innerHTML =
+    (data.keywords || []).map(k => `<span class="keyword">${k}</span>`).join('');
 
   // 参考ニュース
   const refs = data.news_refs || [];
