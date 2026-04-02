@@ -90,10 +90,9 @@
     .news-ref-source{font-size:10px;color:var(--t3);flex-shrink:0;}
 
     .loading-wrap{text-align:center;padding:48px 20px;color:var(--t2);}
-    .loading-chars{display:flex;justify-content:center;gap:16px;margin-bottom:16px;}
-    .loading-chars img{width:60px;animation:bounce 1s ease infinite;}
-    .loading-chars img:nth-child(2){animation-delay:.2s;}
+
     @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.7;}}
     .loading-text{font-size:13px;}
 
     .notice{font-size:11px;color:var(--t3);padding:10px 14px;background:var(--s);border-radius:8px;}
@@ -105,12 +104,10 @@
 <header>
   <div class="header-inner">
     <p class="back"><a href="index.html">← アズキぷらす</a></p>
-    <div class="header-chars">
-      <div class="header-char zunda"><img src="zundamon.jpeg" alt="ずんだもん"></div>
-      <div class="header-char metan"><img src="metan.jpeg" alt="四国めたん"></div>
+    <div style="margin:8px auto 0;max-width:680px;">
+      <img src="blog-title.png" alt="ずんだもん＆めたんの経済解説" style="width:100%;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.4);">
     </div>
-    <h1>ずんだもん＆めたんの経済解説</h1>
-    <p>今日の経済・金融ニュースをわかりやすく会話形式で解説 📈</p>
+    <p style="margin-top:10px;font-size:12px;color:var(--t2);">今日の経済・金融ニュースをわかりやすく会話形式で解説 📈</p>
   </div>
 </header>
 
@@ -132,10 +129,7 @@
 
   <!-- ローディング -->
   <div id="loading" class="loading-wrap">
-    <div class="loading-chars">
-      <img src="zundamon.jpeg" alt="ずんだもん">
-      <img src="metan.jpeg" alt="めたん">
-    </div>
+    <img src="blog-title.png" alt="ロード中" style="width:100%;max-width:400px;border-radius:12px;margin-bottom:12px;animation:pulse 1.5s ease infinite;">
     <div class="loading-text">ずんだもん＆めたんが解説中なのだ…</div>
   </div>
 
@@ -234,7 +228,7 @@ function renderBlog(data) {
     div.innerHTML = `
       <div class="char-avatar">
         <img src="${isZunda ? 'zundamon.jpeg' : 'metan.jpeg'}" alt="${msg.speaker}">
-        <div class="char-name">${msg.speaker}</div>
+        <div class="char-name">${isZunda ? 'ずんだもん' : 'めたん'}</div>
       </div>
       <div class="bubble">${msg.text}</div>`;
     chatArea.appendChild(div);
