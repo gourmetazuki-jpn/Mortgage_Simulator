@@ -194,7 +194,7 @@ async function init() {
     const res = await fetch(`${WORKER}/blog-get`);
     if (!res.ok) throw new Error('no blog');
     const data = await res.json();
-    if (!data.conversation) throw new Error('empty');
+    if (!data.intro && !data.conversation && !data.sections) throw new Error('empty');
     buildDateSelect([data.date]);
     renderBlog(data);
   } catch(e) {
