@@ -196,7 +196,7 @@ const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
 
 async function init() {
   try {
-    const res = await fetch(`${WORKER}/blog-get`);
+    const res = await fetch(`${WORKER}/blog-get?_=${new Date().toISOString().split('T')[0]}`, {cache:'no-store'});
     if (!res.ok) throw new Error('no blog');
     const data = await res.json();
     if (!data.intro && !data.conversation && !data.sections) throw new Error('empty');
@@ -217,7 +217,7 @@ async function loadBlog(date) {
   document.getElementById('blog-content').style.display = 'none';
   document.getElementById('loading').style.display = 'block';
   try {
-    const res = await fetch(`${WORKER}/blog-get?date=${date}`);
+    const res = await fetch(`${WORKER}/blog-get?date=${date}&_=${Date.now()}`, {cache:'no-store'});
     const data = await res.json();
     renderBlog(data);
   } catch(e) {
