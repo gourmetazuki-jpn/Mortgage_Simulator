@@ -115,6 +115,10 @@
     .duo-comment{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
     .summary-chat{background:var(--s);border:1px solid var(--b);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:4px;}
     .summary-label{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--t3);text-transform:uppercase;margin-bottom:8px;}
+    .fact-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700;margin-top:6px;}
+    .fact-ok{background:rgba(0,204,102,.15);color:#00cc66;border:1px solid rgba(0,204,102,.3);}
+    .fact-ng{background:rgba(255,170,0,.15);color:#ffaa00;border:1px solid rgba(255,170,0,.3);}
+    .fact-overall{font-size:11px;color:var(--t3);padding:8px 12px;background:var(--s2);border-radius:8px;margin-top:8px;}
     .notice{font-size:11px;color:var(--t3);padding:10px 14px;background:var(--s);border-radius:8px;}
     footer{text-align:center;font-size:12px;color:var(--t3);padding:20px;border-top:1px solid var(--b);}
   </style>
@@ -245,9 +249,15 @@ function renderBlog(data) {
     const div = document.createElement('div');
     div.className = 'blog-section';
     div.style.animationDelay = `${i * 0.1}s`;
+    const factBadge = sec.fact_checked === true
+      ? `<span class="fact-badge fact-ok">✓ ファクトチェック済み</span>`
+      : sec.fact_checked === false
+      ? `<span class="fact-badge fact-ng">⚠ 要確認</span>`
+      : '';
     div.innerHTML = `
       <div class="section-heading">${sec.heading}</div>
       <div class="section-body">${sec.body}</div>
+      ${factBadge}
       <div class="duo-comment">
         <div class="zunda-comment">
           <img src="zundamon.jpeg" alt="ずんだもん">
@@ -260,6 +270,14 @@ function renderBlog(data) {
       </div>`;
     chatArea.appendChild(div);
   });
+
+  // ファクトチェック全体コメント
+  if (data.fact_overall) {
+    const factDiv = document.createElement('div');
+    factDiv.className = 'fact-overall';
+    factDiv.innerHTML = `🔍 ファクトチェック：${data.fact_overall}`;
+    chatArea.appendChild(factDiv);
+  }
 
   // まとめ会話
   if ((data.summary || []).length > 0) {
