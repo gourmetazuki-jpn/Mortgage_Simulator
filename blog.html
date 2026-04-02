@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="azuki-icon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ずんだもん＆めたんの経済解説｜わかりやすい金融ニュース | アズキぷらす</title>
+  <meta name="description" content="ずんだもんと四国めたんが今日の経済・金融ニュースを会話形式でわかりやすく解説。毎日自動更新。">
+  <meta name="keywords" content="ずんだもん,四国めたん,経済解説,金融ニュース,わかりやすい,株式市場,アズキぷらす">
+  <link rel="canonical" href="https://azuki-plus.com/blog.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ずんだもん＆めたんの経済解説 | アズキぷらす">
+  <meta property="og:description" content="ずんだもんと四国めたんが今日の経済・金融ニュースを会話形式で解説。">
+  <meta property="og:url" content="https://azuki-plus.com/blog.html">
+  <meta name="twitter:card" content="summary">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4271655790847344" crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#0f0f1a;
+      --s:#161624;
+      --s2:#1e1e30;
+      --b:rgba(255,255,255,.07);
+      --t:#eeeef8;
+      --t2:#9090b8;
+      --t3:#55557a;
+      --zunda:#5ec45e;    /* ずんだもん：緑 */
+      --metan:#c87ec8;    /* めたん：紫ピンク */
+      --accent:#ffd700;
+    }
+    body{font-family:"Zen Maru Gothic","Noto Sans JP",sans-serif;background:var(--bg);color:var(--t);font-size:14px;line-height:1.8;min-height:100vh;}
+
+    /* ヘッダー */
+    header{background:linear-gradient(135deg,#0f0f1a 0%,#1a0f2a 50%,#0f1a1a 100%);border-bottom:1px solid var(--b);padding:20px 16px;text-align:center;position:relative;overflow:hidden;}
+    header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(94,196,94,.08),transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(200,126,200,.08),transparent 60%);}
+    .header-inner{position:relative;}
+    .header-chars{display:flex;justify-content:center;align-items:flex-end;gap:12px;margin-bottom:12px;}
+    .header-char img{width:72px;height:auto;filter:drop-shadow(0 4px 12px rgba(0,0,0,.5));}
+    .header-char.zunda img{filter:drop-shadow(0 4px 12px rgba(94,196,94,.3));}
+    .header-char.metan img{filter:drop-shadow(0 4px 12px rgba(200,126,200,.3));}
+    header .back a{font-size:12px;color:var(--t3);text-decoration:none;display:block;margin-bottom:8px;}
+    header h1{font-size:clamp(15px,3.5vw,20px);font-weight:900;background:linear-gradient(135deg,var(--zunda),var(--accent),var(--metan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;}
+    header p{font-size:12px;color:var(--t2);}
+
+    .breadcrumb{background:var(--s);border-bottom:1px solid var(--b);padding:8px 16px;font-size:11px;color:var(--t3);}
+    .breadcrumb a{color:var(--t3);text-decoration:none;}
+    .ad-slot{background:var(--s);padding:10px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    .container{max-width:700px;margin:0 auto;padding:20px 16px 60px;display:flex;flex-direction:column;gap:16px;}
+
+    /* 日付選択バー */
+    .date-bar{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .date-label{font-size:12px;color:var(--t2);}
+    .date-select{background:var(--s2);border:1px solid var(--b);color:var(--t);border-radius:8px;padding:6px 12px;font-size:12px;font-family:inherit;cursor:pointer;}
+    .date-badge{margin-left:auto;font-size:10px;padding:3px 10px;border-radius:20px;background:linear-gradient(135deg,rgba(94,196,94,.2),rgba(200,126,200,.2));color:var(--t2);border:1px solid var(--b);}
+
+    /* タイトルカード */
+    .title-card{background:var(--s);border:1px solid var(--b);border-radius:16px;padding:20px;text-align:center;position:relative;overflow:hidden;}
+    .title-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,215,0,.05),transparent 60%);}
+    .title-card .topic-tag{display:inline-block;font-size:11px;padding:3px 12px;border-radius:20px;background:rgba(255,215,0,.15);color:var(--accent);border:1px solid rgba(255,215,0,.3);margin-bottom:10px;}
+    .title-card h2{font-size:clamp(15px,4vw,20px);font-weight:900;line-height:1.5;margin-bottom:10px;}
+    .title-card .summary{font-size:13px;color:var(--t2);line-height:1.8;text-align:left;background:var(--s2);border-radius:10px;padding:12px 14px;}
+
+    /* 会話エリア */
+    .chat-section{display:flex;flex-direction:column;gap:4px;}
+
+    .chat-bubble{display:flex;align-items:flex-end;gap:10px;animation:fadeInUp .4s ease both;}
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+    .chat-bubble.zunda{flex-direction:row;}
+    .chat-bubble.metan{flex-direction:row-reverse;}
+
+    .char-avatar{flex-shrink:0;width:52px;display:flex;flex-direction:column;align-items:center;gap:3px;}
+    .char-avatar img{width:52px;height:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4));}
+    .char-name{font-size:9px;font-weight:700;white-space:nowrap;}
+    .chat-bubble.zunda .char-name{color:var(--zunda);}
+    .chat-bubble.metan .char-name{color:var(--metan);}
+
+    .bubble{max-width:calc(100% - 80px);padding:11px 15px;border-radius:18px;font-size:13px;line-height:1.8;position:relative;word-break:break-word;}
+    .chat-bubble.zunda .bubble{background:rgba(94,196,94,.12);border:1px solid rgba(94,196,94,.25);border-bottom-left-radius:4px;}
+    .chat-bubble.metan .bubble{background:rgba(200,126,200,.12);border:1px solid rgba(200,126,200,.25);border-bottom-right-radius:4px;}
+
+    /* キーワード・参考 */
+    .info-card{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:16px 18px;}
+    .info-title{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--t3);text-transform:uppercase;margin-bottom:10px;}
+    .keyword-list{display:flex;flex-wrap:wrap;gap:6px;}
+    .keyword{font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(255,215,0,.1);color:var(--accent);border:1px solid rgba(255,215,0,.2);}
+    .news-ref{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--b);font-size:12px;}
+    .news-ref:last-child{border-bottom:none;}
+    .news-ref-source{font-size:10px;color:var(--t3);flex-shrink:0;}
+
+    .loading-wrap{text-align:center;padding:48px 20px;color:var(--t2);}
+    .loading-chars{display:flex;justify-content:center;gap:16px;margin-bottom:16px;}
+    .loading-chars img{width:60px;animation:bounce 1s ease infinite;}
+    .loading-chars img:nth-child(2){animation-delay:.2s;}
+    @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+    .loading-text{font-size:13px;}
+
+    .notice{font-size:11px;color:var(--t3);padding:10px 14px;background:var(--s);border-radius:8px;}
+    footer{text-align:center;font-size:12px;color:var(--t3);padding:20px;border-top:1px solid var(--b);}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <p class="back"><a href="index.html">← アズキぷらす</a></p>
+    <div class="header-chars">
+      <div class="header-char zunda"><img src="zundamon.jpeg" alt="ずんだもん"></div>
+      <div class="header-char metan"><img src="metan.jpeg" alt="四国めたん"></div>
+    </div>
+    <h1>ずんだもん＆めたんの経済解説</h1>
+    <p>今日の経済・金融ニュースをわかりやすく会話形式で解説 📈</p>
+  </div>
+</header>
+
+<nav class="breadcrumb"><a href="index.html">アズキぷらす</a> › ずんだもん＆めたんの経済解説</nav>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<div class="container">
+
+  <!-- 日付選択 -->
+  <div class="date-bar">
+    <span class="date-label">📅 日付：</span>
+    <select class="date-select" id="date-select" onchange="loadBlog(this.value)"></select>
+    <span class="date-badge">毎日更新</span>
+  </div>
+
+  <!-- ローディング -->
+  <div id="loading" class="loading-wrap">
+    <div class="loading-chars">
+      <img src="zundamon.jpeg" alt="ずんだもん">
+      <img src="metan.jpeg" alt="めたん">
+    </div>
+    <div class="loading-text">ずんだもん＆めたんが解説中なのだ…</div>
+  </div>
+
+  <!-- コンテンツ -->
+  <div id="blog-content" style="display:none;">
+
+    <!-- タイトルカード -->
+    <div class="title-card">
+      <div class="topic-tag" id="blog-topic"></div>
+      <h2 id="blog-title"></h2>
+      <div class="summary" id="blog-summary"></div>
+    </div>
+
+    <!-- 会話 -->
+    <div class="chat-section" id="chat-area"></div>
+
+    <div class="ad-slot" style="border-radius:14px;background:var(--s);border:1px solid var(--b);">
+      <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+    <!-- キーワード -->
+    <div class="info-card">
+      <div class="info-title">今日のキーワード</div>
+      <div class="keyword-list" id="keyword-list"></div>
+    </div>
+
+    <!-- 参考ニュース -->
+    <div class="info-card" id="refs-card" style="display:none;">
+      <div class="info-title">参考ニュース</div>
+      <div id="news-refs"></div>
+    </div>
+
+  </div>
+
+  <div id="no-blog" class="loading-wrap" style="display:none;">
+    <div style="font-size:32px;margin-bottom:8px;">🌱</div>
+    <div>まだ記事がありません。明日また来てください！</div>
+  </div>
+
+  <div class="notice">⚠️ 本ページの解説はAIが自動生成しています。内容の正確性を保証するものではありません。投資判断の根拠にはなりません。</div>
+</div>
+
+<footer>© アズキぷらす | 株式投資・決算解説 YouTubeチャンネル</footer>
+
+<script>
+const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
+
+async function init() {
+  try {
+    const res = await fetch(`${WORKER}/blog-get`);
+    if (!res.ok) throw new Error('no blog');
+    const data = await res.json();
+    if (!data.conversation) throw new Error('empty');
+    buildDateSelect([data.date]);
+    renderBlog(data);
+  } catch(e) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('no-blog').style.display = 'block';
+  }
+}
+
+function buildDateSelect(dates) {
+  const sel = document.getElementById('date-select');
+  sel.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
+}
+
+async function loadBlog(date) {
+  document.getElementById('blog-content').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+  try {
+    const res = await fetch(`${WORKER}/blog-get?date=${date}`);
+    const data = await res.json();
+    renderBlog(data);
+  } catch(e) {
+    document.getElementById('loading').textContent = 'エラー: ' + e.message;
+  }
+}
+
+function renderBlog(data) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('blog-content').style.display = 'block';
+
+  document.getElementById('blog-topic').textContent = data.topic || '';
+  document.getElementById('blog-title').textContent = data.title || '';
+  document.getElementById('blog-summary').textContent = data.summary || '';
+
+  // 会話
+  const chatArea = document.getElementById('chat-area');
+  chatArea.innerHTML = '';
+  (data.conversation || []).forEach((msg, i) => {
+    const isZunda = msg.speaker === 'ずんだもん';
+    const div = document.createElement('div');
+    div.className = `chat-bubble ${isZunda ? 'zunda' : 'metan'}`;
+    div.style.animationDelay = `${i * 0.05}s`;
+    div.innerHTML = `
+      <div class="char-avatar">
+        <img src="${isZunda ? 'zundamon.jpeg' : 'metan.jpeg'}" alt="${msg.speaker}">
+        <div class="char-name">${msg.speaker}</div>
+      </div>
+      <div class="bubble">${msg.text}</div>`;
+    chatArea.appendChild(div);
+  });
+
+  // キーワード
+  const kwList = document.getElementById('keyword-list');
+  kwList.innerHTML = (data.keywords || []).map(k => `<span class="keyword">${k}</span>`).join('');
+
+  // 参考ニュース
+  const refs = data.news_refs || [];
+  if (refs.length > 0) {
+    document.getElementById('refs-card').style.display = 'block';
+    document.getElementById('news-refs').innerHTML = refs.map(r => `
+      <div class="news-ref">
+        <span style="flex:1;">${r.title}</span>
+        <span class="news-ref-source">📰 ${r.source}</span>
+      </div>`).join('');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
