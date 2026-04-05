@@ -1,640 +1,443 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
+<meta charset="UTF-8">
   <link rel="icon" type="image/png" href="azuki-icon.png">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>企業の未来予測シミュレーター｜CAGR・キャッシュフロー・3シナリオ分析 | アズキぷらす</title>
-  <meta name="description" content="証券コードまたは企業名を入力すると実際の財務データからCAGRを計算。配当・キャッシュフロー・自己資本比率も表示。保守的・標準・強気の3シナリオで10年後を予測。無料の株式投資分析ツール。">
-  <meta name="keywords" content="企業分析,CAGR,キャッシュフロー,FCF,配当,株式投資,未来予測,財務分析,アズキぷらす">
+  <meta name="description" content="証券コードを入力するだけで企業の成長性・収益性・経営危険度をAIが分析。財務データをもとに未来の株価をシミュレーション。">
+  <meta name="keywords" content="企業分析,AI,財務分析,成長予測,経営危険度,株価シミュレーター,証券コード,アズキぷらす">
   <link rel="canonical" href="https://azuki-plus.com/company-sim.html">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="企業の未来予測シミュレーター｜CAGR・キャッシュフロー分析 | アズキぷらす">
-  <meta property="og:description" content="証券コードまたは企業名を入力すると実際の財務データからCAGRを計算。配当・キャッシュフロー・自己資本比率も表示。保守的・標準・強気の3シナリオで10年後を予測。">
+  <meta property="og:title" content="企業の未来予測シミュレーター｜AI財務分析 | アズキぷらす">
+  <meta property="og:description" content="証券コードを入力するだけで企業の成長性・収益性・経営危険度をAIが分析。">
   <meta property="og:url" content="https://azuki-plus.com/company-sim.html">
   <meta property="og:locale" content="ja_JP">
   <meta name="twitter:card" content="summary">
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "企業の未来予測シミュレーター",
-    "url": "https://azuki-plus.com/company-sim.html",
-    "description": "証券コードまたは企業名を入力すると実際の財務データからCAGRを計算。配当・キャッシュフロー分析・3シナリオで10年後を予測。",
-    "applicationCategory": "FinanceApplication",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
-    "author": { "@type": "Person", "name": "アズキぷらす" }
-  }
+  {"@context":"https://schema.org","@type":"WebApplication","name":"企業の未来予測シミュレーター","url":"https://azuki-plus.com/company-sim.html","description":"証券コードを入力するだけで企業の成長性・収益性・経営危険度をAIが分析。","applicationCategory":"FinanceApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"},"author":{"@type":"Person","name":"アズキぷらす"}}
   </script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>企業の未来予測シミュレーター｜アズキぷらす - 証券コードで成長・経営危険度をAI分析</title>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+JP:wght@400;700&family=Lato:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#0a0a0f;--s:#13131a;--s2:#1c1c28;--b:rgba(255,255,255,.08);--t:#e8e8f0;--t2:#9090a8;--t3:#5a5a70;--g:#00ff88;--r:#ff4466;--a:#ffaa00;--bl:#4488ff;}
+body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--t);font-size:14px;line-height:1.6;min-height:100vh;}
+.header{text-align:center;padding:28px 20px 16px;border-bottom:1px solid var(--b);}
+.header h1{font-family:"DotGothic16",monospace;font-size:clamp(14px,3.5vw,22px);color:var(--g);letter-spacing:.1em;margin-bottom:6px;text-shadow:0 0 20px rgba(0,255,136,.4);}
+.header p{font-size:12px;color:var(--t3);}
+.container{max-width:800px;margin:0 auto;padding:20px 16px 48px;display:flex;flex-direction:column;gap:16px;}
+.card{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:18px;}
+.card h2{font-size:11px;font-weight:700;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--b);}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.field label{font-size:12px;color:var(--t2);}
+.field input,.field textarea{background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:9px 12px;font-size:14px;font-family:inherit;color:var(--t);outline:none;}
+.field input:focus,.field textarea:focus{border-color:var(--g);}
+.field textarea{resize:vertical;min-height:100px;}
+.hint{font-size:11px;color:var(--t3);}
+.mode-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.mode-row label{font-size:12px;color:var(--t2);}
+.mode-btns{display:flex;border:1px solid var(--b);border-radius:6px;overflow:hidden;}
+.mode-btn{padding:5px 14px;font-size:12px;font-family:inherit;border:none;cursor:pointer;}
+.mode-btn.active{background:var(--g);color:#000;font-weight:700;}
+.mode-btn.inactive{background:var(--s2);color:var(--t2);}
+.auto-msg{font-size:12px;color:var(--t2);padding:10px 12px;background:var(--s2);border:1px solid var(--b);border-radius:8px;display:flex;align-items:center;gap:8px;}
+.auto-msg span.ok{color:var(--g);font-size:15px;}
+.run-btn{width:100%;padding:12px;background:var(--g);color:#000;font-size:15px;font-weight:700;font-family:inherit;border:none;border-radius:8px;cursor:pointer;margin-top:4px;}
+.run-btn:disabled{opacity:.4;cursor:not-allowed;}
+.loading{display:none;text-align:center;padding:28px;color:var(--t2);}
+.loading.show{display:block;}
+.loading .title{font-family:"DotGothic16",monospace;font-size:16px;color:var(--g);margin-bottom:6px;}
+.dot::after{content:"...";animation:dots 1.2s infinite;}
+@keyframes dots{0%{content:"."}33%{content:".."}66%{content:"..."}100%{content:"."}}
+.result{display:none;}
+.result.show{display:block;}
+.stage{background:var(--s2);border:1px solid var(--b);border-radius:12px;overflow:hidden;margin-bottom:14px;}
+.stage-screen{position:relative;height:200px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:16px;overflow:hidden;}
+.sky{position:absolute;inset:0;transition:background 1s;}
+.building{position:relative;z-index:2;}
+.stage-footer{padding:10px 14px;display:flex;align-items:center;gap:10px;border-top:1px solid var(--b);}
+.eff-badge{font-family:"DotGothic16",monospace;font-size:12px;padding:4px 10px;border-radius:4px;font-weight:700;}
+.sum-txt{font-size:13px;color:var(--t2);flex:1;}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.metric{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:13px 15px;}
+.metric .lbl{font-size:11px;color:var(--t3);margin-bottom:5px;}
+.metric .val{font-family:"Lato",sans-serif;font-size:26px;font-weight:900;line-height:1;}
+.metric .bar{height:4px;background:var(--b);border-radius:2px;margin-top:7px;overflow:hidden;}
+.metric .fill{height:100%;border-radius:2px;transition:width 1s ease;}
+.forecast{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:15px;margin-bottom:14px;}
+.forecast .ttl{font-size:12px;color:var(--t2);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;}
+.chart-wrap{display:flex;gap:0;}
+.y-axis{display:flex;flex-direction:column;justify-content:space-between;padding-bottom:20px;margin-right:8px;min-width:36px;text-align:right;}
+.y-tick{font-size:9px;color:var(--t3);font-family:"Lato",sans-serif;}
+.chart-area{flex:1;position:relative;}
+.bars{display:flex;align-items:flex-end;gap:3px;height:110px;}
+.bw{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.bv{font-size:8px;font-family:"Lato",sans-serif;font-weight:700;line-height:1.2;}
+.bb{width:100%;border-radius:2px 2px 0 0;transition:height .8s ease;}
+.bl{font-size:9px;color:var(--t3);font-family:"Lato",sans-serif;}
+.baseline{position:absolute;left:0;right:0;border-top:1px dashed rgba(255,255,255,.2);pointer-events:none;}
+.fnote{font-size:11px;color:var(--t3);margin-top:8px;text-align:center;}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+@keyframes glow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.4)}}
+@keyframes shrink{to{transform:scale(0) rotate(360deg);opacity:0}}
+</style>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4271655790847344" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@700;900&display=swap" rel="stylesheet">
-  <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    :root{--bg:#f4f3ee;--s:#fff;--s2:#f0efe8;--b:rgba(0,0,0,.09);--t:#1a1a16;--t2:#58574f;--t3:#98968c;--red:#b5451b;--blue:#1a4fa0;--green:#1e6b3c;--amber:#d4820a;--r:10px;--rl:14px;}
-    body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--t);font-size:14px;line-height:1.7;}
-    header{background:#1a1a16;color:#fff;padding:18px 20px;text-align:center;}
-    header .back a{font-size:12px;color:rgba(255,255,255,.4);text-decoration:none;}
-    header h1{font-size:clamp(15px,3.5vw,20px);font-weight:700;margin:6px 0 4px;}
-    header p{font-size:12px;color:rgba(255,255,255,.55);}
-    .breadcrumb{background:var(--s);border-bottom:1px solid var(--b);padding:8px 20px;font-size:11px;color:var(--t3);}
-    .breadcrumb a{color:var(--t3);text-decoration:none;}
-    .ad-slot{background:var(--s);border-bottom:1px solid var(--b);padding:10px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
-    .container{max-width:900px;margin:0 auto;padding:20px 16px 60px;display:flex;flex-direction:column;gap:16px;}
-    .card{background:var(--s);border:1px solid var(--b);border-radius:var(--rl);padding:18px 20px;}
-    .section-title{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:12px;}
-
-    /* 検索 */
-    .search-row{display:flex;gap:8px;}
-    .search-row input{flex:1;background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:10px 14px;font-size:15px;font-family:inherit;color:var(--t);outline:none;}
-    .search-row input:focus{border-color:var(--blue);}
-    .search-btn{padding:10px 20px;background:var(--blue);color:#fff;font-size:14px;font-weight:700;font-family:inherit;border:none;border-radius:8px;cursor:pointer;}
-    .search-btn:disabled{opacity:.4;cursor:not-allowed;}
-    .hint{font-size:11px;color:var(--t3);margin-top:5px;}
-    .search-wrap{position:relative;}
-    .suggest-list{position:absolute;top:100%;left:0;right:0;background:var(--s);border:1px solid var(--b);border-radius:8px;margin-top:4px;max-height:240px;overflow-y:auto;z-index:100;display:none;box-shadow:0 4px 16px rgba(0,0,0,.1);}
-    .suggest-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:10px;}
-    .suggest-item:last-child{border-bottom:none;}
-    .suggest-item:hover{background:var(--s2);}
-    .suggest-code{font-family:"Lato",sans-serif;font-size:12px;font-weight:700;color:var(--t3);min-width:50px;}
-    .suggest-name{font-size:13px;font-weight:700;}
-    .suggest-sector{font-size:11px;color:var(--t3);}
-    .err{color:var(--red);font-size:12px;margin-top:6px;display:none;}
-    .err.show{display:block;}
-    .loading{display:none;text-align:center;padding:16px;color:var(--t2);font-size:13px;}
-    .loading.show{display:block;}
-
-    /* 企業ヘッダー */
-    .co-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
-    .co-code{font-family:"Lato",sans-serif;font-size:12px;font-weight:700;color:var(--t3);background:var(--s2);padding:3px 9px;border-radius:5px;}
-    .co-name{font-size:17px;font-weight:700;}
-    .co-sector{font-size:11px;color:var(--t3);}
-
-    /* CAGR指標 */
-    .cagr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:14px;}
-    .cagr-item{background:var(--s2);border-radius:var(--r);padding:12px 14px;}
-    .cagr-label{font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;margin-bottom:4px;}
-    .cagr-value{font-family:"Lato",sans-serif;font-size:22px;font-weight:900;line-height:1;}
-    .cagr-sub{font-size:11px;color:var(--t2);margin-top:3px;}
-
-    /* 過去業績テーブル */
-    .fin-table{width:100%;border-collapse:collapse;font-size:12px;}
-    .fin-table th{background:var(--s2);padding:7px 10px;text-align:right;font-weight:700;color:var(--t3);border-bottom:1px solid var(--b);}
-    .fin-table th:first-child{text-align:left;}
-    .fin-table td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--b);}
-    .fin-table td:first-child{text-align:left;font-weight:700;}
-    .fin-table tr:last-child td{border-bottom:none;}
-    .growth-pos{color:var(--green);}
-    .growth-neg{color:var(--red);}
-
-    /* シナリオ説明 */
-    .scenario-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;}
-    @media(max-width:600px){.scenario-row{grid-template-columns:1fr;}}
-    .scenario-item{padding:12px 14px;border-radius:var(--r);border:1px solid var(--b);}
-    .scenario-item h3{font-size:12px;font-weight:700;margin-bottom:4px;}
-    .scenario-item p{font-size:11px;color:var(--t2);line-height:1.6;}
-
-    .chart-wrap{position:relative;height:260px;}
-    .ai-section{background:var(--s2);border-radius:var(--r);padding:14px 16px;font-size:13px;color:var(--t2);line-height:1.8;}
-    .ai-section strong{color:var(--t);}
-
-    .notice{background:var(--s2);border-radius:var(--r);padding:10px 13px;font-size:11px;color:var(--t3);line-height:1.7;}
-    .cf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:14px;}
-    .cf-item{background:var(--s2);border-radius:var(--r);padding:12px 14px;border-left:3px solid var(--b);}
-    .cf-item .cf-label{font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;margin-bottom:2px;}
-    .cf-item .cf-value{font-family:"Lato",sans-serif;font-size:18px;font-weight:900;line-height:1.2;}
-    .cf-item .cf-sub{font-size:11px;color:var(--t2);margin-top:2px;}
-    .cf-bar-wrap{margin-top:14px;}
-    .cf-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-    .cf-bar-label{font-size:11px;color:var(--t2);min-width:80px;}
-    .cf-bar-track{flex:1;height:8px;background:var(--s2);border-radius:4px;overflow:visible;position:relative;}
-    .cf-bar-fill{height:100%;border-radius:4px;position:absolute;}
-    .cf-bar-val{font-size:11px;font-weight:700;min-width:70px;text-align:right;}
-    .tooltip-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:var(--t3);color:#fff;border-radius:50%;font-size:9px;cursor:help;margin-left:4px;vertical-align:middle;}
-    .ad-mid{background:var(--s);border:1px solid var(--b);border-radius:var(--rl);padding:12px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
-    footer{text-align:center;font-size:12px;color:var(--t3);padding:20px;border-top:1px solid var(--b);}
-  </style>
 </head>
 <body>
-
-<header>
-  <p class="back"><a href="index.html">← アズキぷらす</a></p>
-  <h1>📊 企業の未来予測シミュレーター</h1>
-  <p>実際の財務データからCAGRを計算・3シナリオで10年後を予測</p>
-</header>
-
-<nav class="breadcrumb">
-  <a href="index.html">アズキぷらす</a> › 企業の未来予測シミュレーター
-</nav>
-
-<div class="ad-slot">
-  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
-  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+<nav style="background:#0a0a0f;border-bottom:1px solid rgba(255,255,255,.07);padding:8px 20px;font-size:11px;color:#444466;" aria-label="breadcrumb"><a href="index.html" style="color:#444466;text-decoration:none;">アズキぷらす</a> › 企業の未来予測シミュレーター</nav>
+<div class="header">
+  <h1>▶ 企業の未来予測シミュレーター ◀</h1>
+  <p>企業名を入力するとAIが成長指数・経営危険度を分析してビジュアル演出で表示します</p>
 </div>
-
 <div class="container">
-
-  <!-- 検索 -->
   <div class="card">
-    <div class="section-title">企業を検索</div>
-    <div class="search-wrap">
-      <div class="search-row">
-        <input type="text" id="code-input" placeholder="証券コードまたは企業名（例：7203、トヨタ）" maxlength="20" autocomplete="off" oninput="onInput()" onkeydown="if(event.key==='Enter')run()">
-        <button class="search-btn" id="search-btn" onclick="run()">分析する</button>
-      </div>
-      <div class="suggest-list" id="suggest-list"></div>
+    <h2>企業情報を入力</h2>
+    <div class="field">
+      <label>証券コード（日本株4桁 または 企業名）</label>
+      <input type="text" id="company" placeholder="例：7203 / AAPL / トヨタ">
+      <span class="hint">日本株は4桁コード（7203など）、米国株はティッカー（AAPLなど）でも可</span>
     </div>
-    <p class="hint">証券コード（4〜5桁）または企業名で検索できます。</p>
-    <p class="err" id="err-msg"></p>
+    <div class="mode-row">
+      <label>情報ソース</label>
+      <div class="mode-btns">
+        <button class="mode-btn active" id="btn-auto" onclick="setMode('auto')">自動（AI知識）</button>
+        <button class="mode-btn inactive" id="btn-manual" onclick="setMode('manual')">手動入力</button>
+      </div>
+    </div>
+    <div id="auto-area">
+      <div class="auto-msg"><span class="ok">✓</span><span>企業名だけでOKです。AIが知っている最新情報をもとに分析します。</span></div>
+    </div>
+    <div id="manual-area" style="display:none;">
+      <div class="field" style="margin-top:10px;">
+        <label>ニュース・業績情報</label>
+        <textarea id="news" placeholder="決算情報・新製品・不祥事・業界動向など…"></textarea>
+        <span class="hint">情報が多いほど精度が上がります</span>
+      </div>
+    </div>
+    <button class="run-btn" id="run-btn" onclick="run()">▶ 未来を予測する</button>
   </div>
 
-  <div class="loading" id="loading">財務データを取得中…</div>
+  <div class="loading" id="loading">
+    <div class="title" id="load-title">AI分析中<span class="dot"></span></div>
+    <div style="font-size:12px;" id="load-desc">企業の運命を計算しています</div>
+  </div>
 
-  <!-- 結果エリア -->
-  <div id="result" style="display:none;display:flex;flex-direction:column;gap:16px;">
-
-    <!-- 企業情報 -->
-    <div class="card" id="co-card">
-      <div class="co-header">
-        <span class="co-code" id="co-code"></span>
-        <div>
-          <div class="co-name" id="co-name"></div>
-          <div class="co-sector" id="co-sector"></div>
+  <div class="result" id="result">
+    <!-- 企業情報カード -->
+    <div style="background:var(--s);border:1px solid var(--b);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="font-family:'Lato',sans-serif;font-size:13px;font-weight:700;color:var(--t3);min-width:60px;" id="co-ticker">—</div>
+        <div style="font-size:16px;font-weight:700;flex:1;" id="co-name">—</div>
+      </div>
+      <div style="font-size:12px;color:var(--t2);margin-top:6px;line-height:1.6;" id="co-business">—</div>
+    </div>
+    <div class="stage">
+      <div class="stage-screen" id="stage-screen">
+        <div class="sky" id="sky"></div>
+        <div class="building" id="building">
+          <canvas id="bcanvas" width="80" height="140"></canvas>
+        </div>
+        <canvas id="ecanvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:10;"></canvas>
+      </div>
+      <div class="stage-footer">
+        <span class="eff-badge" id="eff-badge"></span>
+        <span class="sum-txt" id="sum-txt"></span>
+      </div>
+    </div>
+    <div class="metrics">
+      <div class="metric">
+        <div class="lbl">成長指数（-1.0〜+1.0）</div>
+        <div class="val" id="g-val"></div>
+        <div class="bar"><div class="fill" id="g-fill"></div></div>
+        <div id="g-desc" style="font-size:11px;color:var(--t2);margin-top:6px;line-height:1.6;"></div>
+      </div>
+      <div class="metric">
+        <div class="lbl">経営危険度（0〜100%）</div>
+        <div class="val" id="d-val"></div>
+        <div class="bar"><div class="fill" id="d-fill"></div></div>
+        <div id="d-desc" style="font-size:11px;color:var(--t2);margin-top:6px;line-height:1.6;"></div>
+      </div>
+    </div>
+    <!-- 指標の説明 -->
+    <div style="background:var(--s);border:1px solid var(--b);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:5px;">成長指数の目安</div>
+        <div style="font-size:11px;color:var(--t2);line-height:1.8;">
+          +0.8〜+1.0 ▶ 爆発的成長<br>
+          +0.3〜+0.7 ▶ 堅調な成長<br>
+          　0.0 ▶ 横ばい<br>
+          -0.3〜-0.1 ▶ 緩やかな衰退<br>
+          -1.0〜-0.5 ▶ 深刻な衰退
         </div>
       </div>
-
-      <!-- CAGR指標 -->
-      <div class="section-title">成長指標（実績ベース）</div>
-      <div class="cagr-grid" id="cagr-grid"></div>
-
-      <!-- 過去業績テーブル -->
-      <div class="section-title" style="margin-top:14px;">過去業績推移</div>
-      <div style="overflow-x:auto;">
-        <table class="fin-table" id="fin-table"></table>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:5px;">経営危険度の目安</div>
+        <div style="font-size:11px;color:var(--t2);line-height:1.8;">
+          0〜10% ▶ 盤石・安定<br>
+          10〜30% ▶ 軽微なリスク<br>
+          30〜50% ▶ 要注意<br>
+          50〜70% ▶ 危険水域<br>
+          70〜100% ▶ 倒産・消滅リスク高
+        </div>
       </div>
-      <p class="notice" style="margin-top:10px;">※J-Quantsの無料プランのため直近12週間のデータは含まれません。</p>
     </div>
-
-    <!-- 10年予測チャート -->
-    <div class="card">
-      <div class="section-title" id="forecast-title">10年後の予測（3シナリオ）</div>
-      <div class="scenario-row" id="scenario-row"></div>
+    <div class="forecast">
+      <div class="ttl" id="fc-title">10年後の事業規模予測（現在=100）</div>
       <div class="chart-wrap">
-        <canvas id="forecast-chart"></canvas>
+        <div class="y-axis" id="y-axis"></div>
+        <div class="chart-area">
+          <div class="bars" id="bars"></div>
+          <div class="baseline" id="baseline"></div>
+        </div>
       </div>
-      <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;">
-        <span style="font-size:11px;color:#1e6b3c;">■ 強気シナリオ（CAGR×120%）</span>
-        <span style="font-size:11px;color:#1a4fa0;">■ 標準シナリオ（CAGR実績）</span>
-        <span style="font-size:11px;color:#b5451b;">■ 保守的シナリオ（CAGR×70%）</span>
-      </div>
+      <div class="fnote" id="fnote"></div>
     </div>
-
-    <!-- キャッシュフロー分析 -->
-    <div class="card" id="cf-card">
-      <div class="section-title">キャッシュフロー分析</div>
-      <div class="cf-grid" id="cf-grid"></div>
-      <div class="cf-bar-wrap" id="cf-bars"></div>
-      <div class="notice" style="margin-top:12px;" id="cf-notice"></div>
-    </div>
-
-    <!-- AI分析 -->
-    <div class="card">
-      <div class="section-title">AI総合分析</div>
-      <div class="ai-section" id="ai-section">分析中...</div>
-    </div>
-
-    <div class="ad-mid">
-      <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
-      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-    </div>
-
   </div>
 
+  <!-- 広告枠② -->
+  <div style="margin-top:20px;text-align:center;">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-4271655790847344"
+         data-ad-slot="auto"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
 </div>
-
-<div class="ad-slot">
-  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
-  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-</div>
-
-<footer>© アズキぷらす | 株式投資・決算解説 YouTubeチャンネル</footer>
 
 <script>
-const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
-let allStocks = [];
+let mode = 'auto';
 
-// 全銘柄リストを非同期で取得
-async function loadStocks() {
-  try {
-    const res = await fetch(WORKER + '/search');
-    const data = await res.json();
-    allStocks = data.list || [];
-  } catch(e) {}
-}
-loadStocks();
-
-// インクリメンタルサーチ
-function onInput() {
-  const val = document.getElementById('code-input').value.trim();
-  const list = document.getElementById('suggest-list');
-  if (!val || val.length < 2) { list.style.display = 'none'; return; }
-
-  // コードっぽい入力（数字のみ）はサジェストしない
-  if (/^\d+$/.test(val) && val.length >= 4) { list.style.display = 'none'; return; }
-
-  const lower = val.toLowerCase();
-  const matches = allStocks.filter(s =>
-    s.name?.includes(val) ||
-    s.nameEn?.toLowerCase().includes(lower) ||
-    s.code?.startsWith(val)
-  ).slice(0, 10);
-
-  if (matches.length === 0) { list.style.display = 'none'; return; }
-
-  list.innerHTML = matches.map(s => `
-    <div class="suggest-item" onclick="selectStock('${s.code}', '${s.name?.replace(/'/g, "\'")}')">
-      <span class="suggest-code">${s.code}</span>
-      <div>
-        <div class="suggest-name">${s.name}</div>
-        <div class="suggest-sector">${s.sector || ''} ${s.market ? '/ ' + s.market : ''}</div>
-      </div>
-    </div>
-  `).join('');
-  list.style.display = 'block';
-}
-
-function selectStock(code, name) {
-  document.getElementById('code-input').value = code;
-  document.getElementById('suggest-list').style.display = 'none';
-  run();
-}
-
-// 外クリックでサジェストを閉じる
-document.addEventListener('click', e => {
-  if (!e.target.closest('.search-wrap')) {
-    document.getElementById('suggest-list').style.display = 'none';
-  }
-});
-let forecastChart = null;
-
-// CAGR計算
-function calcCAGR(start, end, years) {
-  if (!start || !end || years <= 0 || start <= 0) return null;
-  return Math.pow(end / start, 1 / years) - 1;
-}
-
-// 加重平均CAGR（直近重視）
-function calcWeightedCAGR(financials) {
-  if (financials.length < 2) return null;
-  const rates = [];
-  for (let i = 1; i < financials.length; i++) {
-    const prev = financials[i-1].netSales;
-    const curr = financials[i].netSales;
-    if (prev > 0 && curr > 0) rates.push(curr / prev - 1);
-  }
-  if (rates.length === 0) return null;
-  // 直近に重みを置く加重平均
-  const weights = rates.map((_, i) => i + 1);
-  const total = weights.reduce((a,b) => a+b, 0);
-  const weighted = rates.reduce((sum, r, i) => sum + r * weights[i], 0) / total;
-  return weighted;
-}
-
-// 数値フォーマット
-function fmt(n) {
-  if (!n || isNaN(n)) return '—';
-  if (Math.abs(n) >= 1e12) return (n/1e12).toFixed(1) + '兆円';
-  if (Math.abs(n) >= 1e8)  return (n/1e8).toFixed(1) + '億円';
-  if (Math.abs(n) >= 1e4)  return (n/1e4).toFixed(1) + '万円';
-  return n.toFixed(0) + '円';
-}
-function fmtPct(r) {
-  if (r === null || isNaN(r)) return '—';
-  return (r >= 0 ? '+' : '') + (r * 100).toFixed(1) + '%';
+function setMode(m) {
+  mode = m;
+  document.getElementById('btn-auto').className = 'mode-btn ' + (m==='auto'?'active':'inactive');
+  document.getElementById('btn-manual').className = 'mode-btn ' + (m==='manual'?'active':'inactive');
+  document.getElementById('auto-area').style.display = m==='auto' ? 'block' : 'none';
+  document.getElementById('manual-area').style.display = m==='manual' ? 'block' : 'none';
 }
 
 async function run() {
-  let code = document.getElementById('code-input').value.trim();
-  if (!code) { showErr('証券コードまたは企業名を入力してください'); return; }
+  const company = document.getElementById('company').value.trim();
+  if (!company) { alert('企業名を入力してください'); return; }
+  const news = document.getElementById('news').value.trim();
+  if (mode === 'manual' && !news) { alert('ニュース情報を入力してください'); return; }
 
-  // 企業名入力の場合は銘柄コードに変換
-  if (!/^\d{3,5}[A-Za-z]?$/.test(code) && allStocks.length > 0) {
-    const lower = code.toLowerCase();
-    const match = allStocks.find(s =>
-      s.name?.includes(code) ||
-      s.nameEn?.toLowerCase().includes(lower)
-    );
-    if (match) {
-      code = match.code;
-      document.getElementById('code-input').value = code;
-    } else {
-      showErr('企業が見つかりません。証券コードで検索してください。');
-      return;
-    }
-  }
-
-  document.getElementById('search-btn').disabled = true;
+  document.getElementById('run-btn').disabled = true;
   document.getElementById('loading').classList.add('show');
-  document.getElementById('result').style.display = 'none';
-  document.getElementById('err-msg').classList.remove('show');
+  document.getElementById('result').classList.remove('show');
+  document.getElementById('load-title').innerHTML = 'AI分析中<span class="dot"></span>';
+  document.getElementById('load-desc').textContent = '企業の運命を計算しています';
+
+  const info = mode === 'auto' ? company : `${company}: ${news}`;
+
+  const prompt = `「${info}」は証券コードまたは企業名です。この企業を分析してください。
+返答はJSON形式のみ。説明文・Markdown・コードブロック不要。以下のキーを含めること：
+- target_company: 正式企業名（文字列）
+- ticker: 証券コードまたはティッカー（文字列）
+- business: 事業内容30字以内（文字列）
+- data.growth: -1.0〜1.0の数値（成長度）
+- data.death_risk: 0.0〜1.0の数値（倒産リスク）
+- data.visual_effect: LEVEL_UP / STEADY / SHAKING / FIRE / BLACK_HOLE のいずれか
+- data.one_line_summary: 将来展望15字以内（文字列）`;
 
   try {
-    // 財務データ取得
-    const res = await fetch(`${WORKER}/fins?code=${encodeURIComponent(code)}`);
-    const data = await res.json();
-    if (data.error) { showErr(data.error); return; }
+    const res = await fetch('https://anthropic-proxy.gourmetazuki.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: info })
+    });
 
-    const { info, financials } = data;
-    if (!financials || financials.length < 2) {
-      showErr('財務データが不足しています。別の証券コードをお試しください。');
-      return;
+    const rawText = await res.text();
+    console.log('Worker response:', rawText.slice(0, 500));
+    
+    let data;
+    try { data = JSON.parse(rawText); } 
+    catch(pe) { throw new Error('Worker返答がJSONではない: ' + rawText.slice(0, 200)); }
+    
+    if (data.error) throw new Error('APIエラー: ' + JSON.stringify(data.error));
+    if (data.errorInfo) throw new Error('Geminiエラー: ' + JSON.stringify(data.errorInfo));
+    if (!data.text) throw new Error('レスポンスが空です');
+
+    const cleaned = data.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const s = cleaned.indexOf('{'), e = cleaned.lastIndexOf('}');
+    if (s === -1) throw new Error('JSONが見つかりません');
+    const json = JSON.parse(cleaned.slice(s, e + 1));
+
+    // J-Quantsから取得した企業名・セクター情報で上書き
+    if (data.companyInfo) {
+      json.target_company = data.companyInfo.name;
+      if (data.companyInfo.sector) {
+        json.business = data.companyInfo.sector + '（' + data.companyInfo.market + '）';
+      }
     }
-
-    renderResult(info, financials);
-    await runAI(info, financials);
-
-  } catch(e) {
-    showErr('データ取得エラー: ' + e.message);
+    render(json);
+  } catch(err) {
+    alert('エラー: ' + err.message);
+    console.error(err);
   } finally {
-    document.getElementById('search-btn').disabled = false;
+    document.getElementById('run-btn').disabled = false;
     document.getElementById('loading').classList.remove('show');
   }
 }
 
-function renderResult(info, financials) {
-  // 企業情報
-  document.getElementById('co-code').textContent = info.Code || '';
-  document.getElementById('co-name').textContent = info.CoName || '';
-  document.getElementById('co-sector').textContent = [info.S33Nm, info.MktNm].filter(Boolean).join(' ／ ');
+function render(r) {
+  const d = r.data;
+  const g = d.growth, risk = d.death_risk, ef = d.visual_effect;
 
-  // CAGR計算
-  const n = financials.length;
-  const first = financials[0];
-  const last  = financials[n-1];
-  const years = n - 1;
+  // 企業情報を表示
+  const tickerEl = document.getElementById('co-ticker');
+  const nameEl   = document.getElementById('co-name');
+  const bizEl    = document.getElementById('co-business');
+  if (tickerEl) tickerEl.textContent = r.ticker || '—';
+  if (nameEl)   nameEl.textContent   = r.target_company || '—';
+  if (bizEl)    bizEl.textContent    = r.business || '—';
 
-  const salesCAGR    = calcCAGR(first.netSales, last.netSales, years);
-  const opCAGR       = calcCAGR(first.operatingProfit, last.operatingProfit, years);
-  const weightedCAGR = calcWeightedCAGR(financials);
+  // メトリクス
+  const gv = document.getElementById('g-val');
+  gv.textContent = (g>=0?'+':'') + g.toFixed(2);
+  gv.style.color = g >= 0 ? 'var(--g)' : 'var(--r)';
+  document.getElementById('g-fill').style.cssText = `width:${Math.abs(g)*100}%;background:${g>=0?'var(--g)':'var(--r)'}`;
+  const gDesc = g>=0.8?'爆発的な成長フェーズ':g>=0.3?'堅調な成長':g>=0?'横ばい・微成長':g>=-0.3?'緩やかな衰退傾向':'深刻な業績悪化';
+  document.getElementById('g-desc').textContent = '▶ ' + gDesc;
 
-  // 直近成長率
-  const latestGrowth = n >= 2
-    ? (financials[n-1].netSales / financials[n-2].netSales - 1)
-    : null;
+  const dv = document.getElementById('d-val');
+  dv.textContent = (risk*100).toFixed(0) + '%';
+  dv.style.color = risk>0.5?'var(--r)':risk>0.3?'var(--a)':'var(--g)';
+  document.getElementById('d-fill').style.cssText = `width:${risk*100}%;background:${risk>0.5?'var(--r)':risk>0.3?'var(--a)':'var(--g)'}`;
+  const dDesc = risk<0.1?'財務盤石・倒産リスクほぼなし':risk<0.3?'軽微なリスクあり':risk<0.5?'要注意・動向を監視':risk<0.7?'危険水域・要精査':'倒産・消滅リスクが高い';
+  document.getElementById('d-desc').textContent = '▶ ' + dDesc;
 
-  // CAGR表示
-  const grid = document.getElementById('cagr-grid');
-  grid.innerHTML = [
-    { label:`売上CAGR（${years}年）`, value: fmtPct(salesCAGR), sub:'複利成長率', color: salesCAGR >= 0 ? '#1e6b3c' : '#b5451b' },
-    { label:'営業利益CAGR',          value: fmtPct(opCAGR),    sub:'複利成長率', color: opCAGR >= 0 ? '#1e6b3c' : '#b5451b' },
-    { label:'加重平均成長率',          value: fmtPct(weightedCAGR), sub:'直近重視', color: weightedCAGR >= 0 ? '#1a4fa0' : '#b5451b' },
-    { label:'直近売上成長率',          value: fmtPct(latestGrowth), sub:'前年比', color: latestGrowth >= 0 ? '#1e6b3c' : '#b5451b' },
-  ].map(item => `
-    <div class="cagr-item">
-      <div class="cagr-label">${item.label}</div>
-      <div class="cagr-value" style="color:${item.color}">${item.value}</div>
-      <div class="cagr-sub">${item.sub}</div>
-    </div>
-  `).join('');
+  // エフェクトバッジ
+  const effMap = {
+    LEVEL_UP: {label:'▲ LEVEL UP', color:'var(--g)', bg:'rgba(0,255,136,.15)'},
+    STEADY:   {label:'■ STEADY',   color:'var(--bl)',bg:'rgba(68,136,255,.15)'},
+    SHAKING:  {label:'⚠ SHAKING', color:'var(--a)', bg:'rgba(255,170,0,.15)'},
+    FIRE:     {label:'🔥 FIRE',    color:'var(--r)', bg:'rgba(255,68,102,.15)'},
+    BLACK_HOLE:{label:'☠ BLACK HOLE',color:'#cc44ff',bg:'rgba(170,0,255,.15)'},
+  };
+  const ei = effMap[ef] || effMap.STEADY;
+  const badge = document.getElementById('eff-badge');
+  badge.textContent = ei.label;
+  badge.style.color = ei.color;
+  badge.style.background = ei.bg;
+  document.getElementById('sum-txt').textContent = d.one_line_summary;
 
-  // 過去業績テーブル
-  const table = document.getElementById('fin-table');
-  const periods = financials.map(f => f.period.substring(0,7));
-  table.innerHTML = `
-    <thead><tr>
-      <th>指標</th>
-      ${periods.map(p => `<th>${p}</th>`).join('')}
-    </tr></thead>
-    <tbody>
-      <tr>
-        <td>売上高</td>
-        ${financials.map(f => `<td>${fmt(f.netSales)}</td>`).join('')}
-      </tr>
-      <tr>
-        <td>営業利益</td>
-        ${financials.map(f => `<td>${fmt(f.operatingProfit)}</td>`).join('')}
-      </tr>
-      <tr>
-        <td>純利益</td>
-        ${financials.map(f => `<td>${fmt(f.netIncome)}</td>`).join('')}
-      </tr>
-      <tr>
-        <td>売上成長率</td>
-        ${financials.map((f, i) => {
-          if (i === 0) return '<td>—</td>';
-          const g = financials[i-1].netSales > 0 ? (f.netSales / financials[i-1].netSales - 1) : null;
-          const cls = g === null ? '' : g >= 0 ? 'growth-pos' : 'growth-neg';
-          return `<td class="${cls}">${fmtPct(g)}</td>`;
-        }).join('')}
-      </tr>
-      <tr>
-        <td>年間配当</td>
-        ${financials.map(f => `<td>${f.divAnn ? f.divAnn.toFixed(1) + '円' : '—'}</td>`).join('')}
-      </tr>
-      <tr>
-        <td>配当性向</td>
-        ${financials.map(f => {
-          const p = f.payoutRatio ? (f.payoutRatio * 100).toFixed(1) + '%' : '—';
-          return `<td>${p}</td>`;
-        }).join('')}
-      </tr>
-      <tr>
-        <td>自己資本比率</td>
-        ${financials.map(f => {
-          const e = f.equityRatio ? (f.equityRatio * 100).toFixed(1) + '%' : '—';
-          return `<td>${e}</td>`;
-        }).join('')}
-      </tr>
-    </tbody>
-  `;
+  drawBuilding(g, ef);
+  drawForecast(g, risk, r.target_company);
+  document.getElementById('result').classList.add('show');
+}
 
-  // 売上がない場合は純利益または営業利益をベースに
-  const baseValue = last.netSales > 0 ? last.netSales
-    : last.operatingProfit !== 0 ? last.operatingProfit
-    : last.netIncome;
-  const chartLabel = last.netSales > 0 ? '売上高' : last.operatingProfit !== 0 ? '営業利益' : '純利益';
+function drawBuilding(growth, ef) {
+  const c = document.getElementById('bcanvas');
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, 80, 140);
+  const lvl = Math.max(-1, Math.min(1, growth));
+  const bh = Math.round(55 + lvl*45), bw = Math.round(32 + lvl*10);
+  const bx = (80-bw)/2, by = 140-bh;
 
-  // 3シナリオ計算
-  const baseCAGR = weightedCAGR ?? salesCAGR ?? 0.03;
-  const scenarios = [
-    { label:'強気',   rate: baseCAGR * 1.2, color:'#1e6b3c', bg:'rgba(30,107,60,.08)' },
-    { label:'標準',   rate: baseCAGR,        color:'#1a4fa0', bg:'rgba(26,79,160,.08)' },
-    { label:'保守的', rate: baseCAGR * 0.7,  color:'#b5451b', bg:'rgba(181,69,27,.08)' },
-  ];
+  const walls = ef==='BLACK_HOLE'?'#220022':ef==='FIRE'?'#3a1a00':lvl>=0.5?'#1a2a3a':'#1a1a2a';
+  const wins  = ef==='BLACK_HOLE'?'#440044':ef==='FIRE'?'#ff6600':lvl>=0.5?'#88ccff':'#6688aa';
 
-  // シナリオ説明
-  const scenarioRow = document.getElementById('scenario-row');
-  scenarioRow.innerHTML = scenarios.map(s => {
-    const val10 = last.netSales * Math.pow(1 + s.rate, 10);
-    return `
-      <div class="scenario-item" style="border-color:${s.color};background:${s.bg};">
-        <h3 style="color:${s.color};">${s.label}シナリオ（${fmtPct(s.rate)}/年）</h3>
-        <p>10年後の売上予測: <strong style="color:${s.color};font-size:13px;">${fmt(val10)}</strong></p>
-        <p>現在（${fmt(last.netSales)}）の約${(val10/last.netSales).toFixed(1)}倍</p>
-      </div>
-    `;
-  }).join('');
+  ctx.fillStyle = walls;
+  ctx.fillRect(bx, by, bw, bh);
+  ctx.fillStyle = lvl>=0.5?'#2a4a6a':'#2a2a3a';
+  ctx.fillRect(bx-2, by-4, bw+4, 4);
+  if (lvl >= 0.5) {
+    ctx.fillStyle='#88ccff';
+    ctx.fillRect(bx+bw/2-1, by-14, 2, 10);
+  }
+  const cols=Math.max(2,Math.floor(bw/10)), rows=Math.max(2,Math.floor(bh/12));
+  for (let r=0;r<rows;r++) for (let cc=0;cc<cols;cc++) {
+    const wx=bx+4+cc*((bw-8)/cols), wy=by+6+r*((bh-10)/rows);
+    ctx.fillStyle = Math.random()>0.4?wins:'#111';
+    ctx.fillRect(Math.round(wx),Math.round(wy),4,4);
+  }
 
-  // 予測チャート
-  const labels = ['現在'];
-  for (let y = 1; y <= 10; y++) labels.push(`${y}年後`);
+  const skyEl = document.getElementById('sky');
+  skyEl.style.background = {
+    LEVEL_UP:'linear-gradient(180deg,#001a33,#003366)',
+    STEADY:'linear-gradient(180deg,#0a0a1a,#141428)',
+    SHAKING:'linear-gradient(180deg,#1a1a00,#0a0a0a)',
+    FIRE:'linear-gradient(180deg,#1a0000,#3a0800)',
+    BLACK_HOLE:'linear-gradient(180deg,#0a0014,#14002a)',
+  }[ef] || 'linear-gradient(180deg,#0a0a1a,#141428)';
 
-  const datasets = scenarios.map(s => ({
-    label: s.label,
-    data: [baseValue, ...Array.from({length:10}, (_,i) => baseValue * Math.pow(1+s.rate, i+1))],
-    borderColor: s.color,
-    backgroundColor: s.color + '15',
-    borderWidth: 2,
-    pointRadius: 3,
-    fill: false,
-    tension: 0.3,
-  }));
+  const bel = document.getElementById('building');
+  bel.style.animation = 'none';
+  void bel.offsetHeight;
+  if (ef==='SHAKING') bel.style.animation='shake .5s ease infinite';
+  else if (ef==='FIRE') bel.style.animation='glow .8s ease infinite';
+  else if (ef==='LEVEL_UP') bel.style.animation='glow 2s ease infinite';
+  else if (ef==='BLACK_HOLE') bel.style.animation='shrink 3s ease forwards';
 
-  const ctx = document.getElementById('forecast-chart').getContext('2d');
-  if (forecastChart) forecastChart.destroy();
-  forecastChart = new Chart(ctx, {
-    type: 'line',
-    data: { labels, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          mode: 'index',
-          intersect: false,
-          callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.raw)}` }
-        }
-      },
-      scales: {
-        x: { ticks: { color:'#98968c' }, grid: { color:'rgba(0,0,0,.05)' } },
-        y: { ticks: { color:'#98968c', callback: v => fmt(v) }, grid: { color:'rgba(0,0,0,.05)' } }
-      }
+  // エフェクトキャンバス
+  const ec = document.getElementById('ecanvas');
+  ec.width = ec.offsetWidth; ec.height = ec.offsetHeight;
+  const ectx = ec.getContext('2d');
+  ectx.clearRect(0,0,ec.width,ec.height);
+  if (ef==='FIRE') {
+    for (let i=0;i<25;i++) {
+      ectx.beginPath();
+      ectx.arc(ec.width*.3+Math.random()*ec.width*.4, ec.height*.3+Math.random()*ec.height*.5, 2+Math.random()*5, 0, Math.PI*2);
+      ectx.fillStyle=`rgba(255,${Math.floor(Math.random()*80)},0,${Math.random()*.6})`;
+      ectx.fill();
     }
-  });
-
-  document.getElementById('result').style.display = 'flex';
-  document.getElementById('result').style.flexDirection = 'column';
-
-  // キャッシュフロー表示
-  renderCF(financials);
-}
-
-function renderCF(financials) {
-  const last = financials[financials.length - 1];
-  const cfo = last.cfo || 0;
-  const cfi = last.cfi || 0;
-  const cff = last.cff || 0;
-  const cashEq = last.cashEq || 0;
-  const fcf = cfo + cfi; // フリーキャッシュフロー
-  const fcfMargin = last.netSales > 0 ? fcf / last.netSales : 0;
-
-  // CF評価
-  const cfType = cfo > 0 && cfi < 0 && fcf > 0 ? 'healthy'
-    : cfo > 0 && cfi < 0 && fcf < 0 ? 'investing'
-    : cfo < 0 ? 'warning' : 'neutral';
-
-  const cfTypeLabel = {
-    healthy:   { label:'💪 健全型', color:'#1e6b3c', desc:'本業で稼ぎ、積極投資しつつFCFもプラス。理想的な状態。' },
-    investing: { label:'🏗️ 積極投資型', color:'#1a4fa0', desc:'本業は稼いでいるが積極投資でFCFはマイナス。成長投資中。' },
-    warning:   { label:'⚠️ 要注意', color:'#b5451b', desc:'営業CFがマイナス。本業での稼ぎが不十分な状態。' },
-    neutral:   { label:'📊 確認要', color:'#d4820a', desc:'CF構造を詳細に確認してください。' },
-  }[cfType];
-
-  const grid = document.getElementById('cf-grid');
-  grid.innerHTML = [
-    { label:'営業CF', value: fmt(cfo), sub:'本業での稼ぎ', color: cfo >= 0 ? '#1e6b3c' : '#b5451b', border: cfo >= 0 ? '#1e6b3c' : '#b5451b' },
-    { label:'投資CF', value: fmt(cfi), sub:'設備投資など', color: cfi <= 0 ? '#1a4fa0' : '#b5451b', border: '#1a4fa0' },
-    { label:'財務CF', value: fmt(cff), sub:'借入・配当など', color: '#d4820a', border: '#d4820a' },
-    { label:'現金等', value: fmt(cashEq), sub:'手元資金', color: '#1a4fa0', border: '#1a4fa0' },
-    { label:'FCF', value: fmt(fcf), sub:'フリーCF', color: fcf >= 0 ? '#1e6b3c' : '#b5451b', border: fcf >= 0 ? '#1e6b3c' : '#b5451b' },
-    { label:'FCFマージン', value: fcfMargin ? (fcfMargin * 100).toFixed(1) + '%' : '—', sub:'売上に対するFCF', color: fcfMargin >= 0.05 ? '#1e6b3c' : fcfMargin >= 0 ? '#d4820a' : '#b5451b', border: '#555' },
-  ].map(item => `
-    <div class="cf-item" style="border-left-color:${item.border};">
-      <div class="cf-label">${item.label}</div>
-      <div class="cf-value" style="color:${item.color};">${item.value}</div>
-      <div class="cf-sub">${item.sub}</div>
-    </div>
-  `).join('');
-
-  // CF評価バッジ
-  const notice = document.getElementById('cf-notice');
-  notice.innerHTML = `
-    <strong style="color:${cfTypeLabel.color};">${cfTypeLabel.label}</strong>　${cfTypeLabel.desc}<br>
-    <span style="color:var(--t3);font-size:10px;margin-top:4px;display:block;">
-      💡 FCFマージン（フリーキャッシュフローマージン）とは：売上高に対してフリーキャッシュフロー（本業の稼ぎから設備投資を引いた実質的な現金）がどれだけあるかを示す指標。5%以上が優良、10%以上は特に高収益企業の目安。
-    </span>
-  `;
-}
-
-async function runAI(info, financials) {
-  const n = financials.length;
-  const last = financials[n-1];
-  const first = financials[0];
-  const years = n - 1;
-  const salesCAGR = calcCAGR(first.netSales, last.netSales, years);
-  const weightedCAGR = calcWeightedCAGR(financials);
-
-  const opMargin = last.netSales > 0 ? (last.operatingProfit/last.netSales*100).toFixed(1) : '—';
-  const fcf = last.cfo + last.cfi;
-  const prompt = `以下の日本株企業の財務分析をしてください。
-
-企業名: ${info.CoName}
-英語名: ${info.CoNameEn || ''}
-証券コード: ${info.Code}
-市場: ${info.MktNm}
-
-【重要】業種分類は使わず、企業名・英語名でウェブ検索して実際の事業内容を把握してから分析してください。
-
-財務実績（過去${years}年）:
-- 売上CAGR: ${(salesCAGR*100).toFixed(1)}%
-- 加重平均成長率: ${(weightedCAGR*100).toFixed(1)}%
-- 直近売上: ${last.netSales.toLocaleString()}円
-- 直近営業利益: ${last.operatingProfit.toLocaleString()}円
-- 営業利益率: ${opMargin}%
-- FCF: ${fcf.toLocaleString()}円
-
-分析してください：
-1. この企業の実際の事業内容（業種分類に頼らず）
-2. 成長率の業界比較
-3. 主なリスク
-4. 強気・保守的どちらのシナリオが現実的か
-
-JSON形式のみで回答。説明文不要。
-{"assessment":"事業内容を踏まえた総合評価100〜150字","risk":"実際の事業に基づくリスク30字以内","outlook":"strong|neutral|weak"}`;
-
-  try {
-    const res = await fetch(WORKER, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
-    });
-    const data = await res.json();
-    if (!data.text) throw new Error('AI応答なし');
-    const cleaned = data.text.replace(/```json/gi,'').replace(/```/g,'').trim();
-    const s = cleaned.indexOf('{'), e = cleaned.lastIndexOf('}');
-    const json = JSON.parse(cleaned.slice(s, e+1));
-
-    const color = json.outlook === 'strong' ? '#1e6b3c' : json.outlook === 'weak' ? '#b5451b' : '#1a4fa0';
-    document.getElementById('ai-section').innerHTML = `
-      <strong style="color:${color};">${json.outlook === 'strong' ? '🟢 強気' : json.outlook === 'weak' ? '🔴 弱気' : '🔵 中立'}</strong>
-      &nbsp;&nbsp;${json.assessment}<br>
-      <span style="font-size:12px;color:#98968c;margin-top:6px;display:block;">⚠️ リスク: ${json.risk}</span>
-    `;
-  } catch(e) {
-    document.getElementById('ai-section').textContent = 'AI分析を取得できませんでした（API制限の可能性）';
+  } else if (ef==='LEVEL_UP') {
+    for (let i=0;i<15;i++) {
+      ectx.fillStyle=`rgba(0,255,${Math.floor(Math.random()*200+55)},${Math.random()*.7})`;
+      ectx.fillRect(Math.random()*ec.width, Math.random()*ec.height*.7, 2, 2);
+    }
+  } else if (ef==='BLACK_HOLE') {
+    const cx=ec.width/2, cy=ec.height/2;
+    const gr=ectx.createRadialGradient(cx,cy,0,cx,cy,80);
+    gr.addColorStop(0,'rgba(100,0,150,.7)');
+    gr.addColorStop(1,'rgba(0,0,0,0)');
+    ectx.fillStyle=gr;
+    ectx.fillRect(0,0,ec.width,ec.height);
   }
 }
 
-function showErr(msg) {
-  const el = document.getElementById('err-msg');
-  el.textContent = msg;
-  el.classList.add('show');
-}
+function drawForecast(growth, risk, name) {
+  const annRate = growth*(1-risk*.5)*.12;
+  const vals=[100];
+  for(let y=1;y<=10;y++) vals.push(Math.max(1, vals[y-1]*(1+annRate)));
+  const disp=vals.slice(1);
+  const maxV=Math.max(...disp,110), minV=Math.min(...disp,0);
+  const range=Math.max(maxV-minV,1);
+  const maxH=110;
 
-document.getElementById('code-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') run();
-});
+  // Y軸
+  const ya=document.getElementById('y-axis');
+  const ticks=[maxV,(maxV+minV)/2,minV].map(v=>Math.round(v));
+  ya.innerHTML=ticks.map(t=>`<span class="y-tick">${t}</span>`).join('');
+  ya.style.height=(maxH+20)+'px';
+
+  // ベースライン
+  const bl=document.getElementById('baseline');
+  if(maxV>100){
+    bl.style.top=((maxV-100)/range*maxH)+'px';
+    bl.style.display='block';
+  } else bl.style.display='none';
+
+  // バー
+  const bars=document.getElementById('bars');
+  bars.innerHTML='';
+  const color=annRate>=0.05?'var(--g)':annRate>=0?'var(--bl)':annRate>=-0.05?'var(--a)':'var(--r)';
+  disp.forEach((v,i)=>{
+    const barH=Math.max(3,Math.round((v-minV)/range*maxH));
+    const w=document.createElement('div');
+    w.className='bw';
+    w.innerHTML=`<span class="bv" style="color:${color}">${Math.round(v)}</span><div class="bb" style="height:${barH}px;background:${color};opacity:${.5+(i/10)*.5}"></div><span class="bl">${i+1}年</span>`;
+    bars.appendChild(w);
+  });
+
+  // タイトル・注記
+  const sign=annRate>=0?'+':'';
+  document.getElementById('fc-title').textContent=`${name} — 10年予測（年平均${sign}${(annRate*100).toFixed(1)}%）`;
+  document.getElementById('fnote').textContent=`現在=100の相対値。成長指数${growth>=0?'+':''}${growth.toFixed(2)}・経営危険度${(risk*100).toFixed(0)}%をもとに試算。`;
+}
 </script>
+<div style="text-align:center;padding:16px;font-size:12px;color:#444466;">© アズキぷらす | <a href="privacy.html" style="color:#444466;">プライバシーポリシー</a></div>
 </body>
 </html>

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://azuki-plus.com/simulator/sitemap.xml
+Sitemap: https://azuki-plus.com/sitemap.xml
