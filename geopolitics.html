@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="google-adsense-account" content="ca-pub-4271655790847344">
+  <link rel="icon" type="image/png" href="azuki-icon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>地政学リスクマップ｜米中露EU 外交関係・波及影響をリアルタイム可視化 | アズキぷらす</title>
+  <meta name="description" content="アメリカ・中国・EU・ロシア・日本の視点から世界各国との外交関係を地図上で可視化。友好・敵対・制裁・軍事同盟をリアルタイムで確認。投資・経済への波及影響も表示。">
+  <meta name="keywords" content="地政学リスク,外交関係,米中対立,制裁,軍事同盟,地政学マップ,アズキぷらす">
+  <link rel="canonical" href="https://azuki-plus.com/geopolitics.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="地政学リスクマップ｜米中露EU 外交関係・波及影響 | アズキぷらす">
+  <meta property="og:description" content="主要国の視点から世界各国との外交関係を地図上で可視化。友好・敵対・制裁をリアルタイムで確認。">
+  <meta property="og:url" content="https://azuki-plus.com/geopolitics.html">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"地政学リスクマップ","url":"https://azuki-plus.com/geopolitics.html","description":"主要国の外交関係を地図上で可視化するツール。友好・敵対・制裁・軍事同盟をリアルタイムで確認。","applicationCategory":"NewsApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"},"author":{"@type":"Person","name":"アズキぷらす"}}
+  </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4271655790847344" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#0c0c14;--s:#13131f;--s2:#1c1c2e;--b:rgba(255,255,255,.07);
+      --t:#e8e8f4;--t2:#8888aa;--t3:#444466;
+      --ally:#00cc66;--friendly:#44aaff;--neutral:#888899;--tense:#ffaa00;--hostile:#ff4455;
+    }
+    body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--t);font-size:14px;min-height:100vh;}
+    header{background:linear-gradient(135deg,#0c0c14,#14101a);border-bottom:1px solid rgba(255,100,0,.15);padding:16px 20px;text-align:center;}
+    header .back a{font-size:12px;color:var(--t3);text-decoration:none;}
+    header h1{font-size:clamp(15px,4vw,22px);font-weight:700;margin:6px 0 4px;}
+    header p{font-size:12px;color:var(--t2);}
+    .breadcrumb{background:var(--s);border-bottom:1px solid var(--b);padding:8px 20px;font-size:11px;color:var(--t3);}
+    .breadcrumb a{color:var(--t3);text-decoration:none;}
+    .ad-slot{background:var(--s);border-bottom:1px solid var(--b);padding:10px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+
+    /* プレイヤー選択 */
+    .player-bar{background:var(--s);border-bottom:1px solid var(--b);padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+    .player-btn{padding:8px 16px;border-radius:8px;font-size:13px;font-family:inherit;border:1px solid var(--b);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;}
+    .player-btn:hover{border-color:rgba(255,255,255,.2);}
+    .player-btn.active{background:#ff6600;color:#fff;border-color:#ff6600;}
+
+    /* レイアウト */
+    .layout{display:flex;flex-direction:column;height:calc(100vh - 200px);min-height:500px;}
+    @media(min-width:900px){.layout{flex-direction:row;}}
+
+    /* 地図 */
+    #map{flex:1;min-height:350px;background:#0a0a12;}
+    .leaflet-container{background:#0a0a12!important;}
+    .leaflet-tile{filter:brightness(.4) saturate(.3) hue-rotate(200deg);}
+
+    /* サイドパネル */
+    .side{width:100%;background:var(--s);border-top:1px solid var(--b);overflow-y:auto;max-height:350px;}
+    @media(min-width:900px){.side{width:320px;border-top:none;border-left:1px solid var(--b);max-height:none;}}
+    .side-inner{padding:14px;}
+
+    /* 凡例 */
+    .legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+    .legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--t2);}
+    .legend-dot{width:10px;height:10px;border-radius:50%;}
+
+    /* サマリー */
+    .summary-box{background:var(--s2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:12px;border-left:3px solid #ff6600;}
+
+    /* 国リスト */
+    .section-title{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:6px;}
+    .country-list{display:flex;flex-direction:column;gap:4px;}
+    .country-item{background:var(--s2);border-radius:8px;padding:8px 10px;cursor:pointer;border:1px solid transparent;transition:all .15s;}
+    .country-item:hover{border-color:rgba(255,255,255,.15);}
+    .country-item.selected{border-color:#ff6600;}
+    .country-top{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+    .country-flag{font-size:16px;}
+    .country-name{font-size:13px;font-weight:700;flex:1;}
+    .relation-badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;}
+    .country-note{font-size:11px;color:var(--t3);line-height:1.5;}
+    .country-event{font-size:10px;color:var(--t3);margin-top:2px;font-style:italic;}
+    .impact-icons{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;}
+    .impact-icon{font-size:11px;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,.06);color:var(--t2);}
+
+    /* キーイベント */
+    .key-events{margin-top:14px;}
+    .event-item{background:var(--s2);border-radius:8px;padding:8px 10px;margin-bottom:6px;border-left:3px solid var(--t3);}
+    .event-item.high{border-left-color:var(--hostile);}
+    .event-item.medium{border-left-color:var(--tense);}
+    .event-item.low{border-left-color:var(--friendly);}
+    .event-title{font-size:12px;font-weight:700;margin-bottom:2px;}
+    .event-detail{font-size:11px;color:var(--t3);line-height:1.6;}
+
+    /* ローディング */
+    .loading-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(12,12,20,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .spinner{width:36px;height:36px;border:3px solid var(--b);border-top-color:#ff6600;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px;}
+    .loading-text{color:var(--t2);font-size:13px;}
+
+    /* スコアバー */
+    .score-bar{height:4px;border-radius:2px;margin-top:4px;background:rgba(255,255,255,.1);}
+    .score-fill{height:100%;border-radius:2px;transition:width .3s;}
+
+    /* 説明テキスト */
+    .desc-box{max-width:100%;padding:12px 16px;background:rgba(255,255,255,.03);border-top:1px solid var(--b);}
+    .desc-box p{font-size:12px;color:var(--t3);line-height:1.8;}
+
+    footer{text-align:center;font-size:12px;color:var(--t3);padding:16px;border-top:1px solid var(--b);}
+    footer a{color:var(--t3);}
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="back"><a href="index.html">← アズキぷらす</a></p>
+  <h1>🌍 地政学リスクマップ</h1>
+  <p>主要国の視点から見た世界各国との外交関係・波及影響をリアルタイム可視化</p>
+</header>
+
+<nav class="breadcrumb">
+  <a href="index.html">アズキぷらす</a> › 地政学リスクマップ
+</nav>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<!-- プレイヤー選択 -->
+<div class="player-bar">
+  <button class="player-btn active" onclick="loadPlayer('US')" id="btn-US">🇺🇸 アメリカ</button>
+  <button class="player-btn" onclick="loadPlayer('CN')" id="btn-CN">🇨🇳 中国</button>
+  <button class="player-btn" onclick="loadPlayer('EU')" id="btn-EU">🇪🇺 EU</button>
+  <button class="player-btn" onclick="loadPlayer('RU')" id="btn-RU">🇷🇺 ロシア</button>
+  <button class="player-btn" onclick="loadPlayer('JP')" id="btn-JP">🇯🇵 日本</button>
+</div>
+
+<div class="layout">
+  <!-- 地図 -->
+  <div style="position:relative;flex:1;min-height:350px;">
+    <div id="map"></div>
+    <div class="loading-overlay" id="loading">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loading-text">AIが最新の外交情報を分析中...</div>
+    </div>
+  </div>
+
+  <!-- サイドパネル -->
+  <div class="side">
+    <div class="side-inner">
+      <!-- 凡例 -->
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--ally);"></div>同盟国</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--friendly);"></div>友好国</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--neutral);"></div>中立</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--tense);"></div>緊張</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--hostile);"></div>敵対</div>
+      </div>
+
+      <div id="summary-box" class="summary-box" style="display:none;"></div>
+
+      <!-- 国リスト -->
+      <div id="country-section" style="display:none;">
+        <div id="hostile-list"></div>
+        <div id="tense-list" style="margin-top:10px;"></div>
+        <div id="neutral-list" style="margin-top:10px;"></div>
+        <div id="friendly-list" style="margin-top:10px;"></div>
+        <div id="ally-list" style="margin-top:10px;"></div>
+      </div>
+
+      <!-- キーイベント -->
+      <div id="events-section" class="key-events" style="display:none;">
+        <div class="section-title" style="margin-top:14px;">📰 最近の重要イベント</div>
+        <div id="events-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 説明テキスト -->
+<div class="desc-box">
+  <p>📖 <strong style="color:var(--t2);">地政学リスクマップについて</strong><br>
+  地政学リスクとは、国家間の政治的対立・軍事的緊張・外交関係が経済・金融市場に与えるリスクです。本ページでは主要国（アメリカ・中国・EU・ロシア・日本）の視点から、世界各国との外交関係をAIがリアルタイムで分析・可視化しています。制裁・軍事同盟・エネルギー・貿易への波及影響も表示。投資判断の参考指標としてご活用ください。データはAIによる推定であり、正確性を保証するものではありません。</p>
+</div>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<footer>© アズキぷらす | <a href="privacy.html">プライバシーポリシー</a> | <a href="index.html">トップへ戻る</a></footer>
+
+<script>
+const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
+let map = null;
+let markers = [];
+let lines = [];
+let currentData = null;
+let currentPlayer = 'US';
+
+const RELATION_COLORS = {
+  ally: '#00cc66',
+  friendly: '#44aaff',
+  neutral: '#888899',
+  tense: '#ffaa00',
+  hostile: '#ff4455',
+};
+
+const IMPACT_LABELS = {
+  trade: '📦 貿易',
+  military: '🪖 軍事',
+  energy: '⚡ エネルギー',
+  finance: '💰 金融',
+  sanction: '🚫 制裁',
+};
+
+const PLAYER_COORDS = {
+  US: [38, -97],
+  CN: [35, 105],
+  EU: [50, 10],
+  RU: [60, 90],
+  JP: [36, 138],
+};
+
+// 地図初期化
+function initMap() {
+  map = L.map('map', { zoomControl: true, attributionControl: false }).setView([20, 20], 2);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 10, minZoom: 1,
+  }).addTo(map);
+}
+
+async function loadPlayer(player) {
+  currentPlayer = player;
+  document.querySelectorAll('.player-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + player).classList.add('active');
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('loading-text').textContent = 'AIが最新の外交情報を分析中...';
+  document.getElementById('summary-box').style.display = 'none';
+  document.getElementById('country-section').style.display = 'none';
+  document.getElementById('events-section').style.display = 'none';
+
+  try {
+    const dayKey = new Date().toISOString().split('T')[0];
+    const res = await fetch(`${WORKER}/geopolitics?player=${player}&_=${dayKey}-${player}`, { cache: 'no-store' });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    currentData = data;
+    renderMap(data);
+    renderSide(data);
+  } catch(e) {
+    document.getElementById('loading-text').textContent = 'データ取得エラー: ' + e.message;
+  }
+}
+
+function clearMap() {
+  markers.forEach(m => map.removeLayer(m));
+  lines.forEach(l => map.removeLayer(l));
+  markers = []; lines = [];
+}
+
+function renderMap(data) {
+  clearMap();
+  document.getElementById('loading').style.display = 'none';
+
+  const relations = data.relations || [];
+  const playerCoords = PLAYER_COORDS[currentPlayer] || [20, 20];
+  map.setView(playerCoords, 2);
+
+  relations.forEach(r => {
+    if (!r.lat || !r.lng) return;
+    const color = RELATION_COLORS[r.relation] || '#888899';
+    const size = r.relation === 'hostile' || r.relation === 'ally' ? 14 : 10;
+
+    // 国マーカー
+    const icon = L.divIcon({
+      html: `<div style="font-size:${size}px;filter:drop-shadow(0 0 4px ${color});">${r.flag||'🌐'}</div>`,
+      className: '', iconSize: [size+4, size+4], iconAnchor: [(size+4)/2, (size+4)/2]
+    });
+    const marker = L.marker([r.lat, r.lng], { icon })
+      .addTo(map)
+      .bindPopup(`
+        <div style="min-width:180px;font-family:sans-serif;">
+          <div style="font-size:16px;margin-bottom:4px;">${r.flag} <strong>${r.country_ja}</strong></div>
+          <div style="color:${color};font-weight:700;margin-bottom:6px;">${r.relation_ja}</div>
+          <div style="font-size:12px;color:#666;margin-bottom:4px;">${r.note||''}</div>
+          <div style="font-size:11px;color:#888;font-style:italic;">${r.recent_event||''}</div>
+          <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;">
+            ${(r.impacts||[]).map(i => `<span style="font-size:10px;padding:1px 5px;background:#eee;border-radius:3px;">${IMPACT_LABELS[i]||i}</span>`).join('')}
+          </div>
+        </div>
+      `);
+    markers.push(marker);
+
+    // 関係線
+    const opacity = r.relation === 'neutral' ? 0.2 : 0.5;
+    const weight = Math.abs(r.score || 0) > 60 ? 2 : 1;
+    const line = L.polyline([playerCoords, [r.lat, r.lng]], {
+      color, weight, opacity, dashArray: r.relation === 'tense' || r.relation === 'hostile' ? '5,5' : null
+    }).addTo(map);
+    lines.push(line);
+  });
+
+  // プレイヤーマーカー
+  const playerFlags = {US:'🇺🇸', CN:'🇨🇳', EU:'🇪🇺', RU:'🇷🇺', JP:'🇯🇵'};
+  const pIcon = L.divIcon({
+    html: `<div style="font-size:22px;filter:drop-shadow(0 0 8px #ff6600);">${playerFlags[currentPlayer]||'🌐'}</div>`,
+    className: '', iconSize: [26, 26], iconAnchor: [13, 13]
+  });
+  markers.push(L.marker(playerCoords, { icon: pIcon }).addTo(map));
+}
+
+function renderSide(data) {
+  const relations = data.relations || [];
+
+  // サマリー
+  const summaryEl = document.getElementById('summary-box');
+  summaryEl.textContent = data.summary || '';
+  summaryEl.style.display = 'block';
+
+  // 国リスト（関係別にグループ化）
+  const groups = { hostile:[], tense:[], neutral:[], friendly:[], ally:[] };
+  relations.forEach(r => { if (groups[r.relation]) groups[r.relation].push(r); });
+
+  const labels = {
+    hostile: { label: '🔴 敵対国', color: 'var(--hostile)' },
+    tense:   { label: '🟡 緊張関係', color: 'var(--tense)' },
+    neutral: { label: '⚪ 中立', color: 'var(--neutral)' },
+    friendly:{ label: '🔵 友好国', color: 'var(--friendly)' },
+    ally:    { label: '🟢 同盟国', color: 'var(--ally)' },
+  };
+
+  ['hostile','tense','neutral','friendly','ally'].forEach(rel => {
+    const el = document.getElementById(rel + '-list');
+    const items = groups[rel];
+    if (!items.length) { el.innerHTML = ''; return; }
+    const color = labels[rel].color;
+    el.innerHTML = `<div class="section-title" style="color:${color};">${labels[rel].label}（${items.length}カ国）</div>
+    <div class="country-list">
+      ${items.sort((a,b) => Math.abs(b.score||0) - Math.abs(a.score||0)).map(r => `
+      <div class="country-item" onclick="focusCountry(${r.lat},${r.lng})">
+        <div class="country-top">
+          <span class="country-flag">${r.flag||'🌐'}</span>
+          <span class="country-name">${r.country_ja}</span>
+          <span class="relation-badge" style="background:${RELATION_COLORS[r.relation]}22;color:${RELATION_COLORS[r.relation]};">${r.relation_ja}</span>
+        </div>
+        <div class="score-bar"><div class="score-fill" style="width:${Math.abs(r.score||0)}%;background:${RELATION_COLORS[r.relation]};"></div></div>
+        <div class="country-note">${r.note||''}</div>
+        ${r.recent_event ? `<div class="country-event">📰 ${r.recent_event}</div>` : ''}
+        ${(r.impacts||[]).length ? `<div class="impact-icons">${(r.impacts||[]).map(i=>`<span class="impact-icon">${IMPACT_LABELS[i]||i}</span>`).join('')}</div>` : ''}
+      </div>`).join('')}
+    </div>`;
+  });
+  document.getElementById('country-section').style.display = 'block';
+
+  // キーイベント
+  const events = data.key_events || [];
+  if (events.length) {
+    document.getElementById('events-list').innerHTML = events.map(e => `
+      <div class="event-item ${e.impact||''}">
+        <div class="event-title">${e.title} <span style="font-size:10px;color:var(--t3);">${e.date||''}</span></div>
+        <div class="event-detail">${e.detail||''}</div>
+      </div>`).join('');
+    document.getElementById('events-section').style.display = 'block';
+  }
+}
+
+function focusCountry(lat, lng) {
+  if (!lat || !lng) return;
+  map.setView([lat, lng], 4, { animate: true });
+}
+
+// 初期化
+initMap();
+loadPlayer('US');
+</script>
+</body>
+</html>
