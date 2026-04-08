@@ -243,12 +243,15 @@ async function loadPlayer(player) {
     const dayKey = new Date().toISOString().split('T')[0];
     const res = await fetch(`${WORKER}/geopolitics?player=${player}&_=${dayKey}-${player}`, { cache: 'no-store' });
     const data = await res.json();
-    if (data.error) throw new Error(data.error);
+    if (data.error) throw new Error(data.error + (data.raw ? ' | raw: ' + data.raw.slice(0,100) : ''));
     currentData = data;
     renderMap(data);
     renderSide(data);
   } catch(e) {
-    document.getElementById('loading-text').textContent = 'データ取得エラー: ' + e.message;
+    const msg = e.message || 'unknown error';
+    document.getElementById('loading-text').innerHTML =
+      '<span style="color:#ff4455;">⚠ ' + msg.slice(0, 120) + '</span><br>'
+      + '<span style="font-size:11px;color:#666688;margin-top:8px;display:block;">しばらく待ってから再度お試しください</span>';
   }
 }
 
