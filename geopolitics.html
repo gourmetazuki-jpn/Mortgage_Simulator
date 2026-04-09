@@ -370,7 +370,15 @@ async function renderMap(data) {
     if (r.country_ja) relationMap[r.country_ja] = r;
   });
 
-  const playerCountries = {US:'United States of America',CN:'China',EU:null,RU:'Russia',JP:'Japan'};
+  const playerCountries = {US:'United States of America',CN:'China',EU:'European Union',RU:'Russia',JP:'Japan'};
+
+  // EU加盟27カ国リスト（GeoJSONのname/ADMIN値）
+  const EU_MEMBERS = new Set([
+    'Austria','Belgium','Bulgaria','Croatia','Cyprus','Czech Republic','Czechia',
+    'Denmark','Estonia','Finland','France','Germany','Greece','Hungary','Ireland',
+    'Italy','Latvia','Lithuania','Luxembourg','Malta','Netherlands','Poland',
+    'Portugal','Romania','Slovakia','Slovenia','Spain','Sweden'
+  ]);
   const playerCountry = (playerCountries[currentPlayer] || '').toLowerCase();
 
   // GeoJSONのNAMEまたはname プロパティを取得
@@ -384,7 +392,11 @@ async function renderMap(data) {
       const mapped = (COUNTRY_NAME_MAP[name] || name).toLowerCase();
       const r = relationMap[nameL] || relationMap[mapped];
 
-      if (nameL === playerCountry || mapped === playerCountry) {
+      // EUプレイヤーの場合はEU加盟国を白で塗る
+      const isPlayerCountry = currentPlayer === 'EU'
+        ? (EU_MEMBERS.has(name) || EU_MEMBERS.has(mapped))
+        : (nameL === playerCountry || mapped === playerCountry);
+      if (isPlayerCountry) {
         return { fillColor:'#ffffff', fillOpacity:0.9, color:'rgba(255,255,255,0.5)', weight:1.5 };
       }
       if (r) {
