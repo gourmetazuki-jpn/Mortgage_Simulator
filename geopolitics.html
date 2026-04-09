@@ -232,6 +232,15 @@ const COUNTRY_NAME_MAP = {
   'Russia':'Russia',
   'Russian Federation':'Russia',
   'China':"China",
+  'Republic of Korea':'South Korea',
+  "Democratic People's Republic of Korea":'North Korea',
+  'Islamic Republic of Iran':'Iran',
+  'Syrian Arab Republic':'Syria',
+  'Viet Nam':'Vietnam',
+  'Lao PDR':'Laos',
+  'United Republic of Tanzania':'Tanzania',
+  'Congo':'Congo',
+  'Democratic Republic of the Congo':'DR Congo',
   "People's Republic of China":'China',
   'Japan':'Japan',
   'Germany':'Germany',
@@ -335,7 +344,8 @@ async function renderMap(data) {
   if (geoLayer) { map.removeLayer(geoLayer); geoLayer = null; }
 
   // GeoJSONデータ取得（Natural Earth 110m）
-  const geoRes = await fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson');
+  // geojson-maps.ash.ms の世界地図（-180〜180に正規化済み）
+  const geoRes = await fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson');
   const geoData = await geoRes.json();
 
   // 関係データをcountry名でマップ化
@@ -349,11 +359,21 @@ async function renderMap(data) {
 
   // プレイヤー自身の国
   const playerCountries = {US:'United States of America', CN:'China', EU:null, RU:'Russia', JP:'Japan'};
+  // datasets/geo-countries の ADMIN フィールド名
+  const adminNameFixes = {
+    'United States of America': 'United States of America',
+    'Russia': 'Russia',
+    'South Korea': 'Republic of Korea',
+    'North Korea': "Democratic People's Republic of Korea",
+    'Iran': 'Iran',
+    'Syria': 'Syria',
+    'Taiwan': 'Taiwan',
+  };
   const playerCountry = (playerCountries[currentPlayer]||'').toLowerCase();
 
   geoLayer = L.geoJSON(geoData, {
     style: feature => {
-      const name = feature.properties.NAME || '';
+      const name = feature.properties.ADMIN || feature.properties.NAME || '';
       // 正規化：マッピングテーブルで変換してから完全一致で検索
       const mappedName = COUNTRY_NAME_MAP[name] || name;
       const r = relationMap[mappedName.toLowerCase()] || relationMap[name.toLowerCase()];
@@ -370,7 +390,7 @@ async function renderMap(data) {
       return { fillColor:'#1a1a2e', fillOpacity:0.6, color:'rgba(255,255,255,0.08)', weight:0.5 };
     },
     onEachFeature: (feature, layer) => {
-      const name = feature.properties.NAME || '';
+      const name = feature.properties.ADMIN || feature.properties.NAME || '';
       const nameKey = name.toLowerCase();
       const mappedName = COUNTRY_NAME_MAP[name] || name;
       const r = relationMap[mappedName.toLowerCase()] || relationMap[nameKey];
