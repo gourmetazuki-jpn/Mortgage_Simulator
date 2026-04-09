@@ -192,47 +192,53 @@
 <script>
 const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
 let map = null;
-let markers = [];
-let lines = [];
+let geoLayer = null;
 let currentData = null;
 let currentPlayer = 'US';
 
 const RELATION_COLORS = {
-  ally: '#00cc66',
+  ally:     '#00cc66',
   friendly: '#44aaff',
-  neutral: '#888899',
-  tense: '#ffaa00',
-  hostile: '#ff4455',
+  neutral:  '#555566',
+  tense:    '#ffaa00',
+  hostile:  '#ff4455',
 };
 
 const IMPACT_LABELS = {
-  trade: '📦 貿易',
+  trade:    '📦 貿易',
   military: '🪖 軍事',
-  energy: '⚡ エネルギー',
-  finance: '💰 金融',
+  energy:   '⚡ エネルギー',
+  finance:  '💰 金融',
   sanction: '🚫 制裁',
 };
 
 const PLAYER_COORDS = {
-  US: [38, -97],
-  CN: [35, 105],
-  EU: [50, 10],
-  RU: [60, 90],
-  JP: [36, 138],
+  US:[38,-97], CN:[35,105], EU:[50,10], RU:[60,90], JP:[36,138]
 };
 
-// 地図初期化
+// 国名→GeoJSONのname対応マップ
+const COUNTRY_NAME_MAP = {
+  'United States':'United States of America',
+  'South Korea':'South Korea',
+  'North Korea':'North Korea',
+  'Russia':'Russia',
+  'United Kingdom':'United Kingdom',
+  'Saudi Arabia':'Saudi Arabia',
+  'United Arab Emirates':'United Arab Emirates',
+};
+
 function initMap() {
-  map = L.map('map', { zoomControl: true, attributionControl: false }).setView([20, 20], 2);
+  map = L.map('map', { zoomControl:true, attributionControl:false }).setView([20,20],2);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 10, minZoom: 1,
+    maxZoom:10, minZoom:1,
+    className:'map-tiles'
   }).addTo(map);
 }
 
 async function loadPlayer(player) {
   currentPlayer = player;
   document.querySelectorAll('.player-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('btn-' + player).classList.add('active');
+  document.getElementById('btn-'+player).classList.add('active');
   document.getElementById('loading').style.display = 'flex';
   document.getElementById('loading-text').textContent = 'AIが最新の外交情報を分析中...';
   document.getElementById('summary-box').style.display = 'none';
@@ -241,106 +247,116 @@ async function loadPlayer(player) {
 
   try {
     const dayKey = new Date().toISOString().split('T')[0];
-    const res = await fetch(`${WORKER}/geopolitics?player=${player}&_=${dayKey}-${player}`, { cache: 'no-store' });
+    const res = await fetch(`${WORKER}/geopolitics?player=${player}&_=${dayKey}-${player}`, {cache:'no-store'});
     const data = await res.json();
-    if (data.error) throw new Error(data.error + (data.raw ? ' | raw: ' + data.raw.slice(0,100) : ''));
+    if (data.error) throw new Error(data.error + (data.raw?' | '+data.raw.slice(0,80):''));
     currentData = data;
-    renderMap(data);
+    await renderMap(data);
     renderSide(data);
   } catch(e) {
-    const msg = e.message || 'unknown error';
     document.getElementById('loading-text').innerHTML =
-      '<span style="color:#ff4455;">⚠ ' + msg.slice(0, 120) + '</span><br>'
+      '<span style="color:#ff4455;">⚠ ' + e.message.slice(0,120) + '</span><br>'
       + '<span style="font-size:11px;color:#666688;margin-top:8px;display:block;">しばらく待ってから再度お試しください</span>';
   }
 }
 
-function clearMap() {
-  markers.forEach(m => map.removeLayer(m));
-  lines.forEach(l => map.removeLayer(l));
-  markers = []; lines = [];
-}
+async function renderMap(data) {
+  if (geoLayer) { map.removeLayer(geoLayer); geoLayer = null; }
 
-function renderMap(data) {
-  clearMap();
-  document.getElementById('loading').style.display = 'none';
+  // GeoJSONデータ取得（Natural Earth 110m）
+  const geoRes = await fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson');
+  const geoData = await geoRes.json();
 
-  const relations = data.relations || [];
-  const playerCoords = PLAYER_COORDS[currentPlayer] || [20, 20];
-  map.setView(playerCoords, 2);
+  // 関係データをcountry名でマップ化
+  const relationMap = {};
+  (data.relations || []).forEach(r => {
+    const key = (COUNTRY_NAME_MAP[r.country] || r.country).toLowerCase();
+    relationMap[key] = r;
+    // country_jaでも引けるように
+    if (r.country_ja) relationMap[r.country_ja] = r;
+  });
 
-  relations.forEach(r => {
-    if (!r.lat || !r.lng) return;
-    const color = RELATION_COLORS[r.relation] || '#888899';
-    const size = r.relation === 'hostile' || r.relation === 'ally' ? 14 : 10;
+  // プレイヤー自身の国
+  const playerCountries = {US:'United States of America', CN:'China', EU:null, RU:'Russia', JP:'Japan'};
+  const playerCountry = (playerCountries[currentPlayer]||'').toLowerCase();
 
-    // 国マーカー
-    const icon = L.divIcon({
-      html: `<div style="font-size:${size}px;filter:drop-shadow(0 0 4px ${color});">${r.flag||'🌐'}</div>`,
-      className: '', iconSize: [size+4, size+4], iconAnchor: [(size+4)/2, (size+4)/2]
-    });
-    const marker = L.marker([r.lat, r.lng], { icon })
-      .addTo(map)
-      .bindPopup(`
+  geoLayer = L.geoJSON(geoData, {
+    style: feature => {
+      const name = feature.properties.NAME || '';
+      const nameKey = name.toLowerCase();
+      const r = relationMap[nameKey] || Object.values(relationMap).find(v =>
+        v.country && name.toLowerCase().includes(v.country.toLowerCase().slice(0,5))
+      );
+
+      if (nameKey === playerCountry) {
+        return { fillColor:'#ff6600', fillOpacity:0.85, color:'#ff8833', weight:1.5 };
+      }
+      if (r) {
+        const color = RELATION_COLORS[r.relation] || '#555566';
+        const opacity = r.relation === 'neutral' ? 0.25 : 0.65;
+        return { fillColor:color, fillOpacity:opacity, color:'rgba(255,255,255,0.15)', weight:0.5 };
+      }
+      return { fillColor:'#222233', fillOpacity:0.5, color:'rgba(255,255,255,0.1)', weight:0.5 };
+    },
+    onEachFeature: (feature, layer) => {
+      const name = feature.properties.NAME || '';
+      const nameKey = name.toLowerCase();
+      const r = relationMap[nameKey] || Object.values(relationMap).find(v =>
+        v.country && name.toLowerCase().includes(v.country.toLowerCase().slice(0,5))
+      );
+      if (!r) return;
+      const color = RELATION_COLORS[r.relation] || '#888899';
+      layer.bindPopup(`
         <div style="min-width:180px;font-family:sans-serif;">
-          <div style="font-size:16px;margin-bottom:4px;">${r.flag} <strong>${r.country_ja}</strong></div>
-          <div style="color:${color};font-weight:700;margin-bottom:6px;">${r.relation_ja}</div>
-          <div style="font-size:12px;color:#666;margin-bottom:4px;">${r.note||''}</div>
+          <div style="font-size:16px;margin-bottom:4px;">${r.flag||''} <strong>${r.country_ja||name}</strong></div>
+          <div style="color:${color};font-weight:700;margin-bottom:6px;">${r.relation_ja||r.relation}</div>
+          <div style="font-size:12px;color:#555;margin-bottom:4px;">${r.note||''}</div>
           <div style="font-size:11px;color:#888;font-style:italic;">${r.recent_event||''}</div>
           <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;">
-            ${(r.impacts||[]).map(i => `<span style="font-size:10px;padding:1px 5px;background:#eee;border-radius:3px;">${IMPACT_LABELS[i]||i}</span>`).join('')}
+            ${(r.impacts||[]).map(i=>`<span style="font-size:10px;padding:1px 5px;background:#eee;border-radius:3px;">${IMPACT_LABELS[i]||i}</span>`).join('')}
           </div>
         </div>
       `);
-    markers.push(marker);
+      layer.on('mouseover', e => {
+        layer.setStyle({ fillOpacity: Math.min((layer.options.fillOpacity||0.5)+0.2, 1), weight:1.5 });
+      });
+      layer.on('mouseout', e => {
+        geoLayer.resetStyle(layer);
+      });
+    }
+  }).addTo(map);
 
-    // 関係線
-    const opacity = r.relation === 'neutral' ? 0.2 : 0.5;
-    const weight = Math.abs(r.score || 0) > 60 ? 2 : 1;
-    const line = L.polyline([playerCoords, [r.lat, r.lng]], {
-      color, weight, opacity, dashArray: r.relation === 'tense' || r.relation === 'hostile' ? '5,5' : null
-    }).addTo(map);
-    lines.push(line);
-  });
-
-  // プレイヤーマーカー
-  const playerFlags = {US:'🇺🇸', CN:'🇨🇳', EU:'🇪🇺', RU:'🇷🇺', JP:'🇯🇵'};
-  const pIcon = L.divIcon({
-    html: `<div style="font-size:22px;filter:drop-shadow(0 0 8px #ff6600);">${playerFlags[currentPlayer]||'🌐'}</div>`,
-    className: '', iconSize: [26, 26], iconAnchor: [13, 13]
-  });
-  markers.push(L.marker(playerCoords, { icon: pIcon }).addTo(map));
+  map.setView(PLAYER_COORDS[currentPlayer]||[20,20], 2);
+  document.getElementById('loading').style.display = 'none';
 }
 
 function renderSide(data) {
   const relations = data.relations || [];
 
-  // サマリー
   const summaryEl = document.getElementById('summary-box');
   summaryEl.textContent = data.summary || '';
   summaryEl.style.display = 'block';
 
-  // 国リスト（関係別にグループ化）
-  const groups = { hostile:[], tense:[], neutral:[], friendly:[], ally:[] };
+  const groups = {hostile:[],tense:[],neutral:[],friendly:[],ally:[]};
   relations.forEach(r => { if (groups[r.relation]) groups[r.relation].push(r); });
 
   const labels = {
-    hostile: { label: '🔴 敵対国', color: 'var(--hostile)' },
-    tense:   { label: '🟡 緊張関係', color: 'var(--tense)' },
-    neutral: { label: '⚪ 中立', color: 'var(--neutral)' },
-    friendly:{ label: '🔵 友好国', color: 'var(--friendly)' },
-    ally:    { label: '🟢 同盟国', color: 'var(--ally)' },
+    hostile: {label:'🔴 敵対国', color:'var(--hostile)'},
+    tense:   {label:'🟡 緊張関係', color:'var(--tense)'},
+    neutral: {label:'⚪ 中立', color:'var(--neutral)'},
+    friendly:{label:'🔵 友好国', color:'var(--friendly)'},
+    ally:    {label:'🟢 同盟国', color:'var(--ally)'},
   };
 
   ['hostile','tense','neutral','friendly','ally'].forEach(rel => {
-    const el = document.getElementById(rel + '-list');
+    const el = document.getElementById(rel+'-list');
     const items = groups[rel];
     if (!items.length) { el.innerHTML = ''; return; }
     const color = labels[rel].color;
     el.innerHTML = `<div class="section-title" style="color:${color};">${labels[rel].label}（${items.length}カ国）</div>
     <div class="country-list">
-      ${items.sort((a,b) => Math.abs(b.score||0) - Math.abs(a.score||0)).map(r => `
-      <div class="country-item" onclick="focusCountry(${r.lat},${r.lng})">
+      ${items.sort((a,b)=>Math.abs(b.score||0)-Math.abs(a.score||0)).map(r=>`
+      <div class="country-item" onclick="focusCountry('${r.country}')">
         <div class="country-top">
           <span class="country-flag">${r.flag||'🌐'}</span>
           <span class="country-name">${r.country_ja}</span>
@@ -348,17 +364,16 @@ function renderSide(data) {
         </div>
         <div class="score-bar"><div class="score-fill" style="width:${Math.abs(r.score||0)}%;background:${RELATION_COLORS[r.relation]};"></div></div>
         <div class="country-note">${r.note||''}</div>
-        ${r.recent_event ? `<div class="country-event">📰 ${r.recent_event}</div>` : ''}
-        ${(r.impacts||[]).length ? `<div class="impact-icons">${(r.impacts||[]).map(i=>`<span class="impact-icon">${IMPACT_LABELS[i]||i}</span>`).join('')}</div>` : ''}
+        ${r.recent_event?`<div class="country-event">📰 ${r.recent_event}</div>`:''}
+        ${(r.impacts||[]).length?`<div class="impact-icons">${(r.impacts||[]).map(i=>`<span class="impact-icon">${IMPACT_LABELS[i]||i}</span>`).join('')}</div>`:''}
       </div>`).join('')}
     </div>`;
   });
   document.getElementById('country-section').style.display = 'block';
 
-  // キーイベント
   const events = data.key_events || [];
   if (events.length) {
-    document.getElementById('events-list').innerHTML = events.map(e => `
+    document.getElementById('events-list').innerHTML = events.map(e=>`
       <div class="event-item ${e.impact||''}">
         <div class="event-title">${e.title} <span style="font-size:10px;color:var(--t3);">${e.date||''}</span></div>
         <div class="event-detail">${e.detail||''}</div>
@@ -367,12 +382,12 @@ function renderSide(data) {
   }
 }
 
-function focusCountry(lat, lng) {
-  if (!lat || !lng) return;
-  map.setView([lat, lng], 4, { animate: true });
+function focusCountry(countryName) {
+  if (!geoLayer || !currentData) return;
+  const r = (currentData.relations||[]).find(r => r.country === countryName);
+  if (r?.lat && r?.lng) map.setView([r.lat, r.lng], 4, {animate:true});
 }
 
-// 初期化
 initMap();
 loadPlayer('US');
 </script>
