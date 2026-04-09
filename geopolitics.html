@@ -289,10 +289,20 @@ const COUNTRY_NAME_MAP = {
 };
 
 function initMap() {
-  map = L.map('map', { zoomControl:true, attributionControl:false }).setView([20,20],2);
+  const bounds = L.latLngBounds(L.latLng(-85, -180), L.latLng(85, 180));
+  map = L.map('map', {
+    zoomControl: true,
+    attributionControl: false,
+    worldCopyJump: false,
+    maxBounds: bounds,
+    maxBoundsViscosity: 1.0,
+    minZoom: 1,
+    maxZoom: 10,
+  }).setView([20, 20], 2);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom:10, minZoom:1,
-    className:'map-tiles'
+    maxZoom: 10, minZoom: 1,
+    noWrap: true,
+    bounds: bounds,
   }).addTo(map);
 }
 
