@@ -149,6 +149,7 @@
     <div class="side-inner">
       <!-- 凡例 -->
       <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#ffffff;border:1px solid #444;"></div>選択国</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--ally);"></div>同盟国</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--friendly);"></div>友好国</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--neutral);"></div>中立</div>
@@ -216,15 +217,75 @@ const PLAYER_COORDS = {
   US:[38,-97], CN:[35,105], EU:[50,10], RU:[60,90], JP:[36,138]
 };
 
-// 国名→GeoJSONのname対応マップ
+// AI返却の国名 → GeoJSON NAME の完全一致マップ
 const COUNTRY_NAME_MAP = {
   'United States':'United States of America',
+  'USA':'United States of America',
+  'America':'United States of America',
+  'UK':'United Kingdom',
+  'Britain':'United Kingdom',
+  'Great Britain':'United Kingdom',
   'South Korea':'South Korea',
   'North Korea':'North Korea',
+  'Korea, South':'South Korea',
+  'Korea, North':'North Korea',
   'Russia':'Russia',
-  'United Kingdom':'United Kingdom',
+  'Russian Federation':'Russia',
+  'China':"China",
+  "People's Republic of China":'China',
+  'Japan':'Japan',
+  'Germany':'Germany',
+  'France':'France',
+  'Italy':'Italy',
+  'Spain':'Spain',
+  'Canada':'Canada',
+  'Australia':'Australia',
+  'India':'India',
+  'Brazil':'Brazil',
+  'Mexico':'Mexico',
+  'Turkey':'Turkey',
+  'Türkiye':'Turkey',
   'Saudi Arabia':'Saudi Arabia',
+  'Iran':'Iran',
+  'Israel':'Israel',
+  'Indonesia':'Indonesia',
+  'Poland':'Poland',
+  'Ukraine':'Ukraine',
+  'Taiwan':'Taiwan',
+  'Syria':'Syria',
+  'Iraq':'Iraq',
+  'Pakistan':'Pakistan',
+  'Egypt':'Egypt',
+  'Argentina':'Argentina',
+  'South Africa':'South Africa',
+  'Nigeria':'Nigeria',
+  'Vietnam':'Vietnam',
+  'Thailand':'Thailand',
+  'Philippines':'Philippines',
+  'Malaysia':'Malaysia',
   'United Arab Emirates':'United Arab Emirates',
+  'UAE':'United Arab Emirates',
+  'Netherlands':'Netherlands',
+  'Belgium':'Belgium',
+  'Sweden':'Sweden',
+  'Norway':'Norway',
+  'Finland':'Finland',
+  'Switzerland':'Switzerland',
+  'Austria':'Austria',
+  'Portugal':'Portugal',
+  'Greece':'Greece',
+  'Czech Republic':'Czech Rep.',
+  'Hungary':'Hungary',
+  'Romania':'Romania',
+  'Bangladesh':'Bangladesh',
+  'Colombia':'Colombia',
+  'Chile':'Chile',
+  'Peru':'Peru',
+  'Venezuela':'Venezuela',
+  'Kazakhstan':'Kazakhstan',
+  'Uzbekistan':'Uzbekistan',
+  'Qatar':'Qatar',
+  'Kuwait':'Kuwait',
 };
 
 function initMap() {
@@ -283,27 +344,26 @@ async function renderMap(data) {
   geoLayer = L.geoJSON(geoData, {
     style: feature => {
       const name = feature.properties.NAME || '';
-      const nameKey = name.toLowerCase();
-      const r = relationMap[nameKey] || Object.values(relationMap).find(v =>
-        v.country && name.toLowerCase().includes(v.country.toLowerCase().slice(0,5))
-      );
+      // 正規化：マッピングテーブルで変換してから完全一致で検索
+      const mappedName = COUNTRY_NAME_MAP[name] || name;
+      const r = relationMap[mappedName.toLowerCase()] || relationMap[name.toLowerCase()];
 
-      if (nameKey === playerCountry) {
-        return { fillColor:'#ff6600', fillOpacity:0.85, color:'#ff8833', weight:1.5 };
+      if (name.toLowerCase() === playerCountry) {
+        // プレイヤー国は白で表示（緊張・敵対と区別）
+        return { fillColor:'#ffffff', fillOpacity:0.9, color:'rgba(255,255,255,0.6)', weight:2 };
       }
       if (r) {
         const color = RELATION_COLORS[r.relation] || '#555566';
-        const opacity = r.relation === 'neutral' ? 0.25 : 0.65;
+        const opacity = r.relation === 'neutral' ? 0.3 : 0.7;
         return { fillColor:color, fillOpacity:opacity, color:'rgba(255,255,255,0.15)', weight:0.5 };
       }
-      return { fillColor:'#222233', fillOpacity:0.5, color:'rgba(255,255,255,0.1)', weight:0.5 };
+      return { fillColor:'#1a1a2e', fillOpacity:0.6, color:'rgba(255,255,255,0.08)', weight:0.5 };
     },
     onEachFeature: (feature, layer) => {
       const name = feature.properties.NAME || '';
       const nameKey = name.toLowerCase();
-      const r = relationMap[nameKey] || Object.values(relationMap).find(v =>
-        v.country && name.toLowerCase().includes(v.country.toLowerCase().slice(0,5))
-      );
+      const mappedName = COUNTRY_NAME_MAP[name] || name;
+      const r = relationMap[mappedName.toLowerCase()] || relationMap[nameKey];
       if (!r) return;
       const color = RELATION_COLORS[r.relation] || '#888899';
       layer.bindPopup(`
