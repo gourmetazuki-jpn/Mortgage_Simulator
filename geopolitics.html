@@ -219,6 +219,7 @@ const PLAYER_COORDS = {
 
 // AI返却の国名 → GeoJSON NAME の完全一致マップ
 const COUNTRY_NAME_MAP = {
+  // AI返却名 → GeoJSONのname/NAME値
   'United States':'United States of America',
   'USA':'United States of America',
   'America':'United States of America',
@@ -226,21 +227,14 @@ const COUNTRY_NAME_MAP = {
   'Britain':'United Kingdom',
   'Great Britain':'United Kingdom',
   'South Korea':'South Korea',
-  'North Korea':'North Korea',
   'Korea, South':'South Korea',
+  'Republic of Korea':'South Korea',
+  'North Korea':'North Korea',
   'Korea, North':'North Korea',
+  "Democratic People's Republic of Korea":'North Korea',
   'Russia':'Russia',
   'Russian Federation':'Russia',
-  'China':"China",
-  'Republic of Korea':'South Korea',
-  "Democratic People's Republic of Korea":'North Korea',
-  'Islamic Republic of Iran':'Iran',
-  'Syrian Arab Republic':'Syria',
-  'Viet Nam':'Vietnam',
-  'Lao PDR':'Laos',
-  'United Republic of Tanzania':'Tanzania',
-  'Congo':'Congo',
-  'Democratic Republic of the Congo':'DR Congo',
+  'China':'China',
   "People's Republic of China":'China',
   'Japan':'Japan',
   'Germany':'Germany',
@@ -256,12 +250,14 @@ const COUNTRY_NAME_MAP = {
   'Türkiye':'Turkey',
   'Saudi Arabia':'Saudi Arabia',
   'Iran':'Iran',
+  'Islamic Republic of Iran':'Iran',
   'Israel':'Israel',
   'Indonesia':'Indonesia',
   'Poland':'Poland',
   'Ukraine':'Ukraine',
   'Taiwan':'Taiwan',
   'Syria':'Syria',
+  'Syrian Arab Republic':'Syria',
   'Iraq':'Iraq',
   'Pakistan':'Pakistan',
   'Egypt':'Egypt',
@@ -269,6 +265,7 @@ const COUNTRY_NAME_MAP = {
   'South Africa':'South Africa',
   'Nigeria':'Nigeria',
   'Vietnam':'Vietnam',
+  'Viet Nam':'Vietnam',
   'Thailand':'Thailand',
   'Philippines':'Philippines',
   'Malaysia':'Malaysia',
@@ -283,7 +280,8 @@ const COUNTRY_NAME_MAP = {
   'Austria':'Austria',
   'Portugal':'Portugal',
   'Greece':'Greece',
-  'Czech Republic':'Czech Rep.',
+  'Czech Republic':'Czech Republic',
+  'Czechia':'Czech Republic',
   'Hungary':'Hungary',
   'Romania':'Romania',
   'Bangladesh':'Bangladesh',
@@ -292,7 +290,6 @@ const COUNTRY_NAME_MAP = {
   'Peru':'Peru',
   'Venezuela':'Venezuela',
   'Kazakhstan':'Kazakhstan',
-  'Uzbekistan':'Uzbekistan',
   'Qatar':'Qatar',
   'Kuwait':'Kuwait',
 };
@@ -343,57 +340,64 @@ async function loadPlayer(player) {
 async function renderMap(data) {
   if (geoLayer) { map.removeLayer(geoLayer); geoLayer = null; }
 
-  // GeoJSONデータ取得（Natural Earth 110m）
-  // geojson-maps.ash.ms の世界地図（-180〜180に正規化済み）
-  const geoRes = await fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson');
-  const geoData = await geoRes.json();
+  // GeoJSON取得（複数フォールバック）
+  let geoData = null;
+  const geoUrls = [
+    'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson',
+    'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson',
+  ];
+  for (const url of geoUrls) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) { geoData = await res.json(); break; }
+    } catch(e) {}
+  }
+  if (!geoData) {
+    document.getElementById('loading-text').innerHTML = '<span style="color:#ff4455;">地図データの取得に失敗しました</span>';
+    return;
+  }
 
-  // 関係データをcountry名でマップ化
+  // 関係データをマップ化（複数キーで引けるように）
   const relationMap = {};
   (data.relations || []).forEach(r => {
-    const key = (COUNTRY_NAME_MAP[r.country] || r.country).toLowerCase();
-    relationMap[key] = r;
-    // country_jaでも引けるように
+    // 元の国名
+    const key1 = r.country.toLowerCase();
+    relationMap[key1] = r;
+    // マッピングテーブル経由
+    const mapped = COUNTRY_NAME_MAP[r.country];
+    if (mapped) relationMap[mapped.toLowerCase()] = r;
+    // 日本語名
     if (r.country_ja) relationMap[r.country_ja] = r;
   });
 
-  // プレイヤー自身の国
-  const playerCountries = {US:'United States of America', CN:'China', EU:null, RU:'Russia', JP:'Japan'};
-  // datasets/geo-countries の ADMIN フィールド名
-  const adminNameFixes = {
-    'United States of America': 'United States of America',
-    'Russia': 'Russia',
-    'South Korea': 'Republic of Korea',
-    'North Korea': "Democratic People's Republic of Korea",
-    'Iran': 'Iran',
-    'Syria': 'Syria',
-    'Taiwan': 'Taiwan',
-  };
-  const playerCountry = (playerCountries[currentPlayer]||'').toLowerCase();
+  const playerCountries = {US:'United States of America',CN:'China',EU:null,RU:'Russia',JP:'Japan'};
+  const playerCountry = (playerCountries[currentPlayer] || '').toLowerCase();
+
+  // GeoJSONのNAMEまたはname プロパティを取得
+  const getName = f => f.properties.name || f.properties.NAME || f.properties.ADMIN || '';
 
   geoLayer = L.geoJSON(geoData, {
     style: feature => {
-      const name = feature.properties.ADMIN || feature.properties.NAME || '';
-      // 正規化：マッピングテーブルで変換してから完全一致で検索
-      const mappedName = COUNTRY_NAME_MAP[name] || name;
-      const r = relationMap[mappedName.toLowerCase()] || relationMap[name.toLowerCase()];
+      const name = getName(feature);
+      const nameL = name.toLowerCase();
+      // マッピングテーブルで正規化
+      const mapped = (COUNTRY_NAME_MAP[name] || name).toLowerCase();
+      const r = relationMap[nameL] || relationMap[mapped];
 
-      if (name.toLowerCase() === playerCountry) {
-        // プレイヤー国は白で表示（緊張・敵対と区別）
-        return { fillColor:'#ffffff', fillOpacity:0.9, color:'rgba(255,255,255,0.6)', weight:2 };
+      if (nameL === playerCountry || mapped === playerCountry) {
+        return { fillColor:'#ffffff', fillOpacity:0.9, color:'rgba(255,255,255,0.5)', weight:1.5 };
       }
       if (r) {
         const color = RELATION_COLORS[r.relation] || '#555566';
-        const opacity = r.relation === 'neutral' ? 0.3 : 0.7;
-        return { fillColor:color, fillOpacity:opacity, color:'rgba(255,255,255,0.15)', weight:0.5 };
+        return { fillColor:color, fillOpacity: r.relation==='neutral'?0.3:0.7, color:'rgba(255,255,255,0.12)', weight:0.5 };
       }
       return { fillColor:'#1a1a2e', fillOpacity:0.6, color:'rgba(255,255,255,0.08)', weight:0.5 };
     },
     onEachFeature: (feature, layer) => {
-      const name = feature.properties.ADMIN || feature.properties.NAME || '';
-      const nameKey = name.toLowerCase();
-      const mappedName = COUNTRY_NAME_MAP[name] || name;
-      const r = relationMap[mappedName.toLowerCase()] || relationMap[nameKey];
+      const name = getName(feature);
+      const nameL = name.toLowerCase();
+      const mapped = (COUNTRY_NAME_MAP[name] || name).toLowerCase();
+      const r = relationMap[nameL] || relationMap[mapped];
       if (!r) return;
       const color = RELATION_COLORS[r.relation] || '#888899';
       layer.bindPopup(`
@@ -407,12 +411,8 @@ async function renderMap(data) {
           </div>
         </div>
       `);
-      layer.on('mouseover', e => {
-        layer.setStyle({ fillOpacity: Math.min((layer.options.fillOpacity||0.5)+0.2, 1), weight:1.5 });
-      });
-      layer.on('mouseout', e => {
-        geoLayer.resetStyle(layer);
-      });
+      layer.on('mouseover', () => layer.setStyle({fillOpacity:Math.min((layer.options.fillOpacity||0.5)+0.2,1),weight:1.5}));
+      layer.on('mouseout', () => geoLayer.resetStyle(layer));
     }
   }).addTo(map);
 
