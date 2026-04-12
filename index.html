@@ -46,6 +46,11 @@
   .hero-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
   .yt-btn{padding:9px 20px;border-radius:20px;background:#ff0000;color:#fff;text-decoration:none;font-size:13px;font-weight:700;transition:opacity .15s;}
   .yt-btn:hover{opacity:.85;}
+  .hero-stats{display:flex;align-items:center;justify-content:center;gap:16px;margin:12px 0 16px;flex-wrap:wrap;}
+  .stat{text-align:center;}
+  .stat-num{font-family:"Lato",sans-serif;font-size:22px;font-weight:900;color:#e8e8f4;}
+  .stat-label{font-size:10px;color:var(--t3);margin-top:2px;}
+  .stat-div{width:1px;height:28px;background:var(--b);}
 
   .ad-slot{background:var(--s);border-bottom:1px solid var(--b);padding:10px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
 
@@ -84,6 +89,13 @@
   <img src="azuki-icon.png" alt="アズキぷらす" class="hero-icon">
   <h1 class="channel-name">アズキぷらす</h1>
   <p class="tagline">「3分で決算解説！」株式投資と企業決算をキャラクターとともにわかりやすく解説</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num" id="yt-sub">--</div><div class="stat-label">チャンネル登録者</div></div>
+    <div class="stat-div"></div>
+    <div class="stat"><div class="stat-num" id="yt-vid">--</div><div class="stat-label">公開動画数</div></div>
+    <div class="stat-div"></div>
+    <div class="stat"><div class="stat-num" id="yt-view">--</div><div class="stat-label">総再生回数</div></div>
+  </div>
   <div class="hero-links">
     <a href="https://www.youtube.com/@アズキぷらす" target="_blank" rel="noopener" class="yt-btn">▶ YouTubeを見る</a>
   </div>
@@ -179,6 +191,20 @@ loadYTStats();
 </script>
 
 <script>
+// YouTubeスタッツ取得
+const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
+async function loadYtStats() {
+  try {
+    const res = await fetch(`${WORKER}/youtube-stats`);
+    const d = await res.json();
+    const fmt = n => n >= 10000 ? (n/10000).toFixed(1)+'万' : n >= 1000 ? (n/1000).toFixed(1)+'K' : n;
+    if (d.subscriberCount) document.getElementById('yt-sub').textContent = fmt(d.subscriberCount);
+    if (d.videoCount) document.getElementById('yt-vid').textContent = d.videoCount + '本';
+    if (d.viewCount) document.getElementById('yt-view').textContent = fmt(d.viewCount);
+  } catch(e) {}
+}
+loadYtStats();
+
 function filterCat(cat) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
