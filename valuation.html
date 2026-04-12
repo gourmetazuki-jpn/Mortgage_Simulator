@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="google-adsense-account" content="ca-pub-4271655790847344">
+  <link rel="icon" type="image/png" href="azuki-icon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>理論株価計算ツール｜DCF・PER・配当・割安割高判定 | アズキぷらす</title>
+  <meta name="description" content="銘柄コードを入力するだけでDCF・PER・PBR・配当割引モデルによる理論株価を自動計算。割安・割高判定、増配・減配時のシナリオ分析、リスク評価まで一括表示。">
+  <meta name="keywords" content="理論株価,DCF,PER,割安株,配当割引,株価分析,バリュエーション,アズキぷらす">
+  <link rel="canonical" href="https://azuki-plus.com/valuation.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="理論株価計算ツール｜DCF・PER・配当・割安割高判定 | アズキぷらす">
+  <meta property="og:description" content="銘柄コードを入力するだけで理論株価を自動計算。割安・割高判定、配当シナリオ分析まで。">
+  <meta property="og:url" content="https://azuki-plus.com/valuation.html">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"理論株価計算ツール","url":"https://azuki-plus.com/valuation.html","description":"DCF・PER・PBR・配当割引モデルによる理論株価計算ツール。","applicationCategory":"FinanceApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"},"author":{"@type":"Person","name":"アズキぷらす"}}</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4271655790847344" crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#0a0a12;--s:#12121e;--s2:#1a1a2a;--s3:#222235;--b:rgba(255,255,255,.07);
+      --t:#e8e8f4;--t2:#8888aa;--t3:#444466;
+      --green:#00cc66;--red:#ff4455;--amber:#ffaa00;--blue:#4488ff;--purple:#aa55ff;
+    }
+    body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--t);font-size:14px;min-height:100vh;}
+
+    header{background:linear-gradient(135deg,#0a0a12,#141020);border-bottom:1px solid rgba(170,85,255,.2);padding:18px 20px;text-align:center;}
+    header .back a{font-size:12px;color:var(--t3);text-decoration:none;}
+    header h1{font-size:clamp(16px,4vw,22px);font-weight:700;margin:6px 0 4px;}
+    header p{font-size:12px;color:var(--t2);}
+    .breadcrumb{background:var(--s);border-bottom:1px solid var(--b);padding:8px 20px;font-size:11px;color:var(--t3);}
+    .breadcrumb a{color:var(--t3);text-decoration:none;}
+    .ad-slot{background:var(--s);border-bottom:1px solid var(--b);padding:10px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+
+    .container{max-width:900px;margin:0 auto;padding:20px 16px 60px;}
+    .card{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:18px 20px;margin-bottom:14px;}
+    .section-title{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:12px;}
+
+    /* 入力 */
+    .search-box{display:flex;gap:10px;flex-wrap:wrap;}
+    .search-input{flex:1;min-width:160px;background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:12px 16px;color:var(--t);font-size:15px;font-family:inherit;outline:none;transition:border .15s;}
+    .search-input:focus{border-color:var(--purple);}
+    .search-input::placeholder{color:var(--t3);}
+    .search-btn{padding:12px 24px;border-radius:8px;background:var(--purple);color:#fff;font-size:14px;font-weight:700;font-family:inherit;border:none;cursor:pointer;transition:opacity .15s;white-space:nowrap;}
+    .search-btn:hover{opacity:.85;}
+    .search-btn:disabled{opacity:.4;cursor:not-allowed;}
+    .examples{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+    .example-btn{padding:4px 12px;border-radius:20px;font-size:11px;font-family:inherit;border:1px solid var(--b);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s;}
+    .example-btn:hover{border-color:var(--purple);color:var(--purple);}
+
+    /* ローディング */
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .spinner{width:32px;height:32px;border:3px solid var(--b);border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;}
+    .loading-box{text-align:center;padding:40px;color:var(--t2);}
+
+    /* ヘッダー情報 */
+    .stock-header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px;}
+    .stock-name{font-size:20px;font-weight:700;}
+    .stock-ticker{font-size:13px;color:var(--t3);background:var(--s2);padding:3px 10px;border-radius:6px;}
+    .stock-sector{font-size:12px;color:var(--t2);}
+    .current-price-big{font-family:"Lato",sans-serif;font-size:36px;font-weight:900;color:var(--t);}
+    .price-sub{font-size:12px;color:var(--t3);}
+
+    /* 判定バッジ */
+    .judgment-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:30px;font-size:15px;font-weight:700;}
+    .judgment-大幅割安{background:rgba(0,204,102,.15);color:var(--green);border:2px solid var(--green);}
+    .judgment-割安{background:rgba(0,204,102,.1);color:#44dd88;border:2px solid #44dd88;}
+    .judgment-適正{background:rgba(136,136,170,.1);color:var(--t2);border:2px solid var(--t3);}
+    .judgment-割高{background:rgba(255,170,0,.1);color:var(--amber);border:2px solid var(--amber);}
+    .judgment-大幅割高{background:rgba(255,68,85,.15);color:var(--red);border:2px solid var(--red);}
+
+    /* 理論株価グリッド */
+    .val-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+    @media(min-width:600px){.val-grid{grid-template-columns:repeat(3,1fr);}}
+    .val-item{background:var(--s2);border-radius:10px;padding:14px;}
+    .val-method{font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px;}
+    .val-price{font-family:"Lato",sans-serif;font-size:22px;font-weight:900;margin-bottom:4px;}
+    .val-basis{font-size:10px;color:var(--t3);line-height:1.6;}
+    .val-diff{font-size:11px;margin-top:4px;font-weight:700;}
+    .diff-up{color:var(--green);}
+    .diff-down{color:var(--red);}
+
+    /* フェアバリュー */
+    .fair-value-box{background:linear-gradient(135deg,rgba(170,85,255,.1),rgba(68,136,255,.1));border:1px solid rgba(170,85,255,.3);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+    .fair-value-num{font-family:"Lato",sans-serif;font-size:40px;font-weight:900;color:var(--purple);}
+    .fair-value-label{font-size:11px;color:var(--t3);}
+    .upside-num{font-family:"Lato",sans-serif;font-size:28px;font-weight:900;}
+
+    /* 配当グリッド */
+    .div-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+    @media(min-width:600px){.div-grid{grid-template-columns:repeat(4,1fr);}}
+    .div-item{background:var(--s2);border-radius:10px;padding:12px 14px;text-align:center;}
+    .div-label{font-size:10px;color:var(--t3);margin-bottom:4px;}
+    .div-val{font-family:"Lato",sans-serif;font-size:18px;font-weight:900;}
+    .div-scenario{background:var(--s3);border-radius:10px;padding:12px 14px;margin-top:10px;}
+    .scenario-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--b);}
+    .scenario-row:last-child{border-bottom:none;}
+    .scenario-label{font-size:12px;color:var(--t2);}
+    .scenario-price{font-family:"Lato",sans-serif;font-size:16px;font-weight:700;}
+
+    /* リスク */
+    .risk-list{display:flex;flex-direction:column;gap:8px;}
+    .risk-item{background:var(--s2);border-radius:8px;padding:10px 14px;display:flex;align-items:flex-start;gap:10px;border-left:3px solid var(--t3);}
+    .risk-item.high{border-left-color:var(--red);}
+    .risk-item.medium{border-left-color:var(--amber);}
+    .risk-item.low{border-left-color:var(--blue);}
+    .risk-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap;}
+    .risk-badge-high{background:rgba(255,68,85,.2);color:var(--red);}
+    .risk-badge-medium{background:rgba(255,170,0,.2);color:var(--amber);}
+    .risk-badge-low{background:rgba(68,136,255,.2);color:var(--blue);}
+    .risk-title{font-size:12px;font-weight:700;margin-bottom:2px;}
+    .risk-detail{font-size:11px;color:var(--t3);line-height:1.6;}
+
+    /* 財務指標 */
+    .fin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+    @media(min-width:600px){.fin-grid{grid-template-columns:repeat(6,1fr);}}
+    .fin-item{background:var(--s2);border-radius:8px;padding:10px;text-align:center;}
+    .fin-label{font-size:9px;color:var(--t3);margin-bottom:4px;}
+    .fin-val{font-family:"Lato",sans-serif;font-size:16px;font-weight:700;}
+
+    /* 説明文 */
+    .desc-box{background:rgba(255,255,255,.03);border-radius:10px;padding:14px 16px;margin-top:8px;}
+    .desc-box p{font-size:12px;color:var(--t3);line-height:1.9;}
+
+    .notice{font-size:11px;color:var(--t3);padding:10px 14px;background:var(--s2);border-radius:8px;line-height:1.7;}
+    footer{text-align:center;font-size:12px;color:var(--t3);padding:20px;border-top:1px solid var(--b);}
+    footer a{color:var(--t3);}
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="back"><a href="index.html">← アズキぷらす</a></p>
+  <h1>📊 理論株価計算ツール</h1>
+  <p>DCF・PER・PBR・配当割引モデルで理論株価を自動算出</p>
+</header>
+<nav class="breadcrumb"><a href="index.html">アズキぷらす</a> › 理論株価計算ツール</nav>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<div class="container">
+
+  <!-- 入力 -->
+  <div class="card">
+    <div class="section-title">銘柄を入力</div>
+    <div class="search-box">
+      <div style="flex:1;position:relative;">
+        <input class="search-input" id="ticker-input" type="text" placeholder="例：AAPL, 7203.T, NVDA" maxlength="20" autocomplete="off" style="width:100%;">
+        <div id="autocomplete-list" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--s2);border:1px solid var(--b);border-radius:0 0 8px 8px;z-index:100;max-height:200px;overflow-y:auto;"></div>
+      </div>
+      <button class="search-btn" id="search-btn" onclick="analyze()">🔍 分析する</button>
+    </div>
+    <div class="examples">
+      <span style="font-size:11px;color:var(--t3);margin-right:4px;">例：</span>
+      <button class="example-btn" onclick="setTicker('AAPL','Apple')">AAPL</button>
+      <button class="example-btn" onclick="setTicker('NVDA','NVIDIA')">NVDA</button>
+      <button class="example-btn" onclick="setTicker('MSFT','Microsoft')">MSFT</button>
+      <button class="example-btn" onclick="setTicker('7203.T','トヨタ自動車')">7203.T</button>
+      <button class="example-btn" onclick="setTicker('6758.T','ソニーグループ')">6758.T</button>
+      <button class="example-btn" onclick="setTicker('9984.T','ソフトバンクG')">9984.T</button>
+    </div>
+  </div>
+
+  <!-- ローディング -->
+  <div id="loading" class="loading-box" style="display:none;">
+    <div class="spinner"></div>
+    <div>AIが財務データを分析中...<br><span style="font-size:11px;color:var(--t3);">10〜20秒ほどかかります</span></div>
+  </div>
+
+  <!-- 結果 -->
+  <div id="result" style="display:none;">
+
+    <!-- 銘柄ヘッダー -->
+    <div class="card">
+      <div class="stock-header">
+        <div>
+          <div class="stock-name" id="r-company"></div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:4px;">
+            <span class="stock-ticker" id="r-ticker"></span>
+            <span class="stock-sector" id="r-sector"></span>
+          </div>
+        </div>
+        <div style="margin-left:auto;text-align:right;">
+          <div class="price-sub">現在株価</div>
+          <div class="current-price-big" id="r-price"></div>
+          <div class="price-sub" id="r-updated"></div>
+        </div>
+      </div>
+
+      <!-- フェアバリュー -->
+      <div class="fair-value-box">
+        <div>
+          <div class="fair-value-label">加重平均 理論株価</div>
+          <div class="fair-value-num" id="r-fair-value"></div>
+        </div>
+        <div style="width:1px;height:50px;background:rgba(255,255,255,.1);"></div>
+        <div>
+          <div class="fair-value-label">上昇余地</div>
+          <div class="upside-num" id="r-upside"></div>
+        </div>
+        <div style="margin-left:auto;">
+          <div class="fair-value-label" style="margin-bottom:8px;">総合判定</div>
+          <div id="r-judgment"></div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--t2);margin-top:12px;padding:10px 14px;background:var(--s2);border-radius:8px;" id="r-summary"></div>
+    </div>
+
+    <!-- 理論株価内訳 -->
+    <div class="card">
+      <div class="section-title">理論株価内訳（手法別）</div>
+      <div class="val-grid" id="r-val-grid"></div>
+    </div>
+
+    <!-- 財務指標 -->
+    <div class="card">
+      <div class="section-title">主要財務指標</div>
+      <div class="fin-grid" id="r-fin-grid"></div>
+    </div>
+
+    <!-- 配当分析 -->
+    <div class="card">
+      <div class="section-title">配当分析・シナリオ別理論株価</div>
+      <div class="div-grid" id="r-div-grid"></div>
+      <div class="div-scenario" id="r-div-scenario"></div>
+      <div style="font-size:11px;color:var(--t3);margin-top:8px;" id="r-div-basis"></div>
+    </div>
+
+    <!-- リスク -->
+    <div class="card">
+      <div class="section-title">現状のリスク評価</div>
+      <div class="risk-list" id="r-risks"></div>
+    </div>
+
+    <div class="notice">
+      ⚠️ 本ツールの理論株価はAIによる推定値です。実際の投資判断の根拠としないでください。データはYahoo Finance・各種公開情報をもとにAIが算出しています。
+    </div>
+  </div>
+
+  <!-- 説明文 -->
+  <div class="desc-box">
+    <p>📖 <strong style="color:var(--t2);">理論株価計算ツールについて</strong><br>
+    理論株価とは企業の本質的な価値（イントリンシック・バリュー）から算出した「適正な株価」です。本ツールではDCF法（将来キャッシュフローの現在価値）・PER法（業界平均PERを基準）・PBR法・配当割引モデルなど複数の手法で算出し、加重平均した総合理論株価と割安・割高の判定を表示します。また増配・減配シナリオや現状のリスク評価も合わせて確認できます。</p>
+  </div>
+</div>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<footer>© アズキぷらす | <a href="privacy.html">プライバシーポリシー</a> | <a href="index.html">トップへ</a></footer>
+
+<script>
+const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
+
+function setTicker(ticker, name) {
+  document.getElementById('ticker-input').value = ticker;
+  document.getElementById('name-input').value = name;
+}
+
+function fmt(val, currency) {
+  if (val === null || val === undefined || isNaN(val)) return '--';
+  const n = Number(val);
+  if (currency === 'JPY') return '¥' + n.toLocaleString();
+  return '$' + n.toFixed(2);
+}
+
+function fmtPct(val) {
+  if (val === null || val === undefined || isNaN(val)) return '--';
+  const n = Number(val);
+  return (n >= 0 ? '+' : '') + n.toFixed(1) + '%';
+}
+
+async function analyze() {
+  const ticker = document.getElementById('ticker-input').value.trim().toUpperCase();
+  const name = selectedCompanyName || ticker;
+  // selectedCompanyNameはrender()内でリセット（表示に使うため保持）
+  if (!ticker) { alert('銘柄コードを入力してください'); return; }
+
+  document.getElementById('search-btn').disabled = true;
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('result').style.display = 'none';
+
+  try {
+    const dayKey = new Date().toISOString().split('T')[0];
+    const res = await fetch(
+      `${WORKER}/valuation?ticker=${encodeURIComponent(ticker)}&_=${dayKey}-${ticker}`,
+      { cache: 'no-store' }
+    );
+    const data = await res.json();
+    if (data.error) throw new Error(data.error + (data.raw ? ' | ' + data.raw.slice(0,80) : ''));
+    render(data);
+  } catch(e) {
+    document.getElementById('loading').innerHTML =
+      `<div style="color:var(--red);">⚠ ${e.message.slice(0,120)}</div>
+       <div style="font-size:11px;color:var(--t3);margin-top:8px;">しばらくしてから再度お試しください</div>`;
+  } finally {
+    document.getElementById('search-btn').disabled = false;
+  }
+}
+
+function render(d) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('result').style.display = 'block';
+
+  const cur = d.currency || 'USD';
+  const cp = d.current_price;
+
+  // ヘッダー
+  // 会社名：候補選択時の名前 > AIが返した名前 > ticker
+  const displayName = selectedCompanyName || d.company_ja || d.ticker;
+  document.getElementById('r-company').textContent = displayName;
+  selectedCompanyName = ''; // リセット
+  document.getElementById('r-ticker').textContent = d.ticker;
+  document.getElementById('r-sector').textContent = d.sector || '';
+  document.getElementById('r-price').textContent = fmt(cp, cur);
+  document.getElementById('r-updated').textContent = d.last_updated ? `更新: ${d.last_updated}` : '';
+
+  // フェアバリュー
+  // 有効な理論株価のみで加重平均を再計算
+  const validPrices = d.valuation ? Object.values(d.valuation)
+    .map(v => v.price)
+    .filter(p => p && p > 0 && (!cp || (p/cp > 0.1 && p/cp < 10))) : [];
+  const fv = validPrices.length > 0
+    ? Math.round(validPrices.reduce((a,b)=>a+b,0) / validPrices.length * 100) / 100
+    : (d.fair_value && d.fair_value > 0 ? d.fair_value : null);
+  document.getElementById('r-fair-value').textContent = fmt(fv, cur);
+  // 上昇余地をcurrent_priceとfair_valueから再計算
+  const up = (cp && fv && cp > 0) ? ((fv - cp) / cp * 100) : d.upside_pct;
+  const upEl = document.getElementById('r-upside');
+  upEl.textContent = fmtPct(up);
+  upEl.style.color = up >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // 判定：上昇余地から再計算（AIの判定は使わない）
+  let j;
+  if (up === null || up === undefined || isNaN(up)) {
+    j = d.judgment || '適正';
+  } else if (up >= 20) {
+    j = '大幅割安';
+  } else if (up >= 5) {
+    j = '割安';
+  } else if (up >= -5) {
+    j = '適正';
+  } else if (up >= -20) {
+    j = '割高';
+  } else {
+    j = '大幅割高';
+  }
+  const jEl = document.getElementById('r-judgment');
+  jEl.innerHTML = `<span class="judgment-badge judgment-${j}">${j}</span>`;
+
+  document.getElementById('r-summary').textContent = d.summary || '';
+
+  // 理論株価内訳
+  const valMethods = [
+    {key:'dcf', label:'DCF法'},
+    {key:'per', label:'PER法'},
+    {key:'pbr', label:'PBR法'},
+    {key:'historical_avg', label:'過去平均'},
+    {key:'consensus', label:'アナリスト'},
+  ];
+  const vg = document.getElementById('r-val-grid');
+  vg.innerHTML = (d.valuation ? valMethods : []).map(m => {
+    const v = d.valuation?.[m.key];
+    if (!v) return '';
+    const price = (v.price && v.price > 0) ? v.price : null; // 0は無効
+    const diff = (cp && price) ? ((price - cp) / cp * 100) : null;
+    const diffStr = diff !== null ? `<div class="val-diff ${diff>=0?'diff-up':'diff-down'}">${fmtPct(diff)}</div>` : '';
+    return `<div class="val-item">
+      <div class="val-method">${m.label}</div>
+      <div class="val-price" style="color:${price&&price>=cp?'var(--green)':'var(--red)'}">${price ? fmt(price,cur) : '--'}</div>
+      ${diffStr}
+      <div class="val-basis">${v.basis||''}</div>
+    </div>`;
+  }).join('');
+
+  // 財務指標
+  const fin = d.financials || {};
+  const finItems = [
+    {label:'売上成長率', val: fin.revenue_growth_yoy != null ? fmtPct(fin.revenue_growth_yoy) : '--'},
+    {label:'営業利益率', val: fin.operating_margin != null ? fin.operating_margin.toFixed(1)+'%' : '--'},
+    {label:'ROE', val: fin.roe != null ? fin.roe.toFixed(1)+'%' : '--'},
+    {label:'D/E比率', val: fin.debt_equity != null ? fin.debt_equity.toFixed(2)+'x' : '--'},
+    {label:'PER', val: fin.per_current != null ? fin.per_current.toFixed(1)+'x' : '--'},
+    {label:'PBR', val: fin.pbr_current != null ? fin.pbr_current.toFixed(2)+'x' : '--'},
+  ];
+  document.getElementById('r-fin-grid').innerHTML = finItems.map(f =>
+    `<div class="fin-item"><div class="fin-label">${f.label}</div><div class="fin-val">${f.val}</div></div>`
+  ).join('');
+
+  // 配当
+  const div = d.dividend || {};
+  document.getElementById('r-div-grid').innerHTML = [
+    {label:'年間DPS', val: fmt(div.current_dps, cur)},
+    {label:'配当利回り', val: div.yield_pct != null ? div.yield_pct.toFixed(2)+'%' : '--'},
+    {label:'配当性向', val: div.payout_ratio != null ? div.payout_ratio.toFixed(1)+'%' : '--'},
+    {label:'現在株価', val: fmt(cp, cur)},
+  ].map(f => `<div class="div-item"><div class="div-label">${f.label}</div><div class="div-val">${f.val}</div></div>`).join('');
+
+  // 増配・減配確率バー生成
+  const probBar = (pct, color) => `
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="flex:1;height:6px;background:var(--s3);border-radius:3px;overflow:hidden;">
+        <div style="width:${pct||0}%;height:100%;background:${color};border-radius:3px;transition:width .5s;"></div>
+      </div>
+      <span style="font-size:12px;font-weight:700;color:${color};min-width:36px;">${pct||0}%</span>
+    </div>`;
+
+  // 配当シナリオのバリデーション
+  // AIがDDMで異常値を返すことがある（現在株価の10%以下や10倍以上は無効）
+  // 配当シナリオ：正しい関係 cutDisplay < base < hikeDisplay を保証
+  const base = fv || cp;
+  const yieldRate = (div.yield_pct || 2) / 100;
+  // 感応度：配当変化が株価に与える影響
+  // 配当割引モデルでの感応度 = yield / (r - g) の変化率
+  // シンプルに：利回りが低いほど影響小・高いほど影響大
+  // 利回り1%→約2%変動、3%→約6%、5%→約10%（上限10%）
+  const sensitivity = Math.min(yieldRate * 2, 0.10);
+
+  const aiCut = div.price_if_cut_20pct;
+  const aiHike = div.price_if_hike_20pct;
+
+  // AIの値が「cutPrice < base < hikePrice」の関係を満たすか検証
+  const aiCutValid = aiCut && aiCut > 0 && aiCut < base && aiCut > base * 0.5;
+  const aiHikeValid = aiHike && aiHike > 0 && aiHike > base && aiHike < base * 2.0;
+
+  // 両方有効かつ関係が正しい場合のみAI値を使用、それ以外は計算値
+  const cutDisplay = aiCutValid ? aiCut : Math.round(base * (1 - sensitivity) * 10) / 10;
+  const hikeDisplay = aiHikeValid ? aiHike : Math.round(base * (1 + sensitivity) * 10) / 10;
+  const cutNote = aiCutValid ? '' : '<span style="font-size:10px;color:var(--t3);"> (推定値)</span>';
+  const hikeNote = aiHikeValid ? '' : '<span style="font-size:10px;color:var(--t3);"> (推定値)</span>';
+
+  document.getElementById('r-div-scenario').innerHTML = `
+    <div class="scenario-row">
+      <span class="scenario-label">📌 現在の理論株価（配当考慮）</span>
+      <span class="scenario-price" style="color:var(--purple);">${fmt(fv, cur)}</span>
+    </div>
+    <div class="scenario-row">
+      <span class="scenario-label">📉 減配20%時の理論株価</span>
+      <span class="scenario-price" style="color:var(--red);">${fmt(cutDisplay, cur)}${cutNote}</span>
+    </div>
+    <div class="scenario-row">
+      <span class="scenario-label">📈 増配20%時の理論株価</span>
+      <span class="scenario-price" style="color:var(--green);">${fmt(hikeDisplay, cur)}${hikeNote}</span>
+    </div>
+    <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div>
+        <div style="font-size:11px;color:var(--t3);margin-bottom:6px;">📈 増配の可能性</div>
+        ${probBar(div.hike_probability, 'var(--green)')}
+        <div style="font-size:10px;color:var(--t3);margin-top:4px;">${div.hike_reason||''}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--t3);margin-bottom:6px;">📉 減配のリスク</div>
+        ${probBar(div.cut_probability, 'var(--red)')}
+        <div style="font-size:10px;color:var(--t3);margin-top:4px;">${div.cut_reason||''}</div>
+      </div>
+    </div>`;
+
+  document.getElementById('r-div-basis').textContent = div.dividend_basis ? '💡 ' + div.dividend_basis : '';
+
+  // リスク
+  const risks = d.risks || [];
+  document.getElementById('r-risks').innerHTML = risks.map(r => `
+    <div class="risk-item ${r.level||''}">
+      <span class="risk-badge risk-badge-${r.level||'low'}">${r.level==='high'?'高':'medium'===r.level?'中':'低'}</span>
+      <div>
+        <div class="risk-title">${r.title||''}</div>
+        <div class="risk-detail">${r.detail||''}</div>
+      </div>
+    </div>`).join('');
+}
+
+// 主要銘柄データ（予測変換用）
+
+
+const acList = document.getElementById('autocomplete-list');
+const tickerInput = document.getElementById('ticker-input');
+
+let isComposing = false;
+tickerInput.addEventListener('compositionstart', () => { isComposing = true; });
+tickerInput.addEventListener('compositionend', (e) => {
+  isComposing = false;
+  clearTimeout(searchTimer);
+  // 変換確定後にvalueが更新されるのを少し待つ
+  searchTimer = setTimeout(() => {
+    showSuggestions();
+  }, 200);
+});
+
+tickerInput.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  if (!isComposing) {
+    searchTimer = setTimeout(showSuggestions, 200);
+  }
+});
+
+let searchTimer = null;
+let selectedCompanyName = ''; // 候補から選択した会社名
+window._jpStocksCache = null; // ページロード時にリセット
+
+// 日本株ローカル辞書（日本語検索用）
+const JP_STOCKS = [
+  {t:'7203.T',n:'トヨタ自動車'},{t:'7259.T',n:'アイシン（トヨタグループ）'},{t:'6902.T',n:'デンソー（トヨタグループ）'},{t:'7248.T',n:'トヨタ紡織'},{t:'4281.T',n:'トヨタシステムズ'},
+  {t:'7242.T',n:'カヤバ（トヨタ系）'},{t:'7282.T',n:'豊田合成（トヨタグループ）'},
+  {t:'6773.T',n:'パイオニア（トヨタ出資）'},{t:'7267.T',n:'ホンダ（本田技研工業）'},
+  {t:'7201.T',n:'日産自動車'},{t:'7211.T',n:'三菱自動車工業'},
+  {t:'7269.T',n:'スズキ'},{t:'7270.T',n:'SUBARU（スバル）'},
+  {t:'7272.T',n:'ヤマハ発動機'},{t:'7205.T',n:'日野自動車'},
+  {t:'6758.T',n:'ソニーグループ'},{t:'7974.T',n:'任天堂'},
+  {t:'9766.T',n:'コナミグループ'},{t:'9684.T',n:'スクウェア・エニックス'},
+  {t:'9984.T',n:'ソフトバンクグループ'},{t:'9434.T',n:'ソフトバンク'},
+  {t:'9432.T',n:'NTT（日本電信電話）'},{t:'9433.T',n:'KDDI'},
+  {t:'8306.T',n:'三菱UFJフィナンシャルグループ'},{t:'8058.T',n:'三菱商事'},
+  {t:'6503.T',n:'三菱電機'},{t:'7011.T',n:'三菱重工業'},
+  {t:'3407.T',n:'三菱ケミカルグループ'},{t:'8802.T',n:'三菱地所'},
+  {t:'8053.T',n:'住友商事'},{t:'5713.T',n:'住友金属鉱山'},
+  {t:'5110.T',n:'住友ゴム工業'},{t:'1911.T',n:'住友林業'},
+  {t:'4203.T',n:'住友ベークライト'},{t:'4401.T',n:'住友精化'},
+  {t:'6332.T',n:'住友重機械工業'},{t:'5406.T',n:'神戸製鋼所（住友グループ）'},
+  {t:'8318.T',n:'住友銀行（三井住友銀行）'},{t:'8377.T',n:'ほくほくフィナンシャル'},
+  {t:'8316.T',n:'三井住友フィナンシャルグループ'},{t:'4005.T',n:'住友化学'},
+  {t:'5802.T',n:'住友電気工業'},{t:'8309.T',n:'三井住友トラストホールディングス'},
+  {t:'8031.T',n:'三井物産'},{t:'8411.T',n:'みずほフィナンシャルグループ'},
+  {t:'9104.T',n:'商船三井'},{t:'8801.T',n:'三井不動産'},
+  {t:'8001.T',n:'伊藤忠商事'},{t:'8002.T',n:'丸紅'},
+  {t:'8035.T',n:'東京エレクトロン'},{t:'6861.T',n:'キーエンス'},
+  {t:'6367.T',n:'ダイキン工業'},{t:'4063.T',n:'信越化学工業'},
+  {t:'6501.T',n:'日立製作所'},{t:'6702.T',n:'富士通'},
+  {t:'6954.T',n:'ファナック'},{t:'6971.T',n:'京セラ'},
+  {t:'6762.T',n:'TDK'},{t:'6594.T',n:'ニデック（日本電産）'},
+  {t:'6723.T',n:'ルネサスエレクトロニクス'},{t:'6857.T',n:'アドバンテスト'},
+  {t:'6645.T',n:'オムロン'},{t:'6752.T',n:'パナソニックホールディングス'},
+  {t:'6301.T',n:'コマツ（小松製作所）'},{t:'6326.T',n:'クボタ'},
+  {t:'8766.T',n:'東京海上ホールディングス'},{t:'8725.T',n:'MS&ADインシュアランス'},
+  {t:'8750.T',n:'第一生命ホールディングス'},{t:'8604.T',n:'野村ホールディングス'},
+  {t:'4519.T',n:'中外製薬'},{t:'4568.T',n:'第一三共'},
+  {t:'4502.T',n:'武田薬品工業'},{t:'4503.T',n:'アステラス製薬'},
+  {t:'4507.T',n:'塩野義製薬'},{t:'4506.T',n:'住友ファーマ'},
+  {t:'3382.T',n:'セブン＆アイ・ホールディングス'},{t:'8267.T',n:'イオン'},
+  {t:'9983.T',n:'ファーストリテイリング（ユニクロ）'},
+  {t:'3099.T',n:'三越伊勢丹ホールディングス'},{t:'2914.T',n:'JT（日本たばこ産業）'},
+  {t:'2502.T',n:'アサヒグループホールディングス'},
+  {t:'2503.T',n:'キリンホールディングス'},{t:'2801.T',n:'キッコーマン'},
+  {t:'2802.T',n:'味の素'},{t:'1925.T',n:'大和ハウス工業'},
+  {t:'1928.T',n:'積水ハウス'},{t:'8830.T',n:'住友不動産'},
+  {t:'9020.T',n:'東日本旅客鉄道（JR東日本）'},
+  {t:'9022.T',n:'東海旅客鉄道（JR東海）'},
+  {t:'9021.T',n:'西日本旅客鉄道（JR西日本）'},
+  {t:'9101.T',n:'日本郵船'},{t:'9107.T',n:'川崎汽船'},
+  {t:'4661.T',n:'オリエンタルランド'},{t:'9602.T',n:'東宝'},
+  {t:'6098.T',n:'リクルートホールディングス'},
+  {t:'4689.T',n:'LINEヤフー（旧Zホールディングス）'},
+  {t:'3659.T',n:'ネクソン'},{t:'4307.T',n:'野村総合研究所'},
+  {t:'9613.T',n:'NTTデータグループ'},
+  {t:'4911.T',n:'資生堂'},{t:'4452.T',n:'花王'},
+  {t:'4901.T',n:'富士フイルムホールディングス'},
+  {t:'7832.T',n:'バンダイナムコホールディングス'},
+  {t:'2413.T',n:'エムスリー'},{t:'4385.T',n:'メルカリ'},
+  {t:'3697.T',n:'SHIFT'},{t:'4478.T',n:'フリー'},
+  {t:'6920.T',n:'レーザーテック'},{t:'4565.T',n:'そーせいグループ'},
+  {t:'9107.T',n:'川崎汽船'},{t:'9101.T',n:'日本郵船（商船三井と並ぶ海運）'},
+  {t:'5301.T',n:'東海カーボン'},{t:'3436.T',n:'SUMCO（半導体シリコン）'},
+  {t:'6146.T',n:'ディスコ（半導体）'},{t:'4186.T',n:'東京応化工業'},,{t:'4704.T',n:'トレンドマイクロ'},
+  {t:'7751.T',n:'キヤノン'},{t:'7733.T',n:'オリンパス'},
+  {t:'7741.T',n:'HOYA'},{t:'4543.T',n:'テルモ'},
+  {t:'4151.T',n:'協和キリン'},{t:'4578.T',n:'大塚ホールディングス'},
+];
+
+async function showSuggestions() {
+  // DOM更新後に値を取得（compositionend直後の遅延対策）
+  const raw = tickerInput.value.trim();
+  if (!raw || raw.length < 1) { acList.style.display = 'none'; return; }
+
+  // 日本語かどうか判定（ひらがな・カタカナ・漢字）
+  const isJapanese = /[぀-ゟ゠-ヿ一-鿿]/.test(raw);
+
+  if (isJapanese) {
+    // 日本語→J-Quants全銘柄から検索
+    acList.innerHTML = '<div style="padding:10px 14px;color:var(--t3);font-size:12px;">🔍 検索中...</div>';
+    acList.style.display = 'block';
+    try {
+      // 既存の/searchエンドポイントで全上場銘柄を取得（CoName使用）
+      if (!window._jpStocksCache) {
+        const res = await fetch(`${WORKER}/search`);
+        const data = await res.json();
+        // {list: [{code, name, nameEn, sector, market}]} 形式
+        window._jpStocksCache = (data.list || []).map(s => ({
+          t: s.code + '.T',
+          n: s.name || s.nameEn || s.code,
+          market: s.market || '',
+        }));
+      }
+      const all = window._jpStocksCache || [];
+      // rawが社名に含まれる位置が早いものほど優先
+      const matched = all
+        .filter(s => s.n && s.n.includes(raw))
+        .sort((a, b) => {
+          // 「株式会社」を除いた実質社名でのraw出現位置で比較
+          const clean = n => n.replace(/株式会社|有限会社|合同会社|㈱/g, '').trim();
+          const posA = clean(a.n).indexOf(raw);
+          const posB = clean(b.n).indexOf(raw);
+          if (posA !== posB) return posA - posB;
+          // 同じ位置なら社名が短い方を優先（より正確な一致）
+          return a.n.length - b.n.length;
+        })
+        .slice(0, 10);
+      if (!matched.length) {
+        const local = JP_STOCKS.filter(s => s.n.includes(raw)).slice(0, 10);
+        if (!local.length) {
+          acList.innerHTML = '<div style="padding:10px 14px;color:var(--t3);font-size:12px;">候補が見つかりません（ティッカーを直接入力できます）</div>';
+          return;
+        }
+        renderSuggestions(local);
+        return;
+      }
+      renderSuggestions(matched);
+    } catch(e) {
+      const local = JP_STOCKS.filter(s => s.n.includes(raw)).slice(0, 10);
+      renderSuggestions(local.length ? local : [{t:'', n:'検索エラー。直接入力してください'}]);
+    }
+    return;
+  }
+
+  // 英字→Yahoo Finance API
+  acList.innerHTML = '<div style="padding:10px 14px;color:var(--t3);font-size:12px;">🔍 検索中...</div>';
+  acList.style.display = 'block';
+  try {
+    const res = await fetch(`${WORKER}/ticker-search?q=${encodeURIComponent(raw)}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const results = await res.json();
+    if (!Array.isArray(results) || !results.length) {
+      acList.innerHTML = '<div style="padding:10px 14px;color:var(--t3);font-size:12px;">候補が見つかりません（直接入力してください）</div>';
+      return;
+    }
+    renderSuggestions(results.map(s => ({t:s.t, n:s.n + (s.exchange?' ('+s.exchange+')':'')})));
+  } catch(e) {
+    acList.innerHTML = '<div style="padding:10px 14px;color:var(--t3);font-size:12px;">候補が見つかりません（直接入力してください）</div>';
+  }
+}
+
+function renderSuggestions(list) {
+  acList.innerHTML = list.map(s => {
+    const ticker = (s.t||'').replace(/'/g,"&#39;");
+    const name = (s.n||'').replace(/'/g,"&#39;");
+    return `<div onclick="selectTicker('${ticker}','${name}')"
+      style="padding:9px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--b);gap:8px;"
+      onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background=''">
+      <span style="font-family:'Lato',sans-serif;font-weight:700;color:var(--t);min-width:80px;">${s.t}</span>
+      <span style="font-size:12px;color:var(--t2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.n}</span>
+    </div>`;
+  }).join('');
+  acList.style.display = 'block';
+}
+
+function selectTicker(ticker, name) {
+  tickerInput.value = ticker;
+  selectedCompanyName = name || '';
+  acList.style.display = 'none';
+  // 少し待ってからanalyze（inputのvalueが確実に設定されてから）
+  setTimeout(analyze, 50);
+}
+
+// 外クリックで閉じる
+document.addEventListener('click', e => {
+  if (!e.target.closest('#ticker-input') && !e.target.closest('#autocomplete-list')) {
+    acList.style.display = 'none';
+  }
+});
+
+// Enterキーで分析
+tickerInput.addEventListener('keydown', e => { if (e.key==='Enter') { acList.style.display='none'; analyze(); } });
+
+</script>
+</body>
+</html>
