@@ -197,11 +197,23 @@ async function loadYtStats() {
   try {
     const res = await fetch(`${WORKER}/youtube-stats`);
     const d = await res.json();
-    const fmt = n => n >= 10000 ? (n/10000).toFixed(1)+'万' : n >= 1000 ? (n/1000).toFixed(1)+'K' : n;
-    if (d.subscriberCount) document.getElementById('yt-sub').textContent = fmt(d.subscriberCount);
-    if (d.videoCount) document.getElementById('yt-vid').textContent = d.videoCount + '本';
-    if (d.viewCount) document.getElementById('yt-view').textContent = fmt(d.viewCount);
-  } catch(e) {}
+    console.log('youtube-stats response:', d);
+    const fmt = n => {
+      const num = parseInt(n) || 0;
+      if (num >= 10000) return (num/10000).toFixed(1)+'万';
+      if (num >= 1000) return (num/1000).toFixed(1)+'K';
+      return num;
+    };
+    // フィールド名の両パターンに対応
+    const sub = d.subscribers ?? d.subscriberCount ?? d.subscriber_count;
+    const vid = d.videos ?? d.videoCount ?? d.video_count;
+    const view = d.views ?? d.viewCount ?? d.view_count;
+    if (sub) document.getElementById('yt-sub').textContent = fmt(sub);
+    if (vid) document.getElementById('yt-vid').textContent = parseInt(vid) + '本';
+    if (view) document.getElementById('yt-view').textContent = fmt(view);
+  } catch(e) {
+    console.error('youtube-stats error:', e);
+  }
 }
 loadYtStats();
 
