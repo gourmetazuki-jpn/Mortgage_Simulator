@@ -430,39 +430,35 @@ function render(d) {
 
   // 配当シナリオのバリデーション
   // AIがDDMで異常値を返すことがある（現在株価の10%以下や10倍以上は無効）
-  // 配当シナリオ：正しい関係 cutDisplay < base < hikeDisplay を保証
+  // 配当シナリオ：DDM（配当割引モデル）で理論株価ベースで計算
+  // DDM: P = D / (r - g) → 配当D が20%変化 → 理論株価も20%変化
+  // 基準：理論株価（fv）。理論株価がない場合は現在株価（cp）
   const base = fv || cp;
-  const yieldRate = (div.yield_pct || 2) / 100;
-  // 感応度：配当変化が株価に与える影響
-  // 配当割引モデルでの感応度 = yield / (r - g) の変化率
-  // シンプルに：利回りが低いほど影響小・高いほど影響大
-  // 利回り1%→約2%変動、3%→約6%、5%→約10%（上限10%）
-  const sensitivity = Math.min(yieldRate * 2, 0.10);
 
+  // AIの値が論理的に正しいか検証
+  // 正しい関係：cutPrice < base < hikePrice
   const aiCut = div.price_if_cut_20pct;
   const aiHike = div.price_if_hike_20pct;
-
-  // AIの値が「cutPrice < base < hikePrice」の関係を満たすか検証
   const aiCutValid = aiCut && aiCut > 0 && aiCut < base && aiCut > base * 0.5;
   const aiHikeValid = aiHike && aiHike > 0 && aiHike > base && aiHike < base * 2.0;
 
-  // 両方有効かつ関係が正しい場合のみAI値を使用、それ以外は計算値
-  const cutDisplay = aiCutValid ? aiCut : Math.round(base * (1 - sensitivity) * 10) / 10;
-  const hikeDisplay = aiHikeValid ? aiHike : Math.round(base * (1 + sensitivity) * 10) / 10;
-  const cutNote = aiCutValid ? '' : '<span style="font-size:10px;color:var(--t3);"> (推定値)</span>';
-  const hikeNote = aiHikeValid ? '' : '<span style="font-size:10px;color:var(--t3);"> (推定値)</span>';
+  // AIの値が正しい場合のみ使用、それ以外はDDM純粋計算（理論株価×±20%）
+  const cutDisplay = aiCutValid ? Math.round(aiCut * 10) / 10 : Math.round(base * 0.8 * 10) / 10;
+  const hikeDisplay = aiHikeValid ? Math.round(aiHike * 10) / 10 : Math.round(base * 1.2 * 10) / 10;
+  const cutNote = aiCutValid ? '' : '<span style="font-size:10px;color:var(--t3);"> (DDM推定)</span>';
+  const hikeNote = aiHikeValid ? '' : '<span style="font-size:10px;color:var(--t3);"> (DDM推定)</span>';
 
   document.getElementById('r-div-scenario').innerHTML = `
     <div class="scenario-row">
-      <span class="scenario-label">📌 現在の理論株価（配当考慮）</span>
+      <span class="scenario-label">📌 現在の理論株価（DDMベース）</span>
       <span class="scenario-price" style="color:var(--purple);">${fmt(fv, cur)}</span>
     </div>
     <div class="scenario-row">
-      <span class="scenario-label">📉 減配20%時の理論株価</span>
+      <span class="scenario-label">📉 減配20%時の理論株価（DDM）</span>
       <span class="scenario-price" style="color:var(--red);">${fmt(cutDisplay, cur)}${cutNote}</span>
     </div>
     <div class="scenario-row">
-      <span class="scenario-label">📈 増配20%時の理論株価</span>
+      <span class="scenario-label">📈 増配20%時の理論株価（DDM）</span>
       <span class="scenario-price" style="color:var(--green);">${fmt(hikeDisplay, cur)}${hikeNote}</span>
     </div>
     <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
