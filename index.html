@@ -31,78 +31,62 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    :root{--bg:#f4f3ee;--surface:#fff;--surface2:#f0efe8;--border:rgba(0,0,0,.09);--text:#1a1a16;--text2:#58574f;--text3:#98968c;--red:#b5451b;--red-l:#fdf0eb;--blue:#1a4fa0;--blue-l:#e8eef8;--green:#1e6b3c;--green-l:#e6f4ec;--radius:10px;--radius-lg:14px;}
-    body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.7;}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --bg:#0c0c14;--s:#13131f;--s2:#1c1c2e;--b:rgba(255,255,255,.07);
+    --t:#e8e8f4;--t2:#8888aa;--t3:#444466;
+  }
+  body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--t);min-height:100vh;}
 
-    /* ヒーローヘッダー */
-    .hero{background:linear-gradient(135deg,#1a1a16 0%,#2a2a20 100%);color:#fff;padding:36px 20px 32px;text-align:center;}
-    .hero .channel-name{font-size:clamp(26px,7vw,44px);font-weight:700;margin-bottom:8px;letter-spacing:0.02em;}
+  /* ヒーロー */
+  .hero{background:linear-gradient(160deg,#0c0c14,#16101e,#0c0c14);padding:36px 20px 28px;text-align:center;border-bottom:1px solid var(--b);}
+  .hero-icon{width:80px;height:80px;border-radius:50%;border:2px solid rgba(255,255,255,.15);object-fit:cover;margin-bottom:12px;}
+  .channel-name{font-size:clamp(20px,5vw,28px);font-weight:700;margin-bottom:8px;}
+  .tagline{font-size:13px;color:var(--t2);line-height:1.7;max-width:480px;margin:0 auto 16px;}
+  .hero-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  .yt-btn{padding:9px 20px;border-radius:20px;background:#ff0000;color:#fff;text-decoration:none;font-size:13px;font-weight:700;transition:opacity .15s;}
+  .yt-btn:hover{opacity:.85;}
 
-    .hero .tagline{font-size:14px;color:rgba(255,255,255,.65);margin-bottom:24px;}
-    .hero-stats{display:flex;justify-content:center;gap:28px;flex-wrap:wrap;margin-bottom:24px;}
-    .stat .num{font-family:"Lato",sans-serif;font-size:26px;font-weight:900;}
-    .stat .lbl{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;}
-    .yt-btn{display:inline-flex;align-items:center;gap:8px;background:#ff0000;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;transition:opacity .15s;}
-    .yt-btn:hover{opacity:.85;}
+  .ad-slot{background:var(--s);border-bottom:1px solid var(--b);padding:10px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
 
-    /* 広告枠 */
-    .ad-slot{background:var(--surface);border-bottom:1px solid var(--border);padding:12px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+  /* タブ */
+  .tab-bar{display:flex;gap:6px;padding:14px 16px;background:var(--s);border-bottom:1px solid var(--b);flex-wrap:wrap;position:sticky;top:0;z-index:10;}
+  .tab-btn{padding:6px 16px;border-radius:20px;font-size:12px;font-family:inherit;border:1px solid var(--b);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s;white-space:nowrap;}
+  .tab-btn.active{background:rgba(255,255,255,.12);color:var(--t);border-color:rgba(255,255,255,.2);}
+  .tab-btn:hover:not(.active){border-color:rgba(255,255,255,.15);color:var(--t);}
 
-    .container{max-width:860px;margin:0 auto;padding:28px 16px 60px;display:flex;flex-direction:column;gap:20px;}
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px 26px;}
-    .card h2{font-size:16px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
-    .section-label{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-bottom:14px;}
+  /* カードグリッド */
+  .cards-container{max-width:1000px;margin:0 auto;padding:20px 16px 60px;}
+  .cat-section{margin-bottom:32px;}
+  .cat-section.hidden{display:none;}
+  .cat-title{font-size:13px;font-weight:700;color:var(--t2);margin-bottom:12px;padding-left:4px;letter-spacing:.05em;}
+  .cards-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  @media(min-width:600px){.cards-grid{grid-template-columns:repeat(3,1fr);}}
+  @media(min-width:900px){.cards-grid{grid-template-columns:repeat(4,1fr);}}
 
-    /* おすすめ対象 */
-    .recommend-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-    @media(max-width:600px){.recommend-grid{grid-template-columns:1fr;}}
-    .recommend-item{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--surface2);border-radius:var(--radius);}
-    .recommend-icon{font-size:20px;flex-shrink:0;}
-    .recommend-text{font-size:13px;color:var(--text2);line-height:1.6;}
+  /* カード */
+  .card{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--t);transition:all .15s;cursor:pointer;}
+  .card:hover{border-color:rgba(255,255,255,.2);background:var(--s2);transform:translateY(-1px);}
+  .card-wide{grid-column:span 2;}
+  @media(max-width:599px){.card-wide{grid-column:span 2;}}
+  .card-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+  .card-name{font-size:13px;font-weight:700;margin-bottom:3px;line-height:1.4;}
+  .card-desc{font-size:11px;color:var(--t2);line-height:1.5;}
 
-    /* シミュレーターカード */
-    .cards{display:flex;flex-direction:column;gap:14px;margin-bottom:0;}
-    .sim-card{display:flex;align-items:stretch;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);text-decoration:none;color:inherit;overflow:hidden;transition:box-shadow .15s,transform .15s;}
-    .sim-card:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.08);}
-    .sim-card-accent{width:5px;flex-shrink:0;}
-    .sim-card-body{padding:14px 16px;flex:1;}
-    .sim-card-tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;margin-bottom:6px;}
-    .sim-card h3{font-size:14px;font-weight:700;margin-bottom:4px;}
-    .sim-card p{font-size:12px;color:var(--text2);}
-    .sim-card-arrow{display:flex;align-items:center;padding:0 16px 0 0;color:var(--text3);font-size:18px;}
-
-    .faq-item{border-top:1px solid var(--border);padding:13px 0;}
-    .faq-q{font-size:13px;font-weight:700;margin-bottom:5px;}
-    .faq-a{font-size:13px;color:var(--text2);line-height:1.8;}
-    .ad-mid{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px;text-align:center;min-height:100px;display:flex;align-items:center;justify-content:center;}
-    footer{text-align:center;font-size:12px;color:var(--text3);padding:20px;border-top:1px solid var(--border);}
-  </style>
+  footer{text-align:center;font-size:12px;color:var(--t3);padding:20px;border-top:1px solid var(--b);}
+  footer a{color:var(--t3);}
+</style>
 </head>
 <body>
 
-<!-- ヒーローヘッダー -->
+<!-- ヒーロー -->
 <div class="hero">
-  <img src="azuki-icon.png" alt="アズキぷらす" style="width:100px;height:100px;border-radius:50%;border:3px solid rgba(255,255,255,.2);margin-bottom:14px;object-fit:cover;">
+  <img src="azuki-icon.png" alt="アズキぷらす" class="hero-icon">
   <h1 class="channel-name">アズキぷらす</h1>
   <p class="tagline">「3分で決算解説！」株式投資と企業決算をキャラクターとともにわかりやすく解説</p>
-  <div class="hero-stats">
-    <div class="stat">
-      <div class="num" id="yt-subscribers">4,120+</div>
-      <div class="lbl">チャンネル登録者</div>
-    </div>
-    <div class="stat">
-      <div class="num" id="yt-videos">1,695+</div>
-      <div class="lbl">公開動画数</div>
-    </div>
-    <div class="stat">
-      <div class="num" id="yt-views">535,316+</div>
-      <div class="lbl">総再生回数</div>
-    </div>
+  <div class="hero-links">
+    <a href="https://www.youtube.com/@アズキぷらす" target="_blank" rel="noopener" class="yt-btn">▶ YouTubeを見る</a>
   </div>
-  <a href="https://www.youtube.com/@アズキぷらす" target="_blank" rel="noopener" class="yt-btn">
-    ▶ YouTubeチャンネルを見る
-  </a>
 </div>
 
 <div class="ad-slot">
@@ -110,234 +94,60 @@
   <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 </div>
 
-<div class="container">
+<!-- カテゴリタブ -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="filterCat('all')">すべて</button>
+  <button class="tab-btn" onclick="filterCat('market')">📊 マーケット</button>
+  <button class="tab-btn" onclick="filterCat('stock')">📈 株式分析</button>
+  <button class="tab-btn" onclick="filterCat('personal')">🏦 個人資産</button>
+  <button class="tab-btn" onclick="filterCat('blog')">📰 ブログ</button>
+</div>
 
-  <!-- チャンネル紹介 -->
-  <div class="card">
-    <h2>アズキぷらすとは？</h2>
-    <p style="font-size:14px;color:var(--text2);line-height:1.9;margin-bottom:16px;">
-      「3分で決算解説！」をテーマに、<strong style="color:var(--text);">株式投資と企業の決算</strong>をキャラクターとともにわかりやすく解説するYouTubeチャンネルです。難しい決算書もサクッと理解できます。<br><br>
-      頑張って更新していきますので、ぜひチャンネル登録をお願いいたします。チャンネル登録者数10,000人目指して頑張っていきますので、応援をよろしくお願いいたします！
-    </p>
-    <p style="font-size:13px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;">こんな人におすすめ</p>
-    <div class="recommend-grid">
-      <div class="recommend-item"><span class="recommend-icon">📊</span><span class="recommend-text">決算書を読むのがめんどくさいから誰か解説してほしい</span></div>
-      <div class="recommend-item"><span class="recommend-icon">📈</span><span class="recommend-text">経済・株の基本を学びたい</span></div>
-      <div class="recommend-item"><span class="recommend-icon">🎓</span><span class="recommend-text">就職活動で企業分析をしたい</span></div>
-      <div class="recommend-item"><span class="recommend-icon">🏢</span><span class="recommend-text">自分の会社が大丈夫か知りたい</span></div>
-      <div class="recommend-item"><span class="recommend-icon">🌏</span><span class="recommend-text">決算を見て景気の流れをいち早く知りたい</span></div>
-      <div class="recommend-item"><span class="recommend-icon">🖥️</span><span class="recommend-text">このサイトの無料ツールで投資・資産の試算もできます</span></div>
+<div class="cards-container">
+
+  <!-- マーケット分析 -->
+  <div class="cat-section" data-cat="market">
+    <div class="cat-title">📊 マーケット分析</div>
+    <div class="cards-grid">
+      <a href="geopolitics.html" class="card"><div class="card-icon" style="background:linear-gradient(135deg,#ff6600,#cc3300);">🌍</div><div class="card-body"><div class="card-name">地政学リスクマップ</div><div class="card-desc">米中EU露日の外交関係を地図で可視化</div></div></a>
+      <a href="credit.html" class="card"><div class="card-icon" style="background:linear-gradient(135deg,#ff4455,#aa0022);">📊</div><div class="card-body"><div class="card-name">米国クレジットスプレッド</div><div class="card-desc">HY・IG・CDXとリスクメーター</div></div></a>
+      <a href="gold.html" class="card"><div class="card-icon" style="background:linear-gradient(135deg,#ffd700,#cc9900);">🥇</div><div class="card-body"><div class="card-name">金（ゴールド）分析</div><div class="card-desc">相場・中銀保有量・貿易フロー</div></div></a>
+      <a href="oil.html" class="card"><div class="card-icon" style="background:linear-gradient(135deg,#ff8844,#cc5500);">🛢️</div><div class="card-body"><div class="card-name">原油フロー分析</div><div class="card-desc">生産・在庫・WTI価格・MACD</div></div></a>
+      <a href="cycle.html" class="card"><div class="card-icon" style="background:linear-gradient(135deg,#44aaff,#0066cc);">🔄</div><div class="card-body"><div class="card-name">景気サイクル判定</div><div class="card-desc">現在の景気局面をリアルタイム分析</div></div></a>
+      <a href="vix.html" class="card"><div class="card-icon" style="background:linear-gradient(135deg,#aa44ff,#6600cc);">😨</div><div class="card-body"><div class="card-name">VIX恐怖指数</div><div class="card-desc">市場の恐怖・安心度をチャートで確認</div></div></a>
     </div>
   </div>
 
-  <!-- 無料ツール -->
-  <div class="card">
-    <h2>無料ツール集</h2>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">このサイトでは、お金と投資に関する無料シミュレーターも公開しています。チャンネルと合わせてご活用ください。</p>
-
-    <p class="section-label">資産シミュレーター</p>
-    <div class="cards" style="margin-bottom:20px;">
-      <a href="compound.html" class="sim-card">
-        <div class="sim-card-accent" style="background:#1a4fa0;"></div>
-        <div class="sim-card-body">
-          <span class="sim-card-tag" style="background:#e8eef8;color:#1a4fa0;">資産運用</span>
-          <h3>複利・住宅ローンシミュレーター</h3>
-          <p>元本・運用利率・定年・住宅購入を設定して資産推移を試算。元利/元金定額の比較も可能。</p>
-        </div>
-        <div class="sim-card-arrow">›</div>
-      </a>
-      <a href="kaigo.html" class="sim-card">
-        <div class="sim-card-accent" style="background:#b5451b;"></div>
-        <div class="sim-card-body">
-          <span class="sim-card-tag" style="background:#fdf0eb;color:#b5451b;">介護・老後</span>
-          <h3>親の介護・老人ホーム費用枯渇シミュレーター</h3>
-          <p>施設ランク別に資産が何年で底をつくか試算。ダブルケア期間の家計影響も可視化。</p>
-        </div>
-        <div class="sim-card-arrow">›</div>
-      </a>
-      <a href="nisa-exit.html" class="sim-card">
-        <div class="sim-card-accent" style="background:#b5451b;"></div>
-        <div class="sim-card-body">
-          <span class="sim-card-tag" style="background:#fdf0eb;color:#b5451b;">老後・NISA</span>
-          <h3>新NISA出口戦略シミュレーター</h3>
-          <p>定率・定額・4%ルールで資産寿命を比較。暴落シナリオ設定も可能。</p>
-        </div>
-        <div class="sim-card-arrow">›</div>
-      </a>
-    </div>
-
-
-  </div><!-- /card -->
-
-  <!-- ずんだもん＆めたんブログ -->
-  <a href="blog.html" style="text-decoration:none;display:block;">
-    <div style="background:linear-gradient(135deg,#0f1a0f,#1a0f1a);border:1px solid rgba(94,196,94,.2);border-radius:16px;padding:20px 24px;display:flex;align-items:center;gap:16px;" onmouseover="this.style.borderColor='rgba(94,196,94,.6)'" onmouseout="this.style.borderColor='rgba(94,196,94,.2)'">
-      <div style="font-size:36px;flex-shrink:0;">🌱</div>
-      <div style="flex:1;">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;color:#5ec45e;text-transform:uppercase;margin-bottom:4px;">毎日更新</div>
-        <div style="font-size:18px;font-weight:700;color:#eeeef8;margin-bottom:4px;">ずんだもん＆めたんの経済解説</div>
-        <div style="font-size:13px;color:#9090b8;">ずんだもんと四国めたんが今日の経済・金融ニュースをわかりやすく解説</div>
-      </div>
-      <div style="font-size:24px;color:#5ec45e;flex-shrink:0;">›</div>
-    </div>
-  </a>
-
-  <!-- 今週のニュース -->
-  <a href="news.html" style="text-decoration:none;display:block;">
-    <div style="background:linear-gradient(135deg,#0e1628,#13131f);border:1px solid rgba(68,136,255,.3);border-radius:16px;padding:20px 24px;display:flex;align-items:center;gap:16px;" onmouseover="this.style.borderColor='rgba(68,136,255,.7)'" onmouseout="this.style.borderColor='rgba(68,136,255,.3)'">
-      <div style="font-size:36px;flex-shrink:0;">📰</div>
-      <div style="flex:1;">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;color:#4488ff;text-transform:uppercase;margin-bottom:4px;">毎日更新</div>
-        <div style="font-size:18px;font-weight:700;color:#e8e8f4;margin-bottom:4px;">今日の重要ニュース解説</div>
-        <div style="font-size:13px;color:#8888aa;">政治・経済・社会・テクノロジー・国際の主要ニュースをAIが生成、編集者がファクトチェックして公開</div>
-      </div>
-      <div style="font-size:24px;color:#4488ff;flex-shrink:0;">›</div>
-    </div>
-  </a>
-
-  <div class="card">
-    <p class="section-label">株式投資 判定ツール</p>
-    <div class="cards">
-      <a href="canslim.html" class="sim-card">
-        <div class="sim-card-accent" style="background:#1e6b3c;"></div>
-        <div class="sim-card-body">
-          <span class="sim-card-tag" style="background:#e6f4ec;color:#1e6b3c;">成長株投資</span>
-          <h3>CANSLIMチェックツール</h3>
-          <p>オニール流・成長株の7条件を合格/要注意/不合格で判定。市場環境チェック付き。</p>
-        </div>
-        <div class="sim-card-arrow">›</div>
-      </a>
-      <a href="value.html" class="sim-card">
-        <div class="sim-card-accent" style="background:#1a4fa0;"></div>
-        <div class="sim-card-body">
-          <span class="sim-card-tag" style="background:#e8eef8;color:#1a4fa0;">バリュー投資</span>
-          <h3>バリュー投資判定ツール</h3>
-          <p>PBR・PER・配当利回りなど6指標でバフェット流の割安株を判定。</p>
-        </div>
-        <div class="sim-card-arrow">›</div>
-      </a>
-      <a href="company-sim.html" class="sim-card">
-        <div class="sim-card-accent" style="background:#00cc66;"></div>
-        <div class="sim-card-body">
-          <span class="sim-card-tag" style="background:#e6f9f0;color:#00804d;">AI予測</span>
-          <h3>企業の未来予測シミュレーター</h3>
-          <p>証券コードまたは企業名で検索。実際の財務データからCAGR・配当・FCFを分析。保守的〜強気の3シナリオで10年後を予測。</p>
-        </div>
-        <div class="sim-card-arrow">›</div>
-      </a>
-      
-      <a href="valuation.html" class="sim-card">
-        <div class="sim-card-accent" style="background:linear-gradient(135deg,#aa55ff,#4455ff);"></div>
-        <div class="sim-card-body">
-          <span class="sim-card-tag" style="background:#f5f0ff;color:#7733cc;">株価分析</span>
-          <h3>理論株価計算ツール</h3>
-          <p>DCF・PER・PBR・配当割引モデルで理論株価を自動算出。割安・割高判定、増配・減配シナリオ、リスク評価まで一括表示。</p>
-        </div>
-        <div class="sim-card-arrow">›</div>
-      </a>
-      <a href="geopolitics.html" class="sim-card">
-        <div class="sim-card-accent" style="background:linear-gradient(135deg,#ff6600,#cc3300);"></div>
-        <div class="sim-card-body">
-          <span class="sim-card-tag" style="background:#fff4f0;color:#cc3300;">地政学</span>
-          <h3>地政学リスクマップ</h3>
-          <p>米・中・EU・露・日の視点から世界各国との外交関係を地図上で可視化。友好・敵対・制裁・軍事同盟をリアルタイムで確認。</p>
-        </div>
-        <div class="sim-card-arrow">›</div>
-      </a>
-      <a href="credit.html" class="sim-card">
-        <div class="sim-card-accent" style="background:linear-gradient(135deg,#ff4455,#aa0022);"></div>
-        <div class="sim-card-body">
-          <span class="sim-card-tag" style="background:#fff0f0;color:#cc0022;">クレジット</span>
-          <h3>米国クレジットスプレッド</h3>
-          <p>HY OAS・IG OAS・CDXをFRED公式データで表示。リスクメーターで市場の危険度を一目確認。</p>
-        </div>
-        <div class="sim-card-arrow">›</div>
-      </a>
-      <a href="gold.html" class="sim-card">
-        <div class="sim-card-accent" style="background:linear-gradient(135deg,#ffd700,#b8960c);"></div>
-        <div class="sim-card-body">
-          <span class="sim-card-tag" style="background:#fffbe6;color:#b8960c;">コモディティ</span>
-          <h3>金（ゴールド）フロー可視化</h3>
-          <p>国別中央銀行保有量・産金国ランキング・貿易フロー地図・金相場チャートと重要イベントを一画面で確認。</p>
-        </div>
-        <div class="sim-card-arrow">›</div>
-      </a>
-      <a href="oil.html" class="sim-card">
-        <div class="sim-card-accent" style="background:linear-gradient(135deg,#ffaa00,#ff6600);"></div>
-        <div class="sim-card-body">
-          <span class="sim-card-tag" style="background:#fff8e6;color:#b07000;">エネルギー</span>
-          <h3>原油フロー可視化</h3>
-          <p>世界の原油貿易フローを地図で表示。産油国トップ10・米国在庫・WTI価格チャートをタブで切り替え。</p>
-        </div>
-        <div class="sim-card-arrow">›</div>
-      </a>
-      <a href="cycle.html" class="sim-card">
-        <div class="sim-card-accent" style="background:#4488ff;"></div>
-        <div class="sim-card-body">
-          <span class="sim-card-tag" style="background:#e8eef8;color:#1a4fa0;">景気分析</span>
-          <h3>景気サイクル判定ツール</h3>
-          <p>AIが最新の経済指標を分析して景気フェーズを12段階で判定。GICS11セクターのローテーションも表示。</p>
-        </div>
-        <div class="sim-card-arrow">›</div>
-      </a>
-      <a href="sentiment-stock.html" class="sim-card">
-        <div class="sim-card-accent" style="background:linear-gradient(135deg,#4488ff,#aa66ff);"></div>
-        <div class="sim-card-body">
-          <span class="sim-card-tag" style="background:#f0ebfd;color:#5522aa;">銘柄分析</span>
-          <h3>銘柄別ミスターマーケット</h3>
-          <p>銘柄名を入力するとAIが最新ニュース・SNS・掲示板を分析して個別株の投資家心理をスコア化。強気・弱気材料も表示。</p>
-        </div>
-        <div class="sim-card-arrow">›</div>
-      </a>
-      <a href="sentiment.html" class="sim-card">
-        <div class="sim-card-accent" style="background:linear-gradient(135deg,#ff4455,#00cc66);"></div>
-        <div class="sim-card-body">
-          <span class="sim-card-tag" style="background:#fdf0eb;color:#b5451b;">市場心理</span>
-          <h3>ミスターマーケット</h3>
-          <p>AIが最新ニュース・SNSを分析して今日の投資家心理をスコア化。楽観・悲観の度合いをメーターで表示。</p>
-        </div>
-        <div class="sim-card-arrow">›</div>
-      </a>
-      <a href="heatmap.html" class="sim-card">
-        <div class="sim-card-accent" style="background:linear-gradient(135deg,#2d8a3e,#b52020);"></div>
-        <div class="sim-card-body">
-          <span class="sim-card-tag" style="background:#e6f9f0;color:#00804d;">決算分析</span>
-          <h3>決算ヒートマップ</h3>
-          <p>GICS11セクター別に決算の良し悪しをヒートマップで一目表示。売上予想比・営業利益予想比・決算サプライズを色で可視化。セクターローテーションの参考に。</p>
-        </div>
-        <div class="sim-card-arrow">›</div>
-      </a>
-      <a href="vix.html" class="sim-card">
-        <div class="sim-card-accent" style="background:#ff4455;"></div>
-        <div class="sim-card-body">
-          <span class="sim-card-tag" style="background:#fdf0eb;color:#b5451b;">市場心理</span>
-          <h3>VIX 恐怖指数チャート</h3>
-          <p>VIXのリアルタイムチャート＋MACD分析。デッドクロス×VIX30以上で買いのチャンスを自動判定。1ヶ月〜10年対応。</p>
-        </div>
-        <div class="sim-card-arrow">›</div>
-      </a>
+  <!-- 株式分析 -->
+  <div class="cat-section" data-cat="stock">
+    <div class="cat-title">📈 株式・投資分析</div>
+    <div class="cards-grid">
+      <a href="valuation.html" class="card"><div class="card-icon" style="background:linear-gradient(135deg,#aa55ff,#6622cc);">💎</div><div class="card-body"><div class="card-name">理論株価計算</div><div class="card-desc">DCF・PER・配当割引で理論株価を算出</div></div></a>
+      <a href="sentiment.html" class="card"><div class="card-icon" style="background:linear-gradient(135deg,#00cc66,#008844);">🎭</div><div class="card-body"><div class="card-name">ミスターマーケット</div><div class="card-desc">市場センチメント総合指標</div></div></a>
+      <a href="sentiment-stock.html" class="card"><div class="card-icon" style="background:linear-gradient(135deg,#44ffaa,#00cc66);">🔍</div><div class="card-body"><div class="card-name">銘柄別センチメント</div><div class="card-desc">個別銘柄の投資家心理を分析</div></div></a>
+      <a href="heatmap.html" class="card"><div class="card-icon" style="background:linear-gradient(135deg,#4488ff,#0044cc);">🗺️</div><div class="card-body"><div class="card-name">決算ヒートマップ</div><div class="card-desc">日本株の業種別・銘柄別騰落率</div></div></a>
+      <a href="canslim.html" class="card"><div class="card-icon" style="background:linear-gradient(135deg,#ffaa00,#cc7700);">📋</div><div class="card-body"><div class="card-name">CANSLIMチェック</div><div class="card-desc">成長株の7条件を自動スコアリング</div></div></a>
+      <a href="value.html" class="card"><div class="card-icon" style="background:linear-gradient(135deg,#00aaff,#0077cc);">⚖️</div><div class="card-body"><div class="card-name">バリュー投資判定</div><div class="card-desc">割安株をPER・PBR・配当で発掘</div></div></a>
+      <a href="company-sim.html" class="card"><div class="card-icon" style="background:linear-gradient(135deg,#ff6644,#cc3311);">🔮</div><div class="card-body"><div class="card-name">企業未来予測</div><div class="card-desc">AIが財務データから成長・危険度を分析</div></div></a>
     </div>
   </div>
 
-  <div class="ad-mid">
-    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
-    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  <!-- 個人ファイナンス -->
+  <div class="cat-section" data-cat="personal">
+    <div class="cat-title">🏦 個人ファイナンス</div>
+    <div class="cards-grid">
+      <a href="compound.html" class="card"><div class="card-icon" style="background:linear-gradient(135deg,#00cc88,#008855);">📈</div><div class="card-body"><div class="card-name">複利・住宅ローン</div><div class="card-desc">資産推移・ローン返済をシミュレーション</div></div></a>
+      <a href="kaigo.html" class="card"><div class="card-icon" style="background:linear-gradient(135deg,#ff9944,#cc6611);">👴</div><div class="card-body"><div class="card-name">介護費用シミュレーター</div><div class="card-desc">親の介護・老人ホーム費用を試算</div></div></a>
+      <a href="nisa-exit.html" class="card"><div class="card-icon" style="background:linear-gradient(135deg,#44cc88,#009955);">💰</div><div class="card-body"><div class="card-name">NISA出口戦略</div><div class="card-desc">積立NISAの最適な取り崩し計画</div></div></a>
+    </div>
   </div>
 
-  <!-- FAQ -->
-  <div class="card">
-    <h2>よくある質問</h2>
-    <div class="faq-item">
-      <p class="faq-q">Q. 入力したデータは保存・送信されますか？</p>
-      <p class="faq-a">A. いいえ。すべての計算はブラウザ上でのみ行われ、入力データが外部に送信されることは一切ありません。</p>
-    </div>
-    <div class="faq-item">
-      <p class="faq-q">Q. スマートフォンでも使えますか？</p>
-      <p class="faq-a">A. はい。スマートフォン・タブレット・PCどの端末でも対応しています。</p>
-    </div>
-    <div class="faq-item">
-      <p class="faq-q">Q. 利用料はかかりますか？</p>
-      <p class="faq-a">A. 無料でご利用いただけます。会員登録も不要です。</p>
+  <!-- ブログ -->
+  <div class="cat-section" data-cat="blog">
+    <div class="cat-title">📰 情報・ブログ</div>
+    <div class="cards-grid">
+      <a href="blog.html" class="card card-wide"><div class="card-icon" style="background:linear-gradient(135deg,#ff44aa,#cc0077);">✍️</div><div class="card-body"><div class="card-name">経済解説ブログ</div><div class="card-desc">ずんだもん＆めたんが経済・投資をわかりやすく解説。毎日自動更新。</div></div></a>
+      <a href="news.html" class="card card-wide"><div class="card-icon" style="background:linear-gradient(135deg,#4488ff,#0044cc);">📰</div><div class="card-body"><div class="card-name">週次ニュース解説</div><div class="card-desc">政治・経済・テクノロジー・国際の主要ニュースをAIが解説。</div></div></a>
     </div>
   </div>
 
@@ -347,6 +157,7 @@
   <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
   <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 </div>
+
 
 <footer>
   <p>© アズキぷらす | 株式投資・決算解説 YouTubeチャンネル</p>
@@ -365,6 +176,16 @@ async function loadYTStats() {
   } catch(e) {}
 }
 loadYTStats();
+</script>
+
+<script>
+function filterCat(cat) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('.cat-section').forEach(s => {
+    s.classList.toggle('hidden', cat !== 'all' && s.dataset.cat !== cat);
+  });
+}
 </script>
 </body>
 </html>
