@@ -107,10 +107,17 @@
     .risk-item.high{border-left-color:var(--red);}
     .risk-item.medium{border-left-color:var(--amber);}
     .risk-item.low{border-left-color:var(--blue);}
+    .opp-item{background:var(--s2);border-radius:8px;padding:10px 14px;display:flex;align-items:flex-start;gap:10px;border-left:3px solid var(--t3);}
+    .opp-item.high{border-left-color:var(--green);}
+    .opp-item.medium{border-left-color:#44ddaa;}
+    .opp-item.low{border-left-color:var(--blue);}
     .risk-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap;}
     .risk-badge-high{background:rgba(255,68,85,.2);color:var(--red);}
     .risk-badge-medium{background:rgba(255,170,0,.2);color:var(--amber);}
     .risk-badge-low{background:rgba(68,136,255,.2);color:var(--blue);}
+    .opp-badge-high{background:rgba(0,204,102,.2);color:var(--green);}
+    .opp-badge-medium{background:rgba(68,221,170,.2);color:#44ddaa;}
+    .opp-badge-low{background:rgba(68,136,255,.2);color:var(--blue);}
     .risk-title{font-size:12px;font-weight:700;margin-bottom:2px;}
     .risk-detail{font-size:11px;color:var(--t3);line-height:1.6;}
 
@@ -232,10 +239,18 @@
       <div style="font-size:11px;color:var(--t3);margin-top:8px;" id="r-div-basis"></div>
     </div>
 
-    <!-- リスク -->
+    <!-- リスク・機会 -->
     <div class="card">
-      <div class="section-title">現状のリスク評価</div>
-      <div class="risk-list" id="r-risks"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <div class="section-title">⚠️ リスク評価</div>
+          <div class="risk-list" id="r-risks"></div>
+        </div>
+        <div>
+          <div class="section-title">🚀 成長機会</div>
+          <div class="risk-list" id="r-opportunities"></div>
+        </div>
+      </div>
     </div>
 
     <div class="notice">
@@ -475,6 +490,18 @@ function render(d) {
         <div class="risk-detail">${r.detail||''}</div>
       </div>
     </div>`).join('');
+
+  // 機会
+  const opps = d.opportunities || [];
+  document.getElementById('r-opportunities').innerHTML = opps.length ? opps.map(o => `
+    <div class="opp-item ${o.level||''}">
+      <span class="risk-badge opp-badge-${o.level||'low'}">${o.level==='high'?'高':'medium'===o.level?'中':'低'}</span>
+      <div>
+        <div class="risk-title">${o.title||''}</div>
+        <div class="risk-detail">${o.detail||''}</div>
+      </div>
+    </div>`).join('')
+  : '<div style="font-size:12px;color:var(--t3);padding:8px;">データなし</div>';
 }
 
 // 主要銘柄データ（予測変換用）
