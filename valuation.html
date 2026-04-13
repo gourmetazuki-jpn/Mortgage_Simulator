@@ -322,6 +322,7 @@ async function analyze() {
 }
 
 function render(d) {
+  try {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('result').style.display = 'block';
 
@@ -340,7 +341,7 @@ function render(d) {
 
   // フェアバリュー
   // 有効な理論株価のみで加重平均を再計算
-  const validPrices = d.valuation ? Object.values(d.valuation)
+  const validPrices = (d.valuation && typeof d.valuation === 'object') ? Object.values(d.valuation)
     .map(v => v.price)
     .filter(p => p && p > 0 && (!cp || (p/cp > 0.1 && p/cp < 10))) : [];
   const fv = validPrices.length > 0
@@ -498,6 +499,12 @@ function render(d) {
       </div>
     </div>`).join('')
   : '<div style="font-size:12px;color:var(--t3);padding:8px;">データなし</div>';
+  } catch(renderErr) {
+    console.error('render error:', renderErr);
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('loading').innerHTML = '<span style="color:var(--red);">表示エラー: ' + renderErr.message + '</span>';
+    document.getElementById('result').style.display = 'none';
+  }
 }
 
 // 主要銘柄データ（予測変換用）
