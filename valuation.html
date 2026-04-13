@@ -342,6 +342,7 @@ function render(d) {
   // フェアバリュー
   // 有効な理論株価のみで加重平均を再計算
   const validPrices = (d.valuation && typeof d.valuation === 'object') ? Object.values(d.valuation)
+    .filter(v => v && typeof v === 'object')
     .map(v => v.price)
     .filter(p => p && p > 0 && (!cp || (p/cp > 0.1 && p/cp < 10))) : [];
   const fv = validPrices.length > 0
@@ -386,6 +387,7 @@ function render(d) {
   vg.innerHTML = (d.valuation ? valMethods : []).map(m => {
     const v = d.valuation?.[m.key];
     if (!v) return '';
+    if (!v || typeof v !== 'object') return '';
     const price = (v.price && v.price > 0) ? v.price : null; // 0は無効
     const diff = (cp && price) ? ((price - cp) / cp * 100) : null;
     const diffStr = diff !== null ? `<div class="val-diff ${diff>=0?'diff-up':'diff-down'}">${fmtPct(diff)}</div>` : '';
