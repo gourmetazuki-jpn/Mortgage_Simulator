@@ -310,7 +310,7 @@ async function analyze() {
       { cache: 'no-store' }
     );
     const data = await res.json();
-    if (data.error) throw new Error(data.error + (data.raw ? ' | ' + data.raw.slice(0,80) : ''));
+    if (data.error) throw new Error(data.error + (data.reason?' ['+data.reason+']':'') + (data.blockReason?' [block:'+data.blockReason+']':'') + (data.raw?' | '+data.raw.slice(0,60):''));
     render(data);
   } catch(e) {
     document.getElementById('loading').innerHTML =
