@@ -172,19 +172,15 @@
     </div>
 
     <div class="card">
-      <div class="section-title">銘柄指標</div>
+      <div class="section-title">アナリスト評価</div>
       <div class="indicator-grid">
         <div class="indicator-item">
-          <div class="indicator-label">株価トレンド</div>
-          <div class="indicator-value" id="s-trend">--</div>
+          <div class="indicator-label">レーティング</div>
+          <div class="indicator-value" id="s-rating">--</div>
         </div>
         <div class="indicator-item">
-          <div class="indicator-label">直近決算評価</div>
-          <div class="indicator-value" id="s-earnings">--</div>
-        </div>
-        <div class="indicator-item" style="grid-column:1/-1;">
-          <div class="indicator-label">主要材料</div>
-          <div class="indicator-value" id="s-main-factor" style="font-size:13px;">--</div>
+          <div class="indicator-label">目標株価</div>
+          <div class="indicator-value" id="s-target">--</div>
         </div>
       </div>
     </div>
@@ -204,9 +200,13 @@
     </div>
 
     <div class="card">
+      <div class="section-title">直近ニュース</div>
+      <div id="s-news" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+
+    <div class="card">
       <div class="section-title">AI総合コメント</div>
       <div class="summary-box" id="s-summary">--</div>
-      <div class="caution-box" id="s-caution" style="display:none;margin-top:10px;"></div>
     </div>
 
     <div class="ad-mid">
@@ -284,6 +284,11 @@ function getColor(score) {
   return '#ff4455';
 }
 
+// sentiment_score は -100〜100 → 0〜100 に正規化
+function normalizeScore(raw) {
+  return Math.min(100, Math.max(0, Math.round((raw + 100) / 2)));
+}
+
 function setNeedle(score) {
   const angle = (score / 100) * 180 - 90;
   document.getElementById('s-needle').style.transform = `rotate(${angle}deg)`;
@@ -293,7 +298,6 @@ async function run() {
   let input = document.getElementById('code-input').value.trim();
   if (!input) return;
 
-  // 企業名→コード変換
   let code = input, name = input;
   if (!/^\d{4,5}[A-Za-z]?$/.test(input) && allStocks.length > 0) {
     const lower = input.toLowerCase();
@@ -314,13 +318,16 @@ async function run() {
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 
-    const score = Math.min(100, Math.max(0, data.score || 50));
+    // sentiment_score: -100〜100 → 0〜100 に正規化
+    const rawScore = typeof data.sentiment_score === 'number' ? data.sentiment_score : 0;
+    const score = normalizeScore(rawScore);
     const color = getColor(score);
 
-    document.getElementById('stock-name-display').textContent = name !== code ? `${name}（${code}）` : code;
+    document.getElementById('stock-name-display').textContent =
+      (data.name && data.name !== code) ? `${data.name}（${code}）` : (name !== code ? `${name}（${code}）` : code);
     document.getElementById('s-score-num').textContent = score;
     document.getElementById('s-score-num').style.color = color;
-    document.getElementById('s-score-label').textContent = data.label || '中立';
+    document.getElementById('s-score-label').textContent = data.sentiment_label || '中立';
     document.getElementById('s-score-label').style.color = color;
     setTimeout(() => setNeedle(score), 300);
 
@@ -328,22 +335,50 @@ async function run() {
     const activeIdx = score < 20 ? 0 : score < 40 ? 1 : score < 60 ? 2 : score < 80 ? 3 : 4;
     arcs.forEach((id, i) => document.getElementById(id).setAttribute('opacity', i === activeIdx ? '1' : '0.2'));
 
-    const trendEl = document.getElementById('s-trend');
-    trendEl.textContent = data.stock_trend === '上昇トレンド' ? '📈 上昇トレンド' : data.stock_trend === '下落トレンド' ? '📉 下落トレンド' : '➡️ 横ばい';
-    trendEl.style.color = data.stock_trend === '上昇トレンド' ? '#00cc66' : data.stock_trend === '下落トレンド' ? '#ff4455' : '#ffaa00';
+    // アナリスト評価
+    const ratingEl = document.getElementById('s-rating');
+    const rating = data.analyst_rating;
+    ratingEl.textContent = rating || '--';
+    ratingEl.style.color = rating === 'Buy' ? '#00cc66' : rating === 'Sell' ? '#ff4455' : '#ffaa00';
 
-    const earningsEl = document.getElementById('s-earnings');
-    earningsEl.textContent = data.earnings_eval || '--';
-    earningsEl.style.color = data.earnings_eval === '好決算' ? '#00cc66' : data.earnings_eval === '悪決算' ? '#ff4455' : '#ffaa00';
+    const targetEl = document.getElementById('s-target');
+    targetEl.textContent = data.target_price ? `¥${data.target_price.toLocaleString()}` : '--';
+    targetEl.style.color = '#e8e8f4';
 
-    document.getElementById('s-main-factor').textContent = data.main_factor || '--';
-    document.getElementById('s-bull').textContent = data.bull_reason || '--';
-    document.getElementById('s-bear').textContent = data.bear_reason || '--';
+    // 強気・弱気材料（配列 → 箇条書き）
+    const bullEl = document.getElementById('s-bull');
+    const bulls = data.bullish_factors || [];
+    bullEl.innerHTML = bulls.length
+      ? bulls.map(f => `<div style="margin-bottom:4px;">・${f}</div>`).join('')
+      : '--';
+
+    const bearEl = document.getElementById('s-bear');
+    const bears = data.bearish_factors || [];
+    bearEl.innerHTML = bears.length
+      ? bears.map(f => `<div style="margin-bottom:4px;">・${f}</div>`).join('')
+      : '--';
+
+    // 直近ニュース
+    const newsEl = document.getElementById('s-news');
+    const news = data.recent_news || [];
+    if (news.length) {
+      newsEl.innerHTML = news.map(n => {
+        const impactColor = n.impact === 'positive' ? '#00cc66' : n.impact === 'negative' ? '#ff4455' : '#ffaa00';
+        const impactLabel = n.impact === 'positive' ? '▲' : n.impact === 'negative' ? '▼' : '―';
+        return `<div style="display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,.04);border-radius:8px;padding:10px 12px;">
+          <span style="color:${impactColor};font-weight:700;font-size:13px;min-width:16px;">${impactLabel}</span>
+          <div>
+            <div style="font-size:13px;line-height:1.5;">${n.headline}</div>
+            <div style="font-size:11px;color:#8888aa;margin-top:2px;">${n.date || ''}</div>
+          </div>
+        </div>`;
+      }).join('');
+    } else {
+      newsEl.innerHTML = '<div style="font-size:13px;color:#8888aa;">ニュースデータなし</div>';
+    }
+
+    // サマリー
     document.getElementById('s-summary').textContent = data.summary || '--';
-
-    const cautionEl = document.getElementById('s-caution');
-    if (data.caution) { cautionEl.textContent = '⚠️ ' + data.caution; cautionEl.style.display = 'block'; }
-    else { cautionEl.style.display = 'none'; }
 
     document.getElementById('result').style.display = 'flex';
     document.getElementById('result').style.flexDirection = 'column';
