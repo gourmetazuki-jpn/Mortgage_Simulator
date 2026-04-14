@@ -161,33 +161,36 @@
       <div class="section-title">市場指標</div>
       <div class="indicator-grid">
         <div class="indicator-item">
-          <div class="indicator-label">日経平均トレンド</div>
-          <div class="indicator-value" id="nikkei-trend">--</div>
+          <div class="indicator-label">VIX（恐怖指数）</div>
+          <div class="indicator-value" id="ind-vix">--</div>
+          <div class="indicator-sub" id="ind-vix-signal"></div>
         </div>
         <div class="indicator-item">
-          <div class="indicator-label">ドル円</div>
-          <div class="indicator-value" id="usdjpy">--</div>
+          <div class="indicator-label">プットコール比率</div>
+          <div class="indicator-value" id="ind-pcr">--</div>
+          <div class="indicator-sub" id="ind-pcr-signal"></div>
         </div>
-        <div class="indicator-item" style="grid-column:1/-1;">
-          <div class="indicator-label">主要材料</div>
-          <div class="indicator-value" id="main-factor" style="font-size:14px;">--</div>
+        <div class="indicator-item">
+          <div class="indicator-label">信用買い残</div>
+          <div class="indicator-value" id="ind-margin">--</div>
+          <div class="indicator-sub" id="ind-margin-signal"></div>
+        </div>
+        <div class="indicator-item">
+          <div class="indicator-label">外国人売買動向</div>
+          <div class="indicator-value" id="ind-foreign">--</div>
+          <div class="indicator-sub" id="ind-foreign-signal"></div>
         </div>
       </div>
     </div>
 
-    <!-- 強気・弱気材料 -->
+    <!-- 注目テーマ・リスク・注目点 -->
     <div class="card">
-      <div class="section-title">市場の声</div>
-      <div class="factors">
-        <div class="factor-bull">
-          <div class="factor-title" style="color:#00cc66;">🐂 強気材料</div>
-          <div class="factor-text" id="bull-reason">--</div>
-        </div>
-        <div class="factor-bear">
-          <div class="factor-title" style="color:#ff4455;">🐻 弱気材料</div>
-          <div class="factor-text" id="bear-reason">--</div>
-        </div>
-      </div>
+      <div class="section-title">マーケットテーマ</div>
+      <div id="market-themes" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;"></div>
+      <div class="section-title" style="margin-top:4px;">主なリスク</div>
+      <div id="key-risks" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;"></div>
+      <div class="section-title" style="margin-top:4px;">注目ポイント</div>
+      <div id="watch-points" style="display:flex;flex-direction:column;gap:6px;"></div>
     </div>
 
     <!-- AIサマリー -->
@@ -230,25 +233,36 @@
 const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
 
 function getColor(score) {
-  if (score >= 80) return '#00cc66';   // 極度の楽観
-  if (score >= 60) return '#66bb66';   // 楽観
-  if (score >= 40) return '#ffaa00';   // 中立
-  if (score >= 20) return '#cc5533';   // 悲観
-  return '#aa2233';                    // 極度の悲観
+  if (score >= 80) return '#00cc66';
+  if (score >= 60) return '#66bb66';
+  if (score >= 40) return '#ffaa00';
+  if (score >= 20) return '#cc5533';
+  return '#aa2233';
 }
 
 function getLabel(score) {
-  if (score >= 80) return '極度の楽観';  // 80〜100
-  if (score >= 60) return '楽観';        // 60〜79
-  if (score >= 40) return '中立';        // 40〜59
-  if (score >= 20) return '悲観';        // 20〜39
-  return '極度の悲観';                   // 0〜19
+  if (score >= 80) return '極度の楽観';
+  if (score >= 60) return '楽観';
+  if (score >= 40) return '中立';
+  if (score >= 20) return '悲観';
+  return '極度の悲観';
+}
+
+// overall_score は -100〜100 で返ってくるので 0〜100 にスケール変換
+function normalizeScore(raw) {
+  return Math.min(100, Math.max(0, Math.round((raw + 100) / 2)));
 }
 
 function setNeedle(score) {
-  // スコア0〜100を針の角度（-90度〜+90度）に変換
   const angle = (score / 100) * 180 - 90;
   document.getElementById('needle').style.transform = `rotate(${angle}deg)`;
+}
+
+function signalColor(signal) {
+  if (!signal) return '#8888aa';
+  if (['強気','安心','買越','増加'].includes(signal)) return '#00cc66';
+  if (['弱気','恐怖','売越','減少'].includes(signal)) return '#ff4455';
+  return '#ffaa00';
 }
 
 async function load() {
@@ -258,16 +272,19 @@ async function load() {
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 
-    const score = Math.min(100, Math.max(0, data.score || 50));
+    // overall_score: -100〜100 → 0〜100 に正規化
+    const rawScore = typeof data.overall_score === 'number' ? data.overall_score : 0;
+    const score = normalizeScore(rawScore);
     const color = getColor(score);
 
     // スコア表示
     document.getElementById('score-num').textContent = score;
     document.getElementById('score-num').style.color = color;
-    document.getElementById('score-label').textContent = getLabel(score);
+    // overall_labelがあればそちらを優先、なければスコアから導出
+    const label = data.overall_label || getLabel(score);
+    document.getElementById('score-label').textContent = label;
     document.getElementById('score-label').style.color = color;
 
-    // 針を動かす（少し遅延）
     setTimeout(() => setNeedle(score), 300);
 
     // アクティブなarcをハイライト
@@ -277,20 +294,67 @@ async function load() {
       document.getElementById(id).setAttribute('opacity', i === activeIdx ? '1' : '0.2');
     });
 
-    // 指標
-    const nikkeiEl = document.getElementById('nikkei-trend');
-    nikkeiEl.textContent = data.nikkei_trend === '上昇' ? '📈 上昇' : data.nikkei_trend === '下落' ? '📉 下落' : '➡️ 横ばい';
-    nikkeiEl.style.color = data.nikkei_trend === '上昇' ? '#00cc66' : data.nikkei_trend === '下落' ? '#ff4455' : '#ffaa00';
+    // indicators
+    const ind = data.indicators || {};
 
-    const usdEl = document.getElementById('usdjpy');
-    usdEl.textContent = data.usdjpy === '円安' ? '💴 円安' : data.usdjpy === '円高' ? '💴 円高' : '💴 中立';
-    usdEl.style.color = data.usdjpy === '円安' ? '#ff8844' : data.usdjpy === '円高' ? '#4488ff' : '#ffaa00';
+    const vixVal = ind.vix?.value != null ? ind.vix.value : '--';
+    const vixSig = ind.vix?.signal || '';
+    document.getElementById('ind-vix').textContent = vixVal !== '--' ? vixVal : '--';
+    document.getElementById('ind-vix').style.color = signalColor(vixSig);
+    document.getElementById('ind-vix-signal').textContent = vixSig;
+    document.getElementById('ind-vix-signal').style.color = signalColor(vixSig);
 
-    document.getElementById('main-factor').textContent = data.main_factor || '--';
-    document.getElementById('bull-reason').textContent = data.bull_reason || '--';
-    document.getElementById('bear-reason').textContent = data.bear_reason || '--';
+    const pcrVal = ind.put_call_ratio?.value != null ? ind.put_call_ratio.value : '--';
+    const pcrSig = ind.put_call_ratio?.signal || '';
+    document.getElementById('ind-pcr').textContent = pcrVal !== '--' ? pcrVal : '--';
+    document.getElementById('ind-pcr').style.color = signalColor(pcrSig);
+    document.getElementById('ind-pcr-signal').textContent = pcrSig;
+    document.getElementById('ind-pcr-signal').style.color = signalColor(pcrSig);
+
+    const marginTrend = ind.margin_buying?.trend || '--';
+    const marginSig = ind.margin_buying?.signal || '';
+    document.getElementById('ind-margin').textContent = marginTrend;
+    document.getElementById('ind-margin').style.color = signalColor(marginSig);
+    document.getElementById('ind-margin-signal').textContent = marginSig;
+    document.getElementById('ind-margin-signal').style.color = signalColor(marginSig);
+
+    const foreignTrend = ind.foreign_buying?.trend || '--';
+    const foreignSig = ind.foreign_buying?.signal || '';
+    document.getElementById('ind-foreign').textContent = foreignTrend;
+    document.getElementById('ind-foreign').style.color = signalColor(foreignSig);
+    document.getElementById('ind-foreign-signal').textContent = foreignSig;
+    document.getElementById('ind-foreign-signal').style.color = signalColor(foreignSig);
+
+    // market_themes
+    const themesEl = document.getElementById('market-themes');
+    (data.market_themes || []).forEach(t => {
+      const span = document.createElement('span');
+      span.textContent = t;
+      span.style.cssText = 'background:rgba(68,136,255,.15);border:1px solid rgba(68,136,255,.3);border-radius:20px;padding:4px 12px;font-size:12px;color:#4488ff;';
+      themesEl.appendChild(span);
+    });
+
+    // key_risks
+    const risksEl = document.getElementById('key-risks');
+    (data.key_risks || []).forEach(r => {
+      const div = document.createElement('div');
+      div.textContent = '⚠️ ' + r;
+      div.style.cssText = 'font-size:13px;color:#ff8844;background:rgba(255,68,85,.07);border-radius:6px;padding:6px 10px;';
+      risksEl.appendChild(div);
+    });
+
+    // watch_points
+    const watchEl = document.getElementById('watch-points');
+    (data.watch_points || []).forEach(w => {
+      const div = document.createElement('div');
+      div.textContent = '👀 ' + w;
+      div.style.cssText = 'font-size:13px;color:#e8e8f4;background:rgba(255,255,255,.05);border-radius:6px;padding:6px 10px;';
+      watchEl.appendChild(div);
+    });
+
+    // サマリー
     document.getElementById('summary').textContent = data.summary || '--';
-    document.getElementById('meter-updated').textContent = `最終更新: ${data.updated || '—'}（1時間ごとに更新）`;
+    document.getElementById('meter-updated').textContent = `最終更新: ${data.date || '—'}（1日1回更新）`;
 
     document.getElementById('loading').style.display = 'none';
     const result = document.getElementById('result');
