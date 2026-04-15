@@ -446,7 +446,8 @@ async function loadTab(tab) {
     if (tab==='production') renderProduction(data);
     if (tab==='flow') renderFlow(data);
   } catch(e) {
-    document.getElementById(tab+'-loading').textContent = 'データ取得エラー: ' + e.message;
+    const el = document.getElementById(tab+'-loading');
+    if (el) el.innerHTML = `<div style="color:#ff4455;font-size:12px;padding:8px;">⚠️ エラー: ${e.message}<br><span style="color:#8888aa;font-size:11px;">しばらく待ってから再度お試しください</span></div>`;
   }
 }
 
@@ -468,7 +469,7 @@ async function loadPrice(period) {
     if (data.error) throw new Error(data.error);
     renderPrice(data);
   } catch(e) {
-    document.getElementById('price-loading').textContent = 'エラー: ' + e.message;
+    document.getElementById('price-loading').innerHTML = `<div style="color:#ff4455;font-size:12px;">⚠️ エラー: ${e.message}</div>`;
   }
 }
 
