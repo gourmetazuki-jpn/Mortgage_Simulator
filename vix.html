@@ -139,13 +139,12 @@
   <div class="card">
     <div class="section-title">VIX チャート</div>
     <div class="period-tabs">
-      <button class="period-tab" onclick="loadData('1mo')" data-p="1mo">1ヶ月</button>
-      <button class="period-tab active" onclick="loadData('3mo')" data-p="3mo">3ヶ月</button>
-      <button class="period-tab" onclick="loadData('6mo')" data-p="6mo">6ヶ月</button>
+      <button class="period-tab" onclick="loadData('1m')" data-p="1m">1ヶ月</button>
+      <button class="period-tab active" onclick="loadData('3m')" data-p="3m">3ヶ月</button>
+      <button class="period-tab" onclick="loadData('6m')" data-p="6m">6ヶ月</button>
       <button class="period-tab" onclick="loadData('1y')" data-p="1y">1年</button>
-      <button class="period-tab" onclick="loadData('2y')" data-p="2y">2年</button>
+      <button class="period-tab" onclick="loadData('3y')" data-p="3y">3年</button>
       <button class="period-tab" onclick="loadData('5y')" data-p="5y">5年</button>
-      <button class="period-tab" onclick="loadData('10y')" data-p="10y">10年</button>
     </div>
     <div class="chart-wrap">
       <canvas id="vix-chart"></canvas>
@@ -232,7 +231,7 @@ function calcEMA(data, period) {
 
 // MACD計算
 function calcMACD(prices) {
-  const closes = prices.map(p => p.close);
+  const closes = prices.map(p => p.value);
   const ema12 = calcEMA(closes, 12);
   const ema26 = calcEMA(closes, 26);
   const macdLine = ema12.map((v, i) => v !== null && ema26[i] !== null ? Math.round((v - ema26[i]) * 100) / 100 : null);
@@ -256,7 +255,7 @@ function fearLevel(vix) {
   return               { label:'😱 パニック',   color:'#ff4455', pct: Math.min(vix/50*100, 100) };
 }
 
-async function loadData(period = '3mo') {
+async function loadData(period = '3m') {
   // 期間タブ更新
   document.querySelectorAll('.period-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.p === period);
@@ -271,9 +270,9 @@ async function loadData(period = '3mo') {
     const prices = data.prices;
     if (!prices || prices.length === 0) throw new Error('データなし');
 
-    // 現在値更新
-    const latest = prices[prices.length - 1].close;
-    const prev   = prices[prices.length - 2]?.close;
+    // 現在値更新（value フィールドを使用）
+    const latest = prices[prices.length - 1].value;
+    const prev   = prices[prices.length - 2]?.value;
     const change = prev ? Math.round((latest - prev) * 100) / 100 : 0;
     const changePct = prev ? Math.round((change / prev) * 10000) / 100 : 0;
 
@@ -293,7 +292,7 @@ async function loadData(period = '3mo') {
     badge.style.border = `1px solid ${fl.color}`;
 
     const labels = prices.map(p => p.date);
-    const closes = prices.map(p => p.close);
+    const closes = prices.map(p => p.value);
 
     // VIXチャート
     const vixCtx = document.getElementById('vix-chart').getContext('2d');
@@ -467,7 +466,7 @@ async function loadData(period = '3mo') {
 }
 
 // 初期ロード
-loadData('3mo');
+loadData('3m');
 </script>
 </body>
 </html>
