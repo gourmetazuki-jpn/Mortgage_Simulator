@@ -270,10 +270,15 @@ function switchTab(tab) {
 async function fetchGold(type, extra='') {
   const dayKey = new Date().toISOString().split('T')[0];
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 55000); // 55秒タイムアウト
+  const timer = setTimeout(() => controller.abort(), 25000); // 25秒でタイムアウト
+  const url = `${WORKER}/gold?type=${type}${extra}&_=${dayKey}`;
   try {
-    const res = await fetch(`${WORKER}/gold?type=${type}${extra}&_=${dayKey}-${type}${extra.replace(/[^a-z0-9]/gi,'')}`, { signal: controller.signal });
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
+  } catch(e) {
+    if (e.name === 'AbortError') throw new Error('タイムアウト（25秒）- Workerの処理に時間がかかっています');
+    throw e;
   } finally {
     clearTimeout(timer);
   }
@@ -444,16 +449,30 @@ function sortProduction(key) {
 
 async function loadTab(tab) {
   loaded[tab] = true;
+  const loadingEl = document.getElementById(tab+'-loading');
+  const start = Date.now();
+  const ticker = setInterval(() => {
+    const s = Math.floor((Date.now()-start)/1000);
+    if (loadingEl) loadingEl.innerHTML = `<div class="spinner"></div>データ取得中... ${s}秒`;
+  }, 1000);
   try {
     const data = await fetchGold(tab, tab==='price'?`&period=${currentPeriod}`:'');
+    clearInterval(ticker);
     if (data.error) throw new Error(data.error);
     if (tab==='price') renderPrice(data);
     if (tab==='holdings') renderHoldings(data);
     if (tab==='production') renderProduction(data);
     if (tab==='flow') renderFlow(data);
   } catch(e) {
-    const el = document.getElementById(tab+'-loading');
-    if (el) el.innerHTML = `<div style="color:#ff4455;font-size:12px;padding:8px;">⚠️ エラー: ${e.message}<br><span style="color:#8888aa;font-size:11px;">しばらく待ってから再度お試しください</span></div>`;
+    clearInterval(ticker);
+    const dayKey = new Date().toISOString().split('T')[0];
+    const workerUrl = `${WORKER}/gold?type=${tab}${tab==='price'?`&period=${currentPeriod}`:''}&_=${dayKey}`;
+    if (loadingEl) loadingEl.innerHTML = `
+      <div style="color:#ff4455;font-size:12px;padding:8px;line-height:2;">
+        ⚠️ エラー: ${e.message}<br>
+        <button onclick="loaded['${tab}']=false;loadTab('${tab}')" style="margin-top:8px;padding:4px 12px;background:#4488ff;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">再試行</button>
+        <a href="${workerUrl}" target="_blank" style="margin-left:8px;font-size:11px;color:#8888aa;">Workerを直接確認</a>
+      </div>`;
   }
 }
 
