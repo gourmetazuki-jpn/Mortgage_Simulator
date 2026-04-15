@@ -335,7 +335,7 @@ function toggleOilMACD() {
 
 function drawOilMACD() {
   const values = latestPrices.map(d => d.value);
-  const labels = latestPrices.map(d => d.period);
+  const labels = latestPrices.map(d => d.date);
   const { macdLine, signal, hist } = calcMACD(values);
   const ctx = document.getElementById('oil-macd-chart')?.getContext('2d');
   if (!ctx) return;
@@ -394,11 +394,24 @@ function renderFlow(data) {
   document.getElementById('map').style.display = 'block';
   document.getElementById('flow-legend').style.display = 'block';
 
-  // Leaflet地図初期化
-  // AI推定の期間をタイトルに表示
-  if (data.period) {
-    document.getElementById('flow-ai-note').textContent = `AIによる推定データ（${data.period}・参考値）`;
+  if (data.updated) {
+    document.getElementById('flow-ai-note').textContent = `AIによる推定データ（${data.updated}・参考値）`;
   }
+
+  // workerは座標を返さないので国名→座標の辞書で補完
+  const COORDS = {
+    'Saudi Arabia':[24,45],'UAE':[24,54],'Iraq':[33,44],'Iran':[32,53],
+    'Kuwait':[29.5,47.5],'Russia':[60,90],'United States':[38,-97],'USA':[38,-97],
+    'Canada':[56,-106],'Mexico':[23,-102],'Brazil':[10,-55],'Venezuela':[8,-66],
+    'Libya':[27,18],'Nigeria':[10,8],'Angola':[-12,18],'Algeria':[28,3],
+    'China':[35,105],'India':[20,77],'Japan':[36,138],'South Korea':[37,128],
+    'Germany':[51,10],'France':[46,2],'Netherlands':[52,5],'Italy':[43,12],
+    'United Kingdom':[51.5,-0.1],'Spain':[40,-4],'Turkey':[39,35],
+    'Indonesia':[5,120],'Singapore':[1.4,103.8],'Thailand':[15,101],
+    'Australia':[25,134],'Kazakhstan':[48,68],'Norway':[60,10],
+    'Colombia':[4,-74],'Argentina':[34,-64],'Ecuador':[-2,-78],
+    'Europe':[50,10],'Asia':[35,100],'Southeast Asia':[10,108],
+  };
 
   map = L.map('map', { center: [30, 20], zoom: 2, zoomControl: true });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -406,50 +419,51 @@ function renderFlow(data) {
   }).addTo(map);
 
   const flows = data.flows || [];
-  const maxVol = Math.max(...flows.map(f => f.volume || 0));
+  const maxVol = Math.max(...flows.map(f => f.volume || 0), 1);
 
   flows.forEach(flow => {
-    if (!flow.fromLat || !flow.toLat) return;
+    const fromCoords = COORDS[flow.from];
+    const toCoords   = COORDS[flow.to];
+    if (!fromCoords || !toCoords) return;
+
     const weight = Math.max(1, Math.round((flow.volume / maxVol) * 8));
     const opacity = 0.4 + (flow.volume / maxVol) * 0.5;
     const color = flow.volume > maxVol * 0.6 ? '#ffaa00' : flow.volume > maxVol * 0.3 ? '#ff8844' : '#4488ff';
 
-    // 曲線矢印
-    const from = L.latLng(flow.fromLat, flow.fromLng);
-    const to = L.latLng(flow.toLat, flow.toLng);
-    const midLat = (flow.fromLat + flow.toLat) / 2 + 10;
-    const midLng = (flow.fromLng + flow.toLng) / 2;
+    const midLat = (fromCoords[0] + toCoords[0]) / 2 + 10;
+    const midLng = (fromCoords[1] + toCoords[1]) / 2;
 
-    const line = L.polyline([[flow.fromLat, flow.fromLng],[midLat, midLng],[flow.toLat, flow.toLng]], {
+    const line = L.polyline([fromCoords,[midLat,midLng],toCoords], {
       color, weight, opacity, smoothFactor: 1,
     }).addTo(map);
 
+    const fromName = flow.from_ja || flow.from;
+    const toName   = flow.to_ja   || flow.to;
+    const volDisp  = (flow.volume * 100).toFixed(0); // Mb/d → 万bbl/日に変換
     line.bindTooltip(
-      `<div class="flow-tooltip">${flow.from} → ${flow.to}<br>${flow.volume.toLocaleString()} 万バレル/日</div>`,
-      { sticky: true, className: '' }
+      `<div class="flow-tooltip">${fromName} → ${toName}<br>${volDisp} 万バレル/日</div>`,
+      { sticky: true }
     );
 
-    // 到着点マーカー
-    L.circleMarker([flow.toLat, flow.toLng], { radius: 5, color, fillColor: color, fillOpacity: 0.8, weight: 1 }).addTo(map);
-    L.circleMarker([flow.fromLat, flow.fromLng], { radius: 4, color: '#fff', fillColor: '#fff', fillOpacity: 0.6, weight: 1 }).addTo(map);
+    L.circleMarker(toCoords,   {radius:5,color,fillColor:color,fillOpacity:.8,weight:1}).addTo(map);
+    L.circleMarker(fromCoords, {radius:4,color:'#fff',fillColor:'#fff',fillOpacity:.6,weight:1}).addTo(map);
   });
 
   if (data.summary) {
-    const periodNote = data.period ? `${data.period}推定` : 'AI推定';
-    document.getElementById('flow-summary').innerHTML = `<strong style="color:var(--amber);">📰 今日の原油市場トピック</strong><br>${data.summary}<br><span style="font-size:10px;color:var(--t3);">※貿易フローは${periodNote}データ（参考値）</span>`;
+    document.getElementById('flow-summary').innerHTML = `<strong style="color:var(--amber);">📰 今日の原油市場トピック</strong><br>${data.summary}`;
     document.getElementById('flow-summary').style.display = 'block';
   }
 
-  // 流通ルートランキング
+  // 流通ルートランキング（volume単位はMb/d → 表示は万bbl/日）
   const sorted = [...flows].sort((a,b) => (b.volume||0) - (a.volume||0));
   const maxVol2 = sorted[0]?.volume || 1;
   const colors2 = ['#ffd700','#c0c0c0','#cd7f32'];
   document.getElementById('flow-rank-list').innerHTML = sorted.map((f,i) => `
     <div class="rank-item">
       <span class="rank-num" style="color:${colors2[i]||'var(--t3)'};">${i+1}</span>
-      <span class="rank-country">${f.from} → ${f.to}</span>
-      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${f.volume/maxVol2*100}%;background:var(--amber);"></div></div>
-      <span class="rank-val">${(f.volume||0).toLocaleString()} 万bbl/日</span>
+      <span class="rank-country">${f.from_ja||f.from} → ${f.to_ja||f.to}</span>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${(f.volume/maxVol2*100).toFixed(1)}%;background:var(--amber);"></div></div>
+      <span class="rank-val">${((f.volume||0)*100).toFixed(0)} 万bbl/日</span>
     </div>
   `).join('');
   document.getElementById('flow-ranking').style.display = 'block';
@@ -460,55 +474,59 @@ function renderProduction(data) {
   const list = document.getElementById('production-list');
   list.style.display = 'block';
   document.getElementById('production-legend').style.display = 'block';
-  const items = data.data || [];
+
+  // workerはdata.countriesで返す
+  const items = data.countries || [];
   const maxCons = Math.max(...items.map(d => d.consumption || 0), 1);
 
   list.innerHTML = items.map((item, i) => {
-    const prodW = (item.production / maxCons * 100).toFixed(1);
-    const consW = (item.consumption / maxCons * 100).toFixed(1);
-    const impW  = (item.imports / maxCons * 100).toFixed(1);
-    const selfColor = item.selfSufficiency >= 100 ? '#00cc66' : item.selfSufficiency >= 50 ? '#ffaa00' : '#ff4455';
+    const prod = item.production || 0;
+    const cons = item.consumption || 0;
+    // workerはimport（importsではない）
+    const imp  = item.import || 0;
+    // 自給率を計算で導出
+    const selfSuff = cons > 0 ? Math.round(prod / cons * 100) : (prod > 0 ? 100 : 0);
+    const selfColor = selfSuff >= 100 ? '#00cc66' : selfSuff >= 50 ? '#ffaa00' : '#ff4455';
+    const prodW = (prod / maxCons * 100).toFixed(1);
+    const consW = (cons / maxCons * 100).toFixed(1);
     return `
       <div class="compare-item">
         <div class="compare-country">
           <span style="font-size:16px;">${getFlagEmoji(item.country)}</span>
-          <span>${item.country}</span>
-          <span class="compare-self" style="background:${selfColor}22;color:${selfColor};">自給率 ${item.selfSufficiency}%</span>
+          <span>${item.country_ja || item.country}</span>
+          ${cons > 0 ? `<span class="compare-self" style="background:${selfColor}22;color:${selfColor};">自給率 ${selfSuff}%</span>` : ''}
         </div>
         <div class="compare-row">
           <span class="compare-label">生産量</span>
           <div class="compare-bar-wrap"><div class="compare-bar" style="width:${prodW}%;background:#ffaa00;"></div></div>
-          <span class="compare-val" style="color:#ffaa00;">${item.production.toLocaleString()}</span>
+          <span class="compare-val" style="color:#ffaa00;">${prod.toFixed(1)}</span>
         </div>
-        ${item.consAvailable ? `
+        ${cons > 0 ? `
         <div class="compare-row">
           <span class="compare-label">消費量</span>
           <div class="compare-bar-wrap"><div class="compare-bar" style="width:${consW}%;background:#4488ff;"></div></div>
-          <span class="compare-val" style="color:#4488ff;">${item.consumption.toLocaleString()}</span>
+          <span class="compare-val" style="color:#4488ff;">${cons.toFixed(1)}</span>
         </div>
-        ${item.imports != null && item.imports > 100 ? `
+        ${imp > 0.1 ? `
         <div class="compare-row">
           <span class="compare-label">輸入量</span>
-          <div class="compare-bar-wrap"><div class="compare-bar" style="width:${Math.min(Math.abs(item.imports)/maxCons*100,100).toFixed(1)}%;background:#ff4455;"></div></div>
-          <span class="compare-val" style="color:#ff4455;">${item.imports.toLocaleString()}</span>
-        </div>` : item.imports != null && item.imports < -100 ? `
+          <div class="compare-bar-wrap"><div class="compare-bar" style="width:${Math.min(imp/maxCons*100,100).toFixed(1)}%;background:#ff4455;"></div></div>
+          <span class="compare-val" style="color:#ff4455;">${imp.toFixed(1)}</span>
+        </div>` : imp < -0.1 ? `
         <div class="compare-row">
           <span class="compare-label">輸出超過</span>
-          <div class="compare-bar-wrap"><div class="compare-bar" style="width:${Math.min(Math.abs(item.imports)/maxCons*100,100).toFixed(1)}%;background:#00cc66;"></div></div>
-          <span class="compare-val" style="color:#00cc66;">+${Math.abs(item.imports).toLocaleString()}</span>
-        </div>` : item.imports == null ? `
-        <div style="font-size:11px;color:var(--t3);margin-top:2px;">輸入量データなし</div>
-        ` : ''}
+          <div class="compare-bar-wrap"><div class="compare-bar" style="width:${Math.min(Math.abs(imp)/maxCons*100,100).toFixed(1)}%;background:#00cc66;"></div></div>
+          <span class="compare-val" style="color:#00cc66;">+${Math.abs(imp).toFixed(1)}</span>
+        </div>` : ''}
         ` : '<div style="font-size:11px;color:var(--t3);margin-top:4px;">消費量データなし</div>'}
       </div>
     `;
   }).join('');
 
-  const prodPeriod = items[0]?.period ? items[0].period.split('-')[0]+'年' : '';
-  const consPeriod = data.consPeriod || '';
-  const periodText = prodPeriod && consPeriod 
-    ? `⏱ 生産量: ${prodPeriod}（EIA公式）　消費量・輸入量: ${consPeriod}（AI推定・参考値）`
-    : prodPeriod ? `⏱ データ期間: ${prodPeriod}（EIA公式）` : '';
+  const usLatest = (data.usProduction||[])[0];
+  const periodText = usLatest
+    ? `⏱ 米国生産量: ${usLatest.period}（EIA公式）　その他: AI推定（参考値）`
+    : '⏱ データ: AI推定（参考値）';
   document.getElementById('production-period').textContent = periodText;
 }
 
@@ -528,47 +546,41 @@ function renderStocks(data) {
   document.getElementById('stocks-loading').style.display = 'none';
   document.getElementById('stocks-content').style.display = 'block';
 
-  const usStocks = data.usStocks || [];
-  const prices = data.prices || [];
-  const cs = data.countryStocks || {};
+  // workerが返すフィールド:
+  //   inventory[] → {date, value}   米国週次在庫（desc順）
+  //   wti[]       → {date, value}   WTI価格（desc順）
+  //   countries[] → {country, country_ja, spr, days, flag}  国別SPR
+  //   summary     → 文字列
+  const inventory = data.inventory || [];
+  const wti       = data.wti       || [];
+  const countries = data.countries || [];
 
-  // 国別備蓄ランキング
-  const countries = cs.countries || [];
-  const maxStock = Math.max(...countries.map(c => c.stock||0), 1);
-  const changeIcon = t => t==='増加'?'<span class="change-up">▲</span>':t==='減少'?'<span class="change-down">▼</span>':'<span class="change-flat">─</span>';
+  // 国別備蓄ランキング（sprフィールド）
+  const maxSpr = Math.max(...countries.map(c => c.spr||0), 1);
   document.getElementById('country-stocks-list').innerHTML = countries.map((c,i) => `
     <div class="rank-item">
       <span class="rank-num" style="color:${['#ffd700','#c0c0c0','#cd7f32'][i]||'var(--t3)'};">${i+1}</span>
       <span style="font-size:16px;">${c.flag||'🛢️'}</span>
-      <span class="rank-country">${c.country}<span class="stock-type">${c.type||''}</span></span>
-      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${(c.stock||0)/maxStock*100}%;background:var(--amber);"></div></div>
-      <span class="rank-val">${changeIcon(c.change)} ${(c.stock||0).toLocaleString()}M bbl</span>
+      <span class="rank-country">${c.country_ja||c.country}<span class="stock-type">${c.days ? `（${c.days}日分）` : ''}</span></span>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${((c.spr||0)/maxSpr*100).toFixed(1)}%;background:var(--amber);"></div></div>
+      <span class="rank-val">${(c.spr||0).toLocaleString()} Mb</span>
     </div>
   `).join('');
-  // 国別備蓄のAI推定期間を表示
-  if (cs.period) {
-    document.getElementById('stocks-ai-note').textContent = `AIによる推定データ（${cs.period}・参考値）`;
+
+  document.getElementById('stocks-ai-note').textContent = 'AIによる推定データ（参考値）';
+
+  // EIAはdesc順で返すので[0]が最新
+  if (inventory.length > 0) {
+    document.getElementById('stocks-period').textContent = `⏱ 米国在庫データ: ${inventory[0].date}（EIA公式）`;
+    document.getElementById('current-stock').textContent = (inventory[0].value / 1000).toFixed(0) + '万';
+  }
+  if (data.summary) {
+    document.getElementById('stocks-summary').innerHTML = `<strong style="color:var(--amber);">📰 今日の備蓄市場トピック</strong><br>${data.summary}`;
   }
 
-  // 米国在庫の最新週を期間として表示
-  if (usStocks.length > 0) {
-    const latestPeriod = usStocks[usStocks.length-1].period; // 例: "2025-09-06"
-    const d = new Date(latestPeriod);
-    const periodLabel = isNaN(d) ? latestPeriod : `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日週`;
-    document.getElementById('stocks-period').textContent = `⏱ 米国在庫データ: ${periodLabel}（EIA公式）`;
-  } else if (cs.period) {
-    document.getElementById('stocks-period').textContent = `⏱ データ期間: ${cs.period}`;
-  }
-  if (cs.summary) {
-    const csPeriod = cs.period ? `${cs.period}推定` : 'AI推定';
-    document.getElementById('stocks-summary').innerHTML = `<strong style="color:var(--amber);">📰 今日の備蓄市場トピック</strong><br>${cs.summary}<br><span style="font-size:10px;color:var(--t3);">※国別備蓄量は${csPeriod}データ（参考値）</span>`;
-  }
-
-  // 米国最新在庫
-  if (usStocks.length > 0) {
-    const latest = usStocks[usStocks.length-1];
-    document.getElementById('current-stock').textContent = (latest.value/1000).toFixed(0) + '万';
-  }
+  // チャート描画は昇順で（EIAはdesc順なのでreverseする）
+  const invAsc = [...inventory].reverse();
+  const wtiAsc = [...wti].reverse();
 
   // 在庫チャート
   const sCtx = document.getElementById('stock-chart').getContext('2d');
@@ -576,8 +588,8 @@ function renderStocks(data) {
   stockChart = new Chart(sCtx, {
     type: 'line',
     data: {
-      labels: usStocks.map(d => d.period),
-      datasets: [{ label: '在庫(千バレル)', data: usStocks.map(d => d.value), borderColor: '#ffaa00', backgroundColor: 'rgba(255,170,0,.1)', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }]
+      labels: invAsc.map(d => d.date),
+      datasets: [{ label: '在庫(千バレル)', data: invAsc.map(d => d.value), borderColor: '#ffaa00', backgroundColor: 'rgba(255,170,0,.1)', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }]
     },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
       scales: { x: { ticks: { color:'#444466', maxTicksLimit: 6, maxRotation: 0 }, grid: { color:'rgba(255,255,255,.04)' } },
@@ -585,7 +597,7 @@ function renderStocks(data) {
   });
 
   // WTI価格データを保存（MACD用）
-  latestPrices = prices;
+  latestPrices = wtiAsc;
 
   // WTIチャート
   const pCtx = document.getElementById('price-chart').getContext('2d');
@@ -593,8 +605,8 @@ function renderStocks(data) {
   priceChart = new Chart(pCtx, {
     type: 'line',
     data: {
-      labels: prices.map(d => d.period),
-      datasets: [{ label: 'WTI($)', data: prices.map(d => d.value), borderColor: '#4488ff', backgroundColor: 'rgba(68,136,255,.1)', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }]
+      labels: wtiAsc.map(d => d.date),
+      datasets: [{ label: 'WTI($)', data: wtiAsc.map(d => d.value), borderColor: '#4488ff', backgroundColor: 'rgba(68,136,255,.1)', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 }]
     },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
       scales: { x: { ticks: { color:'#444466', maxTicksLimit: 6, maxRotation: 0 }, grid: { color:'rgba(255,255,255,.04)' } },
