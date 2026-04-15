@@ -269,8 +269,14 @@ function switchTab(tab) {
 
 async function fetchGold(type, extra='') {
   const dayKey = new Date().toISOString().split('T')[0];
-  const res = await fetch(`${WORKER}/gold?type=${type}${extra}&_=${dayKey}-${type}${extra.replace(/[^a-z0-9]/gi,'')}`, { cache: 'no-store' });
-  return res.json();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 55000); // 55秒タイムアウト
+  try {
+    const res = await fetch(`${WORKER}/gold?type=${type}${extra}&_=${dayKey}-${type}${extra.replace(/[^a-z0-9]/gi,'')}`, { signal: controller.signal });
+    return res.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function toggleOverlay() {
@@ -281,7 +287,7 @@ async function toggleOverlay() {
     btn.textContent = '🏦 読み込み中...';
     try {
       const dayKey = new Date().toISOString().split('T')[0];
-      const res = await fetch(`${WORKER}/gold?type=time_series&_=${dayKey}`, { cache: 'no-store' });
+      const res = await fetch(`${WORKER}/gold?type=time_series&_=${dayKey}`);
       timeSeriesData = await res.json();
     } catch(e) { overlayEnabled = false; btn.classList.remove('active'); return; }
   }
@@ -293,7 +299,7 @@ async function loadTimeSeries() {
   if (timeSeriesData) { renderTimeSeries(timeSeriesData); return; }
   try {
     const dayKey = new Date().toISOString().split('T')[0];
-    const res = await fetch(`${WORKER}/gold?type=time_series&_=${dayKey}`, { cache: 'no-store' });
+    const res = await fetch(`${WORKER}/gold?type=time_series&_=${dayKey}`);
     timeSeriesData = await res.json();
     renderTimeSeries(timeSeriesData);
   } catch(e) {
@@ -464,7 +470,7 @@ async function loadPrice(period) {
   try {
     // 期間ごとに異なるキャッシュキーで取得（短期→短期ニュース、長期→長期ニュース）
     const dayKey = new Date().toISOString().split('T')[0];
-    const res = await fetch(`${WORKER}/gold?type=price&period=${period}&_=${dayKey}-${period}`, { cache: 'no-store' });
+    const res = await fetch(`${WORKER}/gold?type=price&period=${period}&_=${dayKey}-${period}`);
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     renderPrice(data);
