@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body>
+<p id="p1">テスト開始前</p>
+<script>
+const el = document.getElementById('p1');
+el.textContent = 'JS動作OK - fetch開始中...';
+
+fetch('https://anthropic-proxy.gourmetazuki.workers.dev/gold?type=price&period=1y')
+  .then(r => r.text())
+  .then(t => { el.textContent = '成功: ' + t.slice(0, 80); })
+  .catch(e => { el.textContent = 'エラー: ' + e.name + ' / ' + e.message; });
+</script>
+</body>
+</html>
