@@ -143,9 +143,6 @@
         <div class="section-title">金価格チャート（USD/oz）</div>
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
           <div class="period-tabs" style="margin-bottom:0;">
-            <button class="period-tab" onclick="loadPrice('1m')">1ヶ月</button>
-            <button class="period-tab" onclick="loadPrice('3m')">3ヶ月</button>
-            <button class="period-tab" onclick="loadPrice('6m')">6ヶ月</button>
             <button class="period-tab" onclick="loadPrice('1y')">1年</button>
             <button class="period-tab" onclick="loadPrice('3y')">3年</button>
             <button class="period-tab" onclick="loadPrice('5y')">5年</button>
@@ -310,7 +307,7 @@ const selectedCountries = new Set();
 function renderTimeSeries(data) {
   document.getElementById('ts-loading').style.display = 'none';
   document.getElementById('ts-chart-wrap').style.display = 'block';
-  // 初回は必ずメッセージ表示（selectedCountriesが空のため）
+  // time_seriesはdata.seriesフィールドで返る（data.countriesではない）
   selectedCountries.clear();
   if (tsChart) { tsChart.destroy(); tsChart = null; }
   const wrap = document.getElementById('ts-chart-wrap');
@@ -337,16 +334,18 @@ function toggleTsCountry(country) {
 }
 
 function getCountryColorIdx(country) {
-  const countries = (timeSeriesData?.countries||[]).map(c=>c.country);
+  // time_seriesはdata.seriesフィールド
+  const countries = (timeSeriesData?.series||[]).map(c=>c.country);
   return countries.indexOf(country) % TS_COLORS.length;
 }
 
 function drawTsChart() {
   const data = timeSeriesData;
   if (!data) return;
-  const countries = data.countries || [];
+  // workerはseriesフィールドで返す。各国のデータはc.data（{year,tons}の配列）
+  const countries = data.series || [];
   const allYears = new Set();
-  countries.forEach(c => (c.series||[]).forEach(s => allYears.add(s.year)));
+  countries.forEach(c => (c.data||[]).forEach(s => allYears.add(s.year)));
   const years = [...allYears].sort();
 
   const activeCountries = selectedCountries.size > 0
@@ -365,7 +364,6 @@ function drawTsChart() {
     return;
   }
 
-  // canvasが消えていたら再作成
   if (!document.getElementById('ts-chart')) {
     wrap.innerHTML = '<div style="position:relative;height:220px;"><canvas id="ts-chart"></canvas></div>';
   }
@@ -380,7 +378,8 @@ function drawTsChart() {
         const colorIdx = getCountryColorIdx(c.country);
         return {
           label: `${c.flag||''} ${c.country}`,
-          data: years.map(y => (c.series||[]).find(s=>s.year===y)?.tons || null),
+          // seriesの各国データはc.data（{year, tons}）
+          data: years.map(y => (c.data||[]).find(s=>s.year===y)?.tons || null),
           borderColor: TS_COLORS[colorIdx],
           backgroundColor: TS_COLORS[colorIdx] + '15',
           borderWidth: 2.5,
@@ -410,32 +409,11 @@ let currentHighlightIdx = -1;
 function sortHoldings(key) {
   document.querySelectorAll('[id^="sort-hold-"]').forEach(b => b.classList.remove('active'));
   document.getElementById('sort-hold-'+key).classList.add('active');
-  // 正規化関数（renderHoldingsListと同じロジック）
-  const toB2 = v => {
-    if (!v||v<=0) return 0;
-    if (v>1e12) return Math.round(v/1e9);
-    if (v>1e9)  return Math.round(v/1e9);
-    if (v>1e6)  return Math.round(v/1e3);
-    if (v<1)    return Math.round(v*1000);
-    return Math.round(v);
-  };
-  const getDebt = item => {
-    let d = toB2(item.debt_usd||0);
-    const cap = {'United States':40000,'China':20000,'Japan':10000,'United Kingdom':4000,'France':4000,'Italy':4000,'Germany':3500,'India':3000,'Canada':2500,'Brazil':2000,'Spain':1800,'South Korea':1000,'Australia':800,'Mexico':700,'Saudi Arabia':500,'Russia':500,'Turkey':400,'Indonesia':400,'Switzerland':300,'Poland':400,'Netherlands':600,'Sweden':300,'Kazakhstan':100,'Uzbekistan':50,'Qatar':200,'UAE':300,'Singapore':600,'Argentina':300,'Colombia':200,'Chile':200,'South Africa':200,'Egypt':200}[item.country];
-    if (cap && d > cap * 2) d = 0;
-    if (d > 200000) d = 0;
-    return d;
-  };
-  const getBacking = item => {
-    const gold = item.gold_usd || 0;
-    const debt = getDebt(item);
-    return debt > 0 && gold > 0 ? Math.round(toB2(gold) / debt * 100 * 10) / 10 : (item.gold_backing||0);
-  };
 
   const sorted = [...holdingsData].sort((a,b) => {
-    if (key === 'gold') return (b.gold_tons||b.tons||0) - (a.gold_tons||a.tons||0);
-    if (key === 'debt') return getDebt(b) - getDebt(a);
-    if (key === 'backing') return getBacking(b) - getBacking(a);
+    if (key === 'gold') return (b.gold_tons||0) - (a.gold_tons||0);
+    if (key === 'debt') return (b.debt_billion_usd||0) - (a.debt_billion_usd||0);
+    if (key === 'backing') return (b.gold_pct||0) - (a.gold_pct||0);
     return 0;
   });
   renderHoldingsList(sorted);
@@ -444,19 +422,18 @@ function sortHoldings(key) {
 function sortProduction(key) {
   document.querySelectorAll('[id^="sort-prod-"]').forEach(b => b.classList.remove('active'));
   document.getElementById('sort-prod-'+key).classList.add('active');
-  const hoardingOrder = {'高':3,'中':2,'低':1,'不明':0};
   const sorted = [...productionData].sort((a,b) => {
-    if (key === 'production') return (b.production||b.tons||0) - (a.production||a.tons||0);
-    if (key === 'exports') return (b.exports||0) - (a.exports||0);
+    if (key === 'production') return (b.production_tons||0) - (a.production_tons||0);
+    if (key === 'exports') return (b.export_tons||0) - (a.export_tons||0);
     if (key === 'hoarding') {
-      // 輸出率が低い（備蓄傾向高）順にソート
-      const expRateA = (a.production||a.tons||0) > 0 ? (a.exports||0)/(a.production||a.tons||1)*100 : 100;
-      const expRateB = (b.production||b.tons||0) > 0 ? (b.exports||0)/(b.production||b.tons||1)*100 : 100;
-      return expRateA - expRateB; // 輸出率低い順（備蓄傾向高い順）
+      const expRateA = (a.production_tons||0) > 0 ? (a.export_tons||0)/(a.production_tons||1)*100 : 100;
+      const expRateB = (b.production_tons||0) > 0 ? (b.export_tons||0)/(b.production_tons||1)*100 : 100;
+      return expRateA - expRateB;
     }
     return 0;
   });
   renderProductionList(sorted);
+}
 }
 
 async function loadTab(tab) {
@@ -475,9 +452,9 @@ async function loadTab(tab) {
 
 async function loadPrice(period) {
   currentPeriod = period;
-  document.querySelectorAll('.period-tab').forEach(b => {
-    const labelMap = {'1m':'1ヶ月','3m':'3ヶ月','6m':'6ヶ月','1y':'1年','3y':'3年','5y':'5年','10y':'10年','20y':'20年'};
-    b.classList.toggle('active', b.textContent === labelMap[period]);
+  document.querySelectorAll('#tab-price .period-tab').forEach(b => {
+    const labelMap = {'1y':'1年','3y':'3年','5y':'5年','10y':'10年','20y':'20年'};
+    b.classList.toggle('active', b.textContent.trim() === labelMap[period]);
   });
   document.getElementById('price-loading').style.display = 'block';
   document.getElementById('price-loading').innerHTML = '<div class="spinner"></div>データ取得中...';
@@ -601,13 +578,12 @@ function drawPriceChart(highlightIdx = -1) {
           tension: 0.2,
           yAxisID: 'y',
         },
-        ...(overlayEnabled && timeSeriesData?.central_bank_total ? [{
+        ...(overlayEnabled && timeSeriesData?.total_series ? [{
           label: '中銀総保有量(t)',
           data: (() => {
-            const cbData = timeSeriesData.central_bank_total;
+            const cbData = timeSeriesData.total_series;
             return labels.map(date => {
               const year = parseInt(date.slice(0,4));
-              // 最も近い年のデータを使用
               const sorted = [...cbData].sort((a,b)=>Math.abs(a.year-year)-Math.abs(b.year-year));
               return sorted[0]?.tons || null;
             });
@@ -678,75 +654,49 @@ function renderHoldings(data) {
 }
 
 function renderHoldingsList(items) {
-  const maxGold = Math.max(...(holdingsData.length?holdingsData:[items[0]||{}]).map(d => d.gold_tons||d.tons||0), 1);
-  const maxDebtArr = (holdingsData.length?holdingsData:[items[0]||{}]).map(d => { let v=d.debt_usd||0; if(v>0&&v<100)v*=1000; return v; });
-  const maxDebt = Math.max(...maxDebtArr, 1);
+  const maxGold = Math.max(...(holdingsData.length?holdingsData:[items[0]||{}]).map(d => d.gold_tons||0), 1);
   const rankColors = ['#ffd700','#c0c0c0','#cd7f32'];
 
   document.getElementById('holdings-list').innerHTML = items.map((item, i) => {
-    const gold = item.gold_tons || item.tons || 0;
-    // goldUsdは上のnormalizeToBで計算済み
-    let debt = item.debt_usd || 0;
-    let goldUsd = item.gold_usd || 0;
-
-    // 単位正規化（目標：十億USD）
-    const toB = v => {
-      if (!v||v<=0) return 0;
-      if (v>1e12) return Math.round(v/1e9);   // ドル単位
-      if (v>1e9)  return Math.round(v/1e9);   // ドル単位
-      if (v>1e6)  return Math.round(v/1e3);   // 百万ドル単位
-      if (v<1)    return Math.round(v*1000);  // 兆ドル単位
-      return Math.round(v);
-    };
-    debt = toB(debt);
-    goldUsd = toB(goldUsd);
+    const gold = item.gold_tons || 0;
+    // debt_billion_usd がworkerの正しいフィールド名
+    let debt = item.debt_billion_usd || 0;
+    // gold_pct = 外貨準備に占める金の割合（worker返却値）
+    const goldPct = item.gold_pct || 0;
 
     // 国別の国債上限チェック（十億USD）
     const DEBT_CAP = {
-      // G20・主要国
       'United States':40000,'China':20000,'Japan':10000,'United Kingdom':4000,
       'France':4000,'Italy':4000,'Germany':3500,'India':3000,'Canada':2500,
       'Brazil':2000,'Spain':1800,'South Korea':1000,'Australia':800,
       'Mexico':700,'Saudi Arabia':500,'Russia':500,'Turkey':400,'Indonesia':400,
-      // 欧州
       'Switzerland':300,'Poland':400,'Netherlands':600,'Sweden':300,
       'Belgium':600,'Austria':300,'Denmark':200,'Finland':200,'Norway':200,
       'Portugal':300,'Greece':400,'Czech Republic':200,'Romania':150,'Hungary':150,
-      // 中東・中央アジア
       'Kazakhstan':100,'Uzbekistan':50,'Qatar':200,'UAE':300,
       'Iran':200,'Iraq':150,'Kuwait':150,'Bahrain':50,'Oman':80,
-      // アジア
       'Singapore':600,'Thailand':300,'Malaysia':200,'Philippines':200,
       'Pakistan':150,'Bangladesh':100,'Vietnam':200,'Taiwan':300,
-      // アフリカ・その他
       'South Africa':200,'Egypt':200,'Nigeria':150,'Algeria':100,
       'Morocco':100,'Libya':50,'Ghana':50,'Tanzania':30,'Kenya':50,
-      // 中南米
       'Argentina':300,'Colombia':200,'Chile':200,'Peru':100,'Venezuela':100,
       'Bolivia':30,'Ecuador':80,
     };
     const cap = DEBT_CAP[item.country];
-    if (cap && debt > cap * 2) debt = 0; // 上限2倍超は誤り
-    if (debt > 200000) debt = 0;         // 絶対上限
-    // 金裏付け率 = 金時価 ÷ 国債残高 × 100（正しい計算）
-    // AIが返したgold_backingも念のため検証（100%超は疑わしい）
-    let backing = 0;
-    if (debt > 0 && goldUsd > 0) {
-      backing = Math.round(goldUsd / debt * 100 * 10) / 10;
-    } else if (item.gold_backing && item.gold_backing <= 100) {
-      backing = item.gold_backing;
-    }
-    const backingColor = backing >= 10 ? '#00cc66' : backing >= 3 ? '#ffaa00' : '#ff4455';
-    const changeIcon = item.change==='増加'?'<span style="color:#00cc66;">▲</span>':item.change==='減少'?'<span style="color:#ff4455;">▼</span>':'<span style="color:var(--t3);">─</span>';
+    if (cap && debt > cap * 2) debt = 0;
+    if (debt > 200000) debt = 0;
+
+    // 金裏付け率の表示にはgold_pct（外貨準備比率）を使用
+    const pctColor = goldPct >= 10 ? '#00cc66' : goldPct >= 3 ? '#ffaa00' : '#ff4455';
 
     return `
     <div class="rank-item holdings-item" data-country="${item.country}" style="flex-direction:column;align-items:stretch;gap:6px;cursor:pointer;transition:border .15s;" onclick="toggleTsCountry('${item.country}')">
       <div style="display:flex;align-items:center;gap:8px;">
         <span class="rank-num" style="color:${rankColors[i]||'var(--t3)'};">${i+1}</span>
         <span class="rank-flag">${item.flag||'🏅'}</span>
-        <span class="rank-name" style="flex:1;">${item.country} ${changeIcon}</span>
+        <span class="rank-name" style="flex:1;">${item.country}</span>
         <span style="font-size:10px;color:var(--t3);">📈 クリックで時系列</span>
-        <span style="font-size:11px;padding:2px 7px;border-radius:4px;background:${backingColor}22;color:${backingColor};font-weight:700;">金裏付け率 ${backing}%</span>
+        ${goldPct > 0 ? `<span style="font-size:11px;padding:2px 7px;border-radius:4px;background:${pctColor}22;color:${pctColor};font-weight:700;">外貨準備比 ${goldPct}%</span>` : ''}
       </div>
       <div style="padding-left:52px;display:flex;flex-direction:column;gap:3px;">
         <div style="display:flex;align-items:center;gap:6px;">
@@ -754,15 +704,15 @@ function renderHoldingsList(items) {
           <div style="flex:1;height:8px;background:var(--b);border-radius:4px;overflow:hidden;">
             <div style="width:${(gold/maxGold*100).toFixed(1)}%;height:100%;background:var(--gold2);border-radius:4px;"></div>
           </div>
-          <span style="font-size:11px;color:var(--gold);min-width:80px;text-align:right;">${gold.toLocaleString()}t${goldUsd?` / $${goldUsd}B`:''}</span>
+          <span style="font-size:11px;color:var(--gold);min-width:70px;text-align:right;">${gold.toLocaleString()}t</span>
         </div>
         ${debt > 0 ? `
         <div style="display:flex;align-items:center;gap:6px;">
           <span style="font-size:10px;color:var(--t3);min-width:52px;">国債残高</span>
           <div style="flex:1;height:8px;background:var(--b);border-radius:4px;overflow:hidden;">
-            <div style="width:${Math.min(debt/maxDebt*100,100).toFixed(1)}%;height:100%;background:#4488ff;border-radius:4px;"></div>
+            <div style="width:${Math.min(debt/Math.max(...items.map(d=>d.debt_billion_usd||0),1)*100,100).toFixed(1)}%;height:100%;background:#4488ff;border-radius:4px;"></div>
           </div>
-          <span style="font-size:11px;color:#4488ff;min-width:80px;text-align:right;">$${debt.toLocaleString()}B</span>
+          <span style="font-size:11px;color:#4488ff;min-width:70px;text-align:right;">$${debt.toLocaleString()}B</span>
         </div>` : '<div style="font-size:10px;color:var(--t3);">国債データなし</div>'}
         ${item.note ? `<div style="font-size:10px;color:var(--t3);">${item.note}</div>` : ''}
       </div>
@@ -781,39 +731,31 @@ function renderProduction(data) {
 }
 
 function renderProductionList(items) {
-  const maxProd = Math.max(...(productionData.length?productionData:items).map(d => d.production||d.tons||0), 1);
+  const maxProd = Math.max(...(productionData.length?productionData:items).map(d => d.production_tons||0), 1);
   const rankColors = ['#ffd700','#c0c0c0','#cd7f32'];
-  const hoardingColor = h => h==='高'?'#ff4455':h==='中'?'#ffaa00':h==='低'?'#00cc66':'var(--t3)';
 
   document.getElementById('production-list').innerHTML = items.map((item,i) => {
-    const prod = item.production || item.tons || 0;
-    const exp = item.exports || 0;
+    const prod = item.production_tons || 0;
+    const exp = item.export_tons || 0;
     const expRate = prod > 0 ? Math.round(exp/prod*100) : 0;
+    let hoarding, hcolor;
+    if (expRate >= 90) { hoarding = '低'; hcolor = '#00cc66'; }
+    else if (expRate >= 60) { hoarding = '中'; hcolor = '#ffaa00'; }
+    else { hoarding = '高'; hcolor = '#ff4455'; }
     return `
     <div class="rank-item" style="flex-direction:column;align-items:stretch;gap:6px;">
       <div style="display:flex;align-items:center;gap:8px;">
         <span class="rank-num" style="color:${rankColors[i]||'var(--t3)'};">${i+1}</span>
         <span class="rank-flag">${item.flag||'⛏️'}</span>
         <span class="rank-name" style="flex:1;">${item.country}</span>
-        ${(() => {
-      // 輸出率から備蓄傾向を自動計算（AIのhoardingは信用しない）
-      const prod2 = item.production || item.tons || 0;
-      const exp2 = item.exports || 0;
-      if (!prod2) return '';
-      const expRate2 = exp2 / prod2 * 100;
-      let hoarding, hcolor;
-      if (expRate2 >= 90) { hoarding = '低'; hcolor = '#00cc66'; }      // 90%以上輸出→国内備蓄少
-      else if (expRate2 >= 60) { hoarding = '中'; hcolor = '#ffaa00'; } // 60〜90%輸出
-      else { hoarding = '高'; hcolor = '#ff4455'; }                     // 60%未満輸出→国内備蓄多
-      return `<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${hcolor}22;color:${hcolor};">備蓄傾向${hoarding}</span>`;
-    })()}
+        ${prod > 0 ? `<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${hcolor}22;color:${hcolor};">備蓄傾向${hoarding}</span>` : ''}
         <span class="rank-val">${prod.toLocaleString()}t</span>
       </div>
       <div style="padding-left:52px;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
           <span style="font-size:10px;color:var(--t3);min-width:40px;">産出量</span>
           <div style="flex:1;height:8px;background:var(--b);border-radius:4px;overflow:hidden;">
-            <div style="width:100%;height:100%;background:var(--gold2);border-radius:4px;"></div>
+            <div style="width:${(prod/maxProd*100).toFixed(1)}%;height:100%;background:var(--gold2);border-radius:4px;"></div>
           </div>
           <span style="font-size:11px;color:var(--gold);min-width:55px;text-align:right;">${prod.toLocaleString()}t</span>
         </div>
@@ -829,6 +771,8 @@ function renderProductionList(items) {
     </div>`;
   }).join('');
 }
+  }).join('');
+}
 
 
 function renderFlow(data) {
@@ -842,36 +786,55 @@ function renderFlow(data) {
     }).addTo(goldMap);
   }
 
+  // workerは座標を返さないので国名→座標の辞書で補完
+  const COORDS = {
+    'Switzerland':[47.0,8.3],'United Kingdom':[51.5,-0.1],'United States':[38,-97],
+    'China':[35,105],'India':[20,77],'Hong Kong':[22.3,114.2],'UAE':[24,54],
+    'Turkey':[39,35],'Russia':[60,90],'South Africa':[29,25],'Australia':[25,134],
+    'Canada':[56,-106],'Germany':[51,10],'Japan':[36,138],'Singapore':[1.4,103.8],
+    'Thailand':[15,101],'Saudi Arabia':[24,45],'Ghana':[8,-2],'Tanzania':[6,35],
+    'Peru':[10,-76],'Mexico':[23,-102],'Kazakhstan':[48,68],'Mali':[17,-2],
+    'Indonesia':[5,120],'Philippines':[13,122],'South Korea':[37,128],
+    'France':[46,2],'Italy':[43,12],'Netherlands':[52,5],'Belgium':[50,4],
+    'Brazil':[10,-55],'Argentina':[34,-64],'Chile':[30,-71],'Colombia':[4,-74],
+    'Uzbekistan':[41,64],'Mongolia':[46,105],'Papua New Guinea':[-6,145],
+    'Burkina Faso':[12,-2],'Sudan':[15,30],'Ethiopia':[9,40],'Egypt':[27,30],
+    'Morocco':[32,-6],'Zimbabwe':[20,30],'DRC':[-4,24],'Ivory Coast':[7,-6],
+  };
+
   const flows = data.flows || [];
-  const maxTons = Math.max(...flows.map(f => f.tons||0), 1);
+  const maxVol = Math.max(...flows.map(f => f.volume||0), 1);
 
   flows.forEach(flow => {
-    if (!flow.fromLat || !flow.toLat) return;
-    const weight = Math.max(1, Math.round((flow.tons/maxTons)*8));
-    const color = flow.tons > maxTons*0.6 ? '#ffd700' : flow.tons > maxTons*0.3 ? '#b8960c' : '#8b6914';
-    const midLat = (flow.fromLat + flow.toLat) / 2 + 8;
-    const midLng = (flow.fromLng + flow.toLng) / 2;
-    L.polyline([[flow.fromLat,flow.fromLng],[midLat,midLng],[flow.toLat,flow.toLng]], {
+    const fromCoords = COORDS[flow.from];
+    const toCoords   = COORDS[flow.to];
+    if (!fromCoords || !toCoords) return;
+    const vol = flow.volume || 0;
+    const weight = Math.max(1, Math.round((vol/maxVol)*8));
+    const color = vol > maxVol*0.6 ? '#ffd700' : vol > maxVol*0.3 ? '#b8960c' : '#8b6914';
+    const midLat = (fromCoords[0] + toCoords[0]) / 2 + 8;
+    const midLng = (fromCoords[1] + toCoords[1]) / 2;
+    L.polyline([[fromCoords[0],fromCoords[1]],[midLat,midLng],[toCoords[0],toCoords[1]]], {
       color, weight, opacity: 0.7, smoothFactor: 1,
-    }).bindTooltip(`<div style="background:rgba(13,13,20,.9);border:1px solid #ffd700;border-radius:6px;padding:6px 10px;font-size:12px;color:#fff;">${flow.from} → ${flow.to}<br>${(flow.tons||0).toLocaleString()} トン/年</div>`, { sticky: true }).addTo(goldMap);
-    L.circleMarker([flow.toLat,flow.toLng],{radius:5,color,fillColor:color,fillOpacity:.8,weight:1}).addTo(goldMap);
-    L.circleMarker([flow.fromLat,flow.fromLng],{radius:4,color:'#fff',fillColor:'#fff',fillOpacity:.5,weight:1}).addTo(goldMap);
+    }).bindTooltip(`<div style="background:rgba(13,13,20,.9);border:1px solid #ffd700;border-radius:6px;padding:6px 10px;font-size:12px;color:#fff;">${flow.from_ja||flow.from} → ${flow.to_ja||flow.to}<br>${vol.toLocaleString()} トン/年</div>`, { sticky: true }).addTo(goldMap);
+    L.circleMarker(toCoords,  {radius:5,color,fillColor:color,fillOpacity:.8,weight:1}).addTo(goldMap);
+    L.circleMarker(fromCoords,{radius:4,color:'#fff',fillColor:'#fff',fillOpacity:.5,weight:1}).addTo(goldMap);
   });
 
-  // ランキング
-  const sorted = [...flows].sort((a,b)=>(b.tons||0)-(a.tons||0));
+  // ランキング（volumeフィールドを使用）
+  const sorted = [...flows].sort((a,b)=>(b.volume||0)-(a.volume||0));
   const rankColors = ['#ffd700','#c0c0c0','#cd7f32'];
   document.getElementById('flow-rank-list').innerHTML = sorted.map((f,i) => `
     <div class="rank-item">
       <span class="rank-num" style="color:${rankColors[i]||'var(--t3)'};">${i+1}</span>
-      <span class="rank-name">${f.from} → ${f.to}</span>
-      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${((f.tons||0)/maxTons*100).toFixed(1)}%;"></div></div>
-      <span class="rank-val">${(f.tons||0).toLocaleString()} t</span>
+      <span class="rank-name">${f.from_ja||f.from} → ${f.to_ja||f.to}</span>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${((f.volume||0)/maxVol*100).toFixed(1)}%;"></div></div>
+      <span class="rank-val">${(f.volume||0).toLocaleString()} t</span>
     </div>
   `).join('');
   document.getElementById('flow-rank-wrap').style.display = 'block';
 
-  if (data.period) document.getElementById('flow-ai-note').textContent = `AIによる推定データ（${data.period}・参考値）`;
+  if (data.updated) document.getElementById('flow-ai-note').textContent = `AIによる推定データ（${data.updated}・参考値）`;
   if (data.summary) {
     document.getElementById('flow-summary').innerHTML = `<strong style="color:var(--gold);">📰 今日の金フロートピック</strong><br>${data.summary}`;
     document.getElementById('flow-summary').style.display = 'block';
