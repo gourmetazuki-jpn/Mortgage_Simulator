@@ -439,7 +439,7 @@ function renderFlow(data) {
 
     const fromName = flow.from_ja || flow.from;
     const toName   = flow.to_ja   || flow.to;
-    const volDisp  = Math.round(flow.volume || 0); // 万バレル/日
+    const volDisp = Math.round(flow.volume || 0); // 万bbl/日（worker側で正規化済み）
     line.bindTooltip(
       `<div class="flow-tooltip">${fromName} → ${toName}<br>${volDisp.toLocaleString()} 万バレル/日</div>`,
       { sticky: true }
