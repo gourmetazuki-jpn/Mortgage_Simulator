@@ -439,9 +439,9 @@ function renderFlow(data) {
 
     const fromName = flow.from_ja || flow.from;
     const toName   = flow.to_ja   || flow.to;
-    const volDisp  = (flow.volume * 100).toFixed(0); // Mb/d → 万bbl/日に変換
+    const volDisp  = Math.round(flow.volume || 0); // 万バレル/日
     line.bindTooltip(
-      `<div class="flow-tooltip">${fromName} → ${toName}<br>${volDisp} 万バレル/日</div>`,
+      `<div class="flow-tooltip">${fromName} → ${toName}<br>${volDisp.toLocaleString()} 万バレル/日</div>`,
       { sticky: true }
     );
 
@@ -463,7 +463,7 @@ function renderFlow(data) {
       <span class="rank-num" style="color:${colors2[i]||'var(--t3)'};">${i+1}</span>
       <span class="rank-country">${f.from_ja||f.from} → ${f.to_ja||f.to}</span>
       <div class="rank-bar-wrap"><div class="rank-bar" style="width:${(f.volume/maxVol2*100).toFixed(1)}%;background:var(--amber);"></div></div>
-      <span class="rank-val">${((f.volume||0)*100).toFixed(0)} 万bbl/日</span>
+      <span class="rank-val">${Math.round(f.volume||0).toLocaleString()} 万bbl/日</span>
     </div>
   `).join('');
   document.getElementById('flow-ranking').style.display = 'block';
