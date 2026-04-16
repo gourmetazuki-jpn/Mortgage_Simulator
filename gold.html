@@ -358,17 +358,41 @@ function drawPriceChart(highlightIdx) {
   currentHighlightIdx = highlightIdx;
   var vals = currentPrices.map(function(p) { return p.price; });
   var labels = currentPrices.map(function(p) { return p.date; });
-  var eventDates = {};
-  currentEvents.forEach(function(e) { eventDates[e.date] = true; });
-  var pointColors = currentPrices.map(function(p) { return eventDates[p.date] ? '#ffd700' : 'transparent'; });
-  var pointSizes = currentPrices.map(function(p) { return eventDates[p.date] ? 7 : 0; });
+  // イベント日付をpricesの最近傍インデックスにマッピング
+  var eventNearIndices = {};
+  currentEvents.forEach(function(e) {
+    var target = new Date(e.date).getTime();
+    var bestIdx = -1, bestDiff = Infinity;
+    labels.forEach(function(d, i) {
+      var diff = Math.abs(new Date(d).getTime() - target);
+      if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+    });
+    if (bestDiff <= 30 * 86400000) eventNearIndices[bestIdx] = true;
+  });
+  var pointColors = currentPrices.map(function(p, i) { return eventNearIndices[i] ? '#ffd700' : 'transparent'; });
+  var pointSizes = currentPrices.map(function(p, i) { return eventNearIndices[i] ? 7 : 0; });
 
   var highlightDate = highlightIdx >= 0 && currentEvents[highlightIdx] ? currentEvents[highlightIdx].date : null;
+
+  // 最近傍の取引日を探す（週末・祝日・期間外対策）
+  function findNearestIdx(targetDate) {
+    if (!targetDate) return -1;
+    var exact = labels.indexOf(targetDate);
+    if (exact >= 0) return exact;
+    var target = new Date(targetDate).getTime();
+    var bestIdx = -1, bestDiff = Infinity;
+    labels.forEach(function(d, i) {
+      var diff = Math.abs(new Date(d).getTime() - target);
+      if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+    });
+    // 30日以内の最近傍のみ有効
+    return bestDiff <= 30 * 86400000 ? bestIdx : -1;
+  }
   var highlightPlugin = {
     id: 'highlightLine',
     afterDraw: function(chart) {
       if (!highlightDate) return;
-      var nearIdx = labels.indexOf(highlightDate);
+      var nearIdx = findNearestIdx(highlightDate);
       if (nearIdx < 0) return;
       var meta = chart.getDatasetMeta(0);
       var pt = meta.data[nearIdx];
