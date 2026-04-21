@@ -188,7 +188,7 @@
           <div style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;">米国原油在庫 × WTI価格（EIA公式データ）</div>
           <div class="stock-current">
             <div class="stock-val" id="current-stock">--</div>
-            <div class="stock-unit">千バレル（米国・最新週）</div>
+            <div class="stock-unit">百万バレル・Mb（米国・最新週）</div>
           </div>
           <div class="chart-row">
             <div>
@@ -556,9 +556,10 @@ function renderStocks(data) {
   const wti       = data.wti       || [];
   const countries = data.countries || [];
 
-  // 国別備蓄ランキング（sprフィールド）
-  const maxSpr = Math.max(...countries.map(c => c.spr||0), 1);
-  document.getElementById('country-stocks-list').innerHTML = countries.map((c,i) => `
+  // 国別備蓄ランキング（sprフィールド、量の多い順にソート）
+  const sortedCountries = [...countries].sort((a, b) => (b.spr||0) - (a.spr||0));
+  const maxSpr = Math.max(...sortedCountries.map(c => c.spr||0), 1);
+  document.getElementById('country-stocks-list').innerHTML = sortedCountries.map((c,i) => `
     <div class="rank-item">
       <span class="rank-num" style="color:${['#ffd700','#c0c0c0','#cd7f32'][i]||'var(--t3)'};">${i+1}</span>
       <span style="font-size:16px;">${c.flag||'🛢️'}</span>
@@ -571,9 +572,10 @@ function renderStocks(data) {
   document.getElementById('stocks-ai-note').textContent = 'AIによる推定データ（参考値）';
 
   // EIAはdesc順で返すので[0]が最新
+  // workerで value/1000 済み（千バレル→百万バレルMb）なのでそのまま表示
   if (inventory.length > 0) {
     document.getElementById('stocks-period').textContent = `⏱ 米国在庫データ: ${inventory[0].date}（EIA公式）`;
-    document.getElementById('current-stock').textContent = (inventory[0].value / 1000).toFixed(0) + '万';
+    document.getElementById('current-stock').textContent = (inventory[0].value).toLocaleString() + 'Mb';
   }
   if (data.summary) {
     document.getElementById('stocks-summary').innerHTML = `<strong style="color:var(--amber);">📰 今日の備蓄市場トピック</strong><br>${data.summary}`;
