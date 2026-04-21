@@ -142,25 +142,19 @@ async function search() {
   const input = document.getElementById('code-input').value.trim();
   if (!input) { showError('証券コードまたは企業名を入力してください'); return; }
 
-  // 企業名入力の場合は/searchで検索
-  let code = input;
-  if (!/^\d{4,5}$/.test(input)) {
+  let code = input.replace(/\.T$/, '');
+
+  // 企業名の場合は/searchでコードに変換
+  if (!/^\d{4,5}$/.test(code)) {
     try {
       const res = await fetch(`${WORKER}/search`);
       const data = await res.json();
       const list = data.list || [];
       const lower = input.toLowerCase();
       const match = list.find(s => s.name?.includes(input) || s.nameEn?.toLowerCase().includes(lower));
-      if (match) {
-        code = match.code;
-      } else {
-        showError('企業が見つかりませんでした。証券コード（4桁）で入力してください。');
-        return;
-      }
-    } catch(e) {
-      showError('検索エラー: ' + e.message);
-      return;
-    }
+      if (match) { code = match.code; }
+      else { showError('企業が見つかりませんでした。証券コード（4桁）で入力してください。'); return; }
+    } catch(e) { showError('検索エラー: ' + e.message); return; }
   }
 
   document.getElementById('search-btn').disabled = true;
@@ -169,27 +163,10 @@ async function search() {
   document.getElementById('error-msg').classList.remove('show');
 
   try {
-    const res = await fetch(`${WORKER}/fins?code=${encodeURIComponent(code)}`);
+    const res = await fetch(`${WORKER}/kessan?code=${encodeURIComponent(code)}`);
     const data = await res.json();
-
-    if (data.error || !data.info) {
-      showError(data.error || '企業情報を取得できませんでした。');
-      return;
-    }
-
-    // 決算月を最新の財務データから取得
-    // CurPerEn例: "2024-03-31" → 3月期
-    let fiscalMonth = 3;
-    const financials = data.financials || [];
-    if (financials.length > 0) {
-      const latestPeriod = financials[financials.length - 1].period; // "2024-03-31"
-      if (latestPeriod) {
-        const m = parseInt(latestPeriod.split('-')[1]);
-        if (m >= 1 && m <= 12) fiscalMonth = m;
-      }
-    }
-
-    renderResult(data.info, fiscalMonth);
+    if (data.error || !data.info) { showError(data.error || '企業情報を取得できませんでした。'); return; }
+    renderResult(data.info, data.announcements || [], data.fiscalMonth || 3);
   } catch(e) {
     showError('通信エラー: ' + e.message);
   } finally {
@@ -198,91 +175,98 @@ async function search() {
   }
 }
 
-function renderResult(info, fiscalMonth) {
+function renderResult(info, announcements, fiscalMonth) {
   document.getElementById('r-code').textContent = info.Code?.replace(/0$/, '') || '';
   document.getElementById('r-name').textContent = info.CoName || '';
   document.getElementById('r-sector').textContent = [info.S33Nm, info.MktNm].filter(Boolean).join(' ／ ');
 
-  const schedules = calcSchedule(fiscalMonth);
+  const today = new Date();
   const grid = document.getElementById('schedule-grid');
-  grid.innerHTML = schedules.map(s => `
-    <div class="schedule-item${s.isNext ? ' next' : ''}${s.isPast ? ' past' : ''}">
-      <div class="schedule-quarter">${s.label}</div>
-      <div class="schedule-date">${s.dateStr}</div>
-      <div class="schedule-days${s.days !== null && s.days >= 0 && s.days <= 30 ? ' soon' : ''}">${s.daysText}</div>
-    </div>
-  `).join('');
+
+  // J-Quantsのannouncement APIから取得した実際の発表予定日
+  // フィールド例: { Code, Date, CompanyName, FiscalYear, SectionName, FiscalQuarterType }
+  if (announcements.length > 0) {
+    // 日付順にソート
+    const sorted = [...announcements].sort((a, b) => (a.Date || '').localeCompare(b.Date || ''));
+    grid.innerHTML = sorted.map(ann => {
+      const dateStr = ann.Date || '';
+      const d = dateStr ? new Date(dateStr) : null;
+      const diffDays = d ? Math.ceil((d - today) / 86400000) : null;
+      const isPast = diffDays !== null && diffDays < 0;
+      const isNext = !isPast && diffDays !== null;
+
+      let daysText = '';
+      if (diffDays === null) daysText = '';
+      else if (diffDays < 0) daysText = `${Math.abs(diffDays)}日前に発表済み`;
+      else if (diffDays === 0) daysText = '本日発表予定';
+      else if (diffDays <= 30) daysText = `あと${diffDays}日`;
+      else daysText = `約${Math.round(diffDays / 7)}週間後`;
+
+      // 四半期種別の日本語変換
+      const qtMap = { '1Q':'第１四半期', '2Q':'第２四半期', '3Q':'第３四半期', 'Annual':'本決算', 'FY':'本決算', '1H':'第２四半期', '3M':'第１四半期', '9M':'第３四半期' };
+      const qt = ann.FiscalQuarterType || ann.QuarterType || '';
+      const label = qtMap[qt] || qt || '決算';
+
+      const displayDate = d ? `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日` : '日程未定';
+
+      return `<div class="schedule-item${isPast ? ' past' : ''}${isNext && diffDays <= 30 ? ' next' : ''}">
+        <div class="schedule-quarter">${label}</div>
+        <div class="schedule-date">${displayDate}</div>
+        <div class="schedule-days${diffDays !== null && diffDays >= 0 && diffDays <= 30 ? ' soon' : ''}">${daysText}</div>
+      </div>`;
+    }).join('');
+  } else {
+    // announcementデータがない場合は推定で表示
+    const schedules = calcEstimated(fiscalMonth);
+    grid.innerHTML = schedules.map(s => `
+      <div class="schedule-item${s.isPast ? ' past' : ''}${s.isNext ? ' next' : ''}">
+        <div class="schedule-quarter">${s.label}</div>
+        <div class="schedule-date">${s.dateStr}</div>
+        <div class="schedule-days${s.days >= 0 && s.days <= 30 ? ' soon' : ''}">${s.daysText}</div>
+      </div>
+    `).join('');
+    // 推定である旨を注記
+    const note = document.createElement('p');
+    note.style.cssText = 'font-size:12px;color:var(--t3);margin-top:8px;';
+    note.textContent = '※ J-Quantsに発表予定日データがないため、決算月から推定しています。';
+    grid.insertAdjacentElement('afterend', note);
+  }
 
   document.getElementById('result').classList.add('show');
 }
 
-function calcSchedule(fiscalMonth) {
-  // 日本企業の決算発表：期末から約45〜60日後
-  // 1Q: 期末+3ヶ月 → +45日
-  // 2Q: 期末+6ヶ月 → +45日
-  // 3Q: 期末+9ヶ月 → +45日
-  // 本決算: 期末+12ヶ月 → +60日
+function calcEstimated(fiscalMonth) {
   const today = new Date();
   const quarters = [
-    { label: '第１四半期', qOffset: 3,  announceDays: 45 },
-    { label: '第２四半期', qOffset: 6,  announceDays: 45 },
-    { label: '第３四半期', qOffset: 9,  announceDays: 45 },
-    { label: '本決算',     qOffset: 12, announceDays: 60 },
+    { label: '第１四半期', qOffset: 3,  days: 45 },
+    { label: '第２四半期', qOffset: 6,  days: 45 },
+    { label: '第３四半期', qOffset: 9,  days: 45 },
+    { label: '本決算',     qOffset: 12, days: 60 },
   ];
 
-  const schedules = [];
-  let nextFound = false;
-
-  // 今年・来年の2年分を計算して直近4件を選ぶ
   const candidates = [];
-  for (let yearOffset = -1; yearOffset <= 1; yearOffset++) {
+  for (let yo = -1; yo <= 1; yo++) {
     quarters.forEach(q => {
-      // 期末日
-      let endMonth = ((fiscalMonth - 1 + q.qOffset) % 12) + 1;
-      let endYear = today.getFullYear() + yearOffset + Math.floor((fiscalMonth - 1 + q.qOffset) / 12);
-      const periodEnd = new Date(endYear, endMonth - 1, 28); // 月末近似
-
-      // 発表予定日（期末+45〜60日）
-      const announceDate = new Date(periodEnd.getTime() + q.announceDays * 86400000);
+      const endMonth = ((fiscalMonth - 1 + q.qOffset) % 12) + 1;
+      const endYear = today.getFullYear() + yo + Math.floor((fiscalMonth - 1 + q.qOffset) / 12);
+      const periodEnd = new Date(endYear, endMonth - 1, 28);
+      const announceDate = new Date(periodEnd.getTime() + q.days * 86400000);
       const diffDays = Math.ceil((announceDate - today) / 86400000);
-
-      candidates.push({
-        label: q.label,
-        announceDate,
-        diffDays,
-        announceDays: q.announceDays,
-      });
+      candidates.push({ label: q.label, announceDate, diffDays });
     });
   }
 
-  // 今日以降で最も近い4件を選ぶ（過去1件も含める）
   candidates.sort((a, b) => a.announceDate - b.announceDate);
-  const pastOne = candidates.filter(c => c.diffDays < 0).slice(-1);
+  const past = candidates.filter(c => c.diffDays < 0).slice(-1);
   const future = candidates.filter(c => c.diffDays >= 0).slice(0, 4);
-  const selected = [...pastOne, ...future].slice(0, 4);
-
-  selected.forEach((s, i) => {
-    const y = s.announceDate.getFullYear();
-    const m = s.announceDate.getMonth() + 1;
-    const isNext = i === (pastOne.length > 0 ? 1 : 0);
-
-    let daysText = '';
-    if (s.diffDays < 0) daysText = `${Math.abs(s.diffDays)}日前に発表済み`;
-    else if (s.diffDays === 0) daysText = '本日発表予定';
-    else if (s.diffDays <= 30) daysText = `あと${s.diffDays}日`;
-    else daysText = `約${Math.round(s.diffDays / 7)}週間後`;
-
-    schedules.push({
-      label: s.label,
-      dateStr: `${y}年${m}月頃（推定）`,
-      days: s.diffDays,
-      daysText,
-      isNext,
-      isPast: s.diffDays < 0,
-    });
+  return [...past, ...future].slice(0, 4).map((s, i) => {
+    const y = s.announceDate.getFullYear(), m = s.announceDate.getMonth() + 1;
+    let daysText = s.diffDays < 0 ? `${Math.abs(s.diffDays)}日前に発表済み`
+      : s.diffDays === 0 ? '本日発表予定'
+      : s.diffDays <= 30 ? `あと${s.diffDays}日`
+      : `約${Math.round(s.diffDays / 7)}週間後`;
+    return { label: s.label, dateStr: `${y}年${m}月頃（推定）`, days: s.diffDays, daysText, isNext: i === past.length, isPast: s.diffDays < 0 };
   });
-
-  return schedules;
 }
 
 function showError(msg) {
