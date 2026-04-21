@@ -258,76 +258,11 @@ async function analyze() {
   document.getElementById('phase-result').classList.remove('show');
   document.getElementById('sector-card').style.display = 'none';
 
-  const now = new Date();
-  const prompt = `あなたは経済アナリストです。${now.getFullYear()}年${now.getMonth()+1}月現在の景気サイクルフェーズを判定してください。
-
-## 判定の考え方（重要）
-政府発表の「緩やかに回復」という表現に惑わされず、以下の実態を重視してください：
-- 🚀 拡張期：景気の勢いがピーク。企業業績好調・需要旺盛・株価上昇
-- 🌡️ 後退期：拡張期のピークを過ぎ、物価高・金利高が成長を抑制し始めた局面
-- ❄️ 収縮期：失業率悪化・消費激減・本格的な景気後退
-
-## 現在の主要指標（2026年3月時点）を調べて確認
-- 米国政策金利（FRBの利下げ状況）
-- 日銀政策金利と利上げ動向
-- 原油・エネルギー価格トレンド
-- 米国・日本のPMI（製造業・サービス業）
-- 雇用統計（失業率）
-- インフレ率（CPI）
-- 長短金利差（イールドカーブ）
-
-## 判定基準（12段階）
-- recovery_early/mid/late：金融緩和中・景気底打ちから回復途上
-- expansion_early/mid/late：景気拡大・需要旺盛・企業業績絶好調
-- slowdown_early/mid/late：金利高止まり・インフレ・成長鈍化・ディフェンシブ株が強くなる
-- recession_early/mid/late：失業増・消費激減・企業倒産増加
-
-## 重要な判定ヒント
-「金利上昇中」「インフレ高止まり」「IT過熱感・バブル懸念」「ディフェンシブ株が強い」→ これらは後退期のサイン
-「失業率が深刻に悪化していない」「賃上げが続いている」→ まだ収縮期ではない
-
-JSON形式のみで回答。説明文・Markdown不要。
-
-{
-  "phase": "slowdown_early など12段階のいずれか",
-  "phase_ja": "後退期・前期 など",
-  "base_phase": "recovery|expansion|slowdown|recession",
-  "stage": "early|mid|late",
-  "confidence": 0.0〜1.0,
-  "description": "現在の景気状況（100字以内・具体的な指標を含む）",
-  "key_indicators": "判断根拠の主要指標（80字以内）",
-  "why_not_expansion": "拡張期でない理由（50字以内）",
-  "why_not_recession": "収縮期でない理由（50字以内）",
-  "next_phase": "次フェーズ予想",
-  "sectors": [
-    {"name":"情報技術","rank":"strong|neutral|weak","reason":"20字以内"},
-    {"name":"金融","rank":"strong|neutral|weak","reason":"20字以内"},
-    {"name":"ヘルスケア","rank":"strong|neutral|weak","reason":"20字以内"},
-    {"name":"一般消費財","rank":"strong|neutral|weak","reason":"20字以内"},
-    {"name":"生活必需品","rank":"strong|neutral|weak","reason":"20字以内"},
-    {"name":"通信サービス","rank":"strong|neutral|weak","reason":"20字以内"},
-    {"name":"資本財","rank":"strong|neutral|weak","reason":"20字以内"},
-    {"name":"素材","rank":"strong|neutral|weak","reason":"20字以内"},
-    {"name":"エネルギー","rank":"strong|neutral|weak","reason":"20字以内"},
-    {"name":"公共事業","rank":"strong|neutral|weak","reason":"20字以内"},
-    {"name":"不動産","rank":"strong|neutral|weak","reason":"20字以内"}
-  ]
-}`;
-
   try {
-    const res = await fetch(WORKER, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
-    });
-    const data = await res.json();
-    if (data.errorInfo) throw new Error('APIエラー: ' + JSON.stringify(data.errorInfo));
-    if (!data.text) throw new Error('レスポンスが空です');
-
-    const cleaned = data.text.replace(/```json/gi,'').replace(/```/g,'').trim();
-    const s = cleaned.indexOf('{'), e = cleaned.lastIndexOf('}');
-    if (s === -1) throw new Error('JSONが見つかりません');
-    const json = JSON.parse(cleaned.slice(s, e+1));
+    const res = await fetch(`${WORKER}/cycle`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
     render(json);
   } catch(err) {
     alert('エラー: ' + err.message);
