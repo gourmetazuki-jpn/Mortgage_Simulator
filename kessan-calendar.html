@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>決算カレンダー｜証券コードで決算予定日を確認 | アズキぷらす</title>
+  <meta name="description" content="証券コードを入力するだけで企業の決算期・次回決算予定日を確認できる無料ツール。アズキぷらすが提供する決算解説チャンネル公式ツール。">
+  <link rel="canonical" href="https://azuki-plus.com/kessan-calendar.html">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4271655790847344" crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{--bg:#f4f3ee;--s:#fff;--s2:#f0efe8;--b:rgba(0,0,0,.09);--t:#1a1a16;--t2:#58574f;--t3:#98968c;--red:#b5451b;--red-l:#fdf0eb;--blue:#1a4fa0;--blue-l:#e8eef8;--green:#1e6b3c;--green-l:#e6f4ec;--r:10px;--rl:14px;}
+    body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--t);font-size:15px;line-height:1.7;}
+    header{background:#1a1a16;color:#fff;padding:20px;text-align:center;}
+    header .back{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:8px;}<br>    header .back a{color:rgba(255,255,255,.5);text-decoration:none;}
+    header h1{font-size:clamp(16px,4vw,22px);font-weight:700;margin-bottom:4px;}
+    header p{font-size:12px;color:rgba(255,255,255,.6);}
+    .breadcrumb{background:var(--s);border-bottom:1px solid var(--b);padding:8px 20px;font-size:12px;color:var(--t3);}
+    .breadcrumb a{color:var(--t3);text-decoration:none;}
+    .ad-slot{background:var(--s);border-bottom:1px solid var(--b);padding:12px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    .container{max-width:860px;margin:0 auto;padding:24px 16px 60px;display:flex;flex-direction:column;gap:16px;}
+    .card{background:var(--s);border:1px solid var(--b);border-radius:var(--rl);padding:20px 22px;}
+    .card h2{font-size:14px;font-weight:700;color:var(--t2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--b);}
+
+    /* 検索フォーム */
+    .search-row{display:flex;gap:10px;}
+    .search-row input{flex:1;background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:10px 14px;font-size:15px;font-family:inherit;color:var(--t);outline:none;}
+    .search-row input:focus{border-color:var(--blue);}
+    .search-btn{padding:10px 20px;background:var(--blue);color:#fff;font-size:14px;font-weight:700;font-family:inherit;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;}
+    .search-btn:hover{opacity:.85;}
+    .search-btn:disabled{opacity:.4;cursor:not-allowed;}
+    .hint{font-size:11px;color:var(--t3);margin-top:6px;}
+
+    /* 結果 */
+    .result{display:none;}
+    .result.show{display:block;}
+    .company-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+    .company-code{font-family:"Lato",sans-serif;font-size:13px;font-weight:700;color:var(--t3);background:var(--s2);padding:4px 10px;border-radius:6px;}
+    .company-name{font-size:18px;font-weight:700;}
+    .company-sector{font-size:12px;color:var(--t3);}
+
+    /* 決算スケジュール */
+    .schedule-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:16px;}
+    .schedule-item{background:var(--s2);border-radius:var(--r);padding:14px 16px;border-left:4px solid var(--b);}
+    .schedule-item.next{border-left-color:var(--red);background:var(--red-l);}
+    .schedule-item.past{opacity:.6;}
+    .schedule-quarter{font-size:11px;font-weight:700;color:var(--t3);margin-bottom:4px;letter-spacing:.06em;}
+    .schedule-date{font-family:"Lato",sans-serif;font-size:20px;font-weight:900;margin-bottom:2px;}
+    .schedule-date.unknown{font-size:14px;font-weight:400;color:var(--t3);}
+    .schedule-days{font-size:12px;color:var(--t2);}
+    .schedule-days.soon{color:var(--red);font-weight:700;}
+
+    /* 注意書き */
+    .notice{background:var(--s2);border-radius:var(--r);padding:12px 14px;font-size:12px;color:var(--t2);line-height:1.7;}
+    .notice strong{color:var(--t);}
+
+    .loading{display:none;text-align:center;padding:20px;color:var(--t2);font-size:13px;}
+    .loading.show{display:block;}
+    .error-msg{color:var(--red);font-size:13px;margin-top:8px;display:none;}
+    .error-msg.show{display:block;}
+
+    .ad-mid{background:var(--s);border:1px solid var(--b);border-radius:var(--rl);padding:12px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    footer{text-align:center;font-size:12px;color:var(--t3);padding:20px;border-top:1px solid var(--b);}
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="back"><a href="index.html">← アズキぷらす トップ</a></p>
+  <h1>📅 決算カレンダー</h1>
+  <p>証券コードを入力して決算予定日を確認</p>
+</header>
+
+<nav class="breadcrumb">
+  <a href="index.html">アズキぷらす</a>
+  <span style="margin:0 6px;">›</span>
+  <span>決算カレンダー</span>
+</nav>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+
+    <!-- ページ解説テキスト（AdSense審査・SEO対策） -->
+    <div class="page-description-box" style="max-width:1000px;margin:16px auto 0;padding:0 16px;">
+      <div style="padding-top:10px;"><p style="font-size:12px;font-weight:700;color:#8888aa;margin-bottom:6px;">📖 決算カレンダーについて</p><p style="font-size:12px;color:#666688;line-height:1.9;margin:0;">証券コードを入力すると、その企業の決算発表予定日・決算期・本決算・四半期決算のスケジュールを確認できるツールです。決算直前は株価が大きく動くことが多いため、保有銘柄や注目銘柄の決算日を事前に把握することは投資戦略上で重要です。J-Quants公式データを使用しており、東証上場の全銘柄に対応しています。</p></div>
+    </div>
+<div class="container">
+
+  <div class="card">
+    <h2>企業を検索</h2>
+    <div class="search-row">
+      <input type="text" id="code-input" placeholder="証券コード（例：7203）または企業名" maxlength="10">
+      <button class="search-btn" id="search-btn" onclick="search()">検索</button>
+    </div>
+    <p class="hint">日本株の証券コード（4桁）または企業名で検索できます</p>
+    <p class="error-msg" id="error-msg"></p>
+  </div>
+
+  <div class="loading" id="loading">データを取得中…</div>
+
+  <div class="result card" id="result">
+    <div class="company-header">
+      <span class="company-code" id="r-code"></span>
+      <div>
+        <div class="company-name" id="r-name"></div>
+        <div class="company-sector" id="r-sector"></div>
+      </div>
+    </div>
+
+    <h2>決算スケジュール（推定）</h2>
+    <div class="schedule-grid" id="schedule-grid"></div>
+
+    <div class="notice">
+      <strong>ご注意：</strong>このツールは決算月情報をもとに推定した予定日を表示しています。実際の決算発表日とは異なる場合があります。正確な日程は各企業のIRページまたは<a href="https://www.jpx.co.jp/listing/event-schedules/financial-announcement/index.html" target="_blank" rel="noopener" style="color:var(--blue);">東証の決算発表予定日一覧</a>でご確認ください。
+    </div>
+  </div>
+
+  <div class="ad-mid">
+    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+</div>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<footer>
+  <p>© アズキぷらす | 株式投資・決算解説 YouTubeチャンネル</p>
+</footer>
+
+<script>
+const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
+
+async function search() {
+  const input = document.getElementById('code-input').value.trim();
+  if (!input) { showError('証券コードまたは企業名を入力してください'); return; }
+
+  document.getElementById('search-btn').disabled = true;
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('result').classList.remove('show');
+  document.getElementById('error-msg').classList.remove('show');
+
+  try {
+    // J-Quants v2/equities/master で銘柄情報取得
+    const res = await fetch(`${WORKER}/kessan?code=${encodeURIComponent(input)}`);
+    const data = await res.json();
+
+    if (data.error || !data.info) {
+      showError(data.error || '企業情報を取得できませんでした。証券コード（4桁）で入力してください。');
+      return;
+    }
+
+    renderResult(data.info, data.latestPeriodEnd);
+  } catch(e) {
+    showError('通信エラーが発生しました。しばらく待ってから再度お試しください。');
+  } finally {
+    document.getElementById('search-btn').disabled = false;
+    document.getElementById('loading').classList.remove('show');
+  }
+}
+
+function renderResult(info, latestPeriodEnd) {
+  document.getElementById('r-code').textContent = info.Code || '';
+  document.getElementById('r-name').textContent = info.CoName || '';
+  document.getElementById('r-sector').textContent = [info.S33Nm, info.MktNm].filter(Boolean).join(' ／ ');
+
+  // 決算月を解析（例：「3月31日」→ 3月期）
+  // 直近の決算期末日から決算月を取得
+  let fiscalMonth = 3; // デフォルト3月期
+  if (latestPeriodEnd) {
+    const m = parseInt(latestPeriodEnd.split('-')[1]);
+    if (m) fiscalMonth = m;
+  }
+  const fiscalEnd = fiscalMonth;
+  const grid = document.getElementById('schedule-grid');
+  grid.innerHTML = '';
+
+  if (fiscalEnd) {
+    const schedules = calcSchedule(fiscalEnd);
+    schedules.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'schedule-item' + (s.isNext ? ' next' : '') + (s.isPast ? ' past' : '');
+      const daysText = s.days === null ? '' :
+        s.days < 0 ? `${Math.abs(s.days)}日前に発表済み` :
+        s.days === 0 ? '本日発表予定' :
+        s.days <= 14 ? `あと${s.days}日` : `約${Math.round(s.days/7)}週間後`;
+      div.innerHTML = `
+        <div class="schedule-quarter">${s.label}</div>
+        <div class="schedule-date ${s.estimated ? '' : 'unknown'}">${s.dateStr}</div>
+        <div class="schedule-days ${s.days !== null && s.days <= 14 && s.days >= 0 ? 'soon' : ''}">${daysText}</div>
+      `;
+      grid.appendChild(div);
+    });
+  } else {
+    grid.innerHTML = '<p style="font-size:13px;color:var(--t3);">決算期情報を取得できませんでした。</p>';
+  }
+
+  document.getElementById('result').classList.add('show');
+}
+
+function parseFiscalMonth(info) {
+  // MarketCodeから決算月を推定（銘柄マスターに決算月フィールドなしのため業種・市場から推定）
+  // 実際はCoNameとCodeから一般的な決算月を返す
+  // 3月期が最多（約70%）なのでデフォルト3
+  return 3;
+}
+
+function calcSchedule(fiscalMonth) {
+  const today = new Date();
+  const year = today.getFullYear();
+  const schedules = [];
+
+  // 本決算・各四半期の発表月を計算
+  // 日本企業は決算月末から約45〜75日後に発表
+  const quarters = [
+    { label: '第１四半期', offset: 3, announce: 2 },  // 決算月+3ヶ月末 → +2ヶ月後に発表
+    { label: '第２四半期', offset: 6, announce: 2 },
+    { label: '第３四半期', offset: 9, announce: 2 },
+    { label: '本決算',     offset: 12, announce: 2 },
+  ];
+
+  let nextFound = false;
+  quarters.forEach(q => {
+    // 決算期末月
+    const endMonth = ((fiscalMonth - 1 + q.offset) % 12) + 1;
+    // 発表予定月（期末+2ヶ月）
+    let announceMonth = endMonth + q.announce;
+    let announceYear = year;
+    if (announceMonth > 12) { announceMonth -= 12; announceYear++; }
+
+    // 発表予定日（各月の中旬〜下旬、仮に14日とする）
+    const estDate = new Date(announceYear, announceMonth - 1, 14);
+
+    // 過去分は前年を試みる
+    if (estDate < today) {
+      estDate.setFullYear(estDate.getFullYear() + 1);
+    }
+
+    const diffMs = estDate - today;
+    const diffDays = Math.ceil(diffMs / (1000*60*60*24));
+
+    const isNext = !nextFound && diffDays >= 0;
+    if (isNext) nextFound = true;
+
+    schedules.push({
+      label: q.label,
+      dateStr: `${estDate.getFullYear()}年${estDate.getMonth()+1}月頃`,
+      days: diffDays,
+      isNext,
+      isPast: diffDays < 0,
+      estimated: true,
+    });
+  });
+
+  return schedules;
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+// Enterキーで検索
+document.getElementById('code-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') search();
+});
+</script>
+</body>
+</html>

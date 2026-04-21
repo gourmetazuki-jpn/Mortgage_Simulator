@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>グリーンブラット魔法の公式チェックツール無料｜ROC・益利回りで割安成長株を発掘 | azuki-plus</title>
+  <meta name="description" content="グリーンブラットの「魔法の公式」に基づき、ROC（資本利益率）と益利回り（EY）を入力するだけで銘柄を評価。複数銘柄の合計ランキングも算出できる無料ツール。">
+  <meta name="keywords" content="グリーンブラット,魔法の公式,ROC,益利回り,割安株,バリュー投資,株式投資,スクリーニング,無料">
+  <link rel="canonical" href="https://azuki-plus.com/simulator/magic.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="グリーンブラット魔法の公式チェックツール無料">
+  <meta property="og:description" content="ROC（資本利益率）と益利回り（EY）を入力するだけで魔法の公式スコアを算出。複数銘柄の比較も可能。">
+  <meta property="og:url" content="https://azuki-plus.com/simulator/magic.html">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "グリーンブラット魔法の公式チェックツール",
+    "url": "https://azuki-plus.com/simulator/magic.html",
+    "description": "グリーンブラットの魔法の公式（ROC・益利回り）で銘柄を評価する無料ツール",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "inLanguage": "ja",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "シミュレーター一覧", "item": "https://azuki-plus.com/simulator/" },
+        { "@type": "ListItem", "position": 2, "name": "魔法の公式チェックツール" }
+      ]
+    }
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f4f3ee;
+      --surface: #ffffff;
+      --surface2: #f0efe8;
+      --border: rgba(0,0,0,0.09);
+      --text: #1a1a16;
+      --text2: #58574f;
+      --text3: #98968c;
+      --green: #1e6b3c;
+      --green-l: #e6f4ec;
+      --amber: #7a4d0a;
+      --amber-l: #fdf3e0;
+      --red: #992020;
+      --red-l: #fdeaea;
+      --blue: #1a4fa0;
+      --blue-l: #e8eef8;
+      --radius: 10px;
+      --radius-lg: 14px;
+    }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.7; }
+
+    header { background: #1a1a16; color: #fff; padding: 24px 20px 20px; text-align: center; }
+    header .logo { font-size: 12px; letter-spacing: 0.12em; color: rgba(255,255,255,0.5); margin-bottom: 10px; }
+    header h1 { font-size: clamp(17px, 4vw, 24px); font-weight: 700; letter-spacing: 0.02em; margin-bottom: 6px; }
+    header p { font-size: 13px; color: rgba(255,255,255,0.65); }
+
+    .breadcrumb { background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 20px; font-size: 12px; color: var(--text3); }
+    .breadcrumb a { color: var(--text3); text-decoration: none; }
+
+    .ad-slot { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px; text-align: center; min-height: 90px; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 12px; }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 24px 16px 60px; }
+
+    /* 入力フォーム */
+    .input-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 22px; margin-bottom: 16px; }
+    .input-card-title { font-size: 13px; font-weight: 700; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 600px) { .input-grid { grid-template-columns: 1fr; } }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 12px; color: var(--text2); }
+    .field input[type=number] { padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 15px; font-family: 'Lato', sans-serif; font-weight: 700; color: var(--text); background: var(--surface2); outline: none; width: 100%; }
+    .field input[type=number]:focus { border-color: var(--blue); background: #fff; }
+    .field .hint { font-size: 11px; color: var(--text3); }
+    .field .formula { font-size: 11px; color: var(--blue); background: var(--blue-l); padding: 4px 8px; border-radius: 4px; font-family: 'Lato', sans-serif; }
+
+    .add-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; font-size: 14px; font-family: inherit; font-weight: 700; border: 1.5px solid var(--blue); border-radius: var(--radius); background: var(--blue-l); color: var(--blue); cursor: pointer; transition: background 0.15s; }
+    .add-btn:hover { background: var(--blue); color: #fff; }
+
+    .calc-btn { padding: 11px 24px; font-size: 14px; font-family: inherit; font-weight: 700; border: none; border-radius: var(--radius); background: #1a1a16; color: #fff; cursor: pointer; transition: opacity 0.15s; }
+    .calc-btn:hover { opacity: 0.85; }
+
+    .reset-btn { padding: 9px 16px; font-size: 13px; font-family: inherit; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface2); color: var(--text2); cursor: pointer; }
+    .reset-btn:hover { background: var(--border); }
+
+    .remove-btn { padding: 4px 10px; font-size: 12px; font-family: inherit; border: 1px solid var(--border); border-radius: 6px; background: var(--surface2); color: var(--text3); cursor: pointer; }
+    .remove-btn:hover { background: var(--red-l); color: var(--red); border-color: rgba(153,32,32,0.2); }
+
+    /* 結果テーブル */
+    .result-section { margin-top: 24px; }
+    .result-section h2 { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+    .result-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); }
+    .result-table th { background: #1a1a16; color: #fff; padding: 10px 14px; font-size: 12px; font-weight: 700; text-align: left; letter-spacing: 0.04em; }
+    .result-table th.num { text-align: right; }
+    .result-table td { padding: 11px 14px; font-size: 13px; border-bottom: 1px solid var(--border); }
+    .result-table td.num { text-align: right; font-family: 'Lato', sans-serif; font-weight: 700; }
+    .result-table tr:last-child td { border-bottom: none; }
+    .result-table tr:hover td { background: var(--surface2); }
+    .rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; font-family: 'Lato', sans-serif; font-size: 13px; font-weight: 900; }
+    .rank-1 { background: #FFD700; color: #5a4000; }
+    .rank-2 { background: #C0C0C0; color: #3a3a3a; }
+    .rank-3 { background: #CD7F32; color: #fff; }
+    .rank-other { background: var(--surface2); color: var(--text3); }
+    .score-chip { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; font-family: 'Lato', sans-serif; }
+    .score-buy { background: var(--green-l); color: var(--green); }
+    .score-watch { background: var(--amber-l); color: var(--amber); }
+    .score-pass { background: var(--red-l); color: var(--red); }
+
+    /* 単体評価 */
+    .single-result { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+    @media (max-width: 500px) { .single-result { grid-template-columns: 1fr; } }
+    .metric-card { background: var(--surface2); border-radius: var(--radius); padding: 12px 14px; }
+    .metric-card .label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+    .metric-card .value { font-size: 20px; font-weight: 700; font-family: 'Lato', sans-serif; }
+    .metric-card .bar { height: 5px; border-radius: 3px; background: var(--border); margin-top: 8px; overflow: hidden; }
+    .metric-card .bar-fill { height: 100%; border-radius: 3px; }
+
+    /* 解説 */
+    .explanation { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; margin-top: 24px; }
+    .explanation h2 { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+    .exp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .exp-grid { grid-template-columns: 1fr; } }
+    .exp-item { padding: 14px; background: var(--surface2); border-radius: var(--radius); }
+    .exp-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+    .exp-formula { font-size: 12px; font-family: 'Lato', sans-serif; color: var(--blue); background: var(--blue-l); padding: 4px 8px; border-radius: 4px; margin-bottom: 8px; display: inline-block; }
+    .exp-text { font-size: 12px; color: var(--text2); line-height: 1.75; }
+    .step-list { list-style: none; padding: 0; }
+    .step-list li { font-size: 13px; color: var(--text2); padding: 8px 0; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: flex-start; }
+    .step-list li:last-child { border-bottom: none; }
+    .step-num { font-family: 'Lato', sans-serif; font-weight: 900; font-size: 13px; color: var(--blue); min-width: 20px; }
+
+    .ad-mid { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px; text-align: center; min-height: 100px; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 12px; margin-top: 20px; }
+    footer { text-align: center; font-size: 12px; color: var(--text3); padding: 20px; border-top: 1px solid var(--border); margin-top: 40px; }
+
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid #1a1a16; margin-bottom: 20px; }
+    .tab { flex: 1; padding: 10px 8px; font-size: 13px; font-weight: 500; text-align: center; cursor: pointer; background: var(--surface2); color: var(--text2); border: none; font-family: inherit; border-radius: 6px 6px 0 0; }
+    .tab.active { background: #1a1a16; color: #fff; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="logo">AZUKI-PLUS</p>
+  <h1>グリーンブラット 魔法の公式チェックツール</h1>
+  <p>ROC（資本利益率）と益利回りで割安優良株を発掘</p>
+</header>
+
+<nav class="breadcrumb">
+  <a href="index.html">シミュレーター一覧</a>
+  <span style="margin:0 6px;">›</span>
+  <span>魔法の公式チェックツール</span>
+</nav>
+
+<div class="ad-slot">
+  <!-- Google AdSense 広告枠① -->
+  広告枠①
+</div>
+
+
+    <!-- ページ解説テキスト（AdSense審査・SEO対策） -->
+    <div class="page-description-box" style="max-width:1000px;margin:16px auto 0;padding:0 16px;">
+      <div style="padding-top:10px;"><p style="font-size:12px;font-weight:700;color:#8888aa;margin-bottom:6px;">📖 グリーンブラット魔法の公式チェックツールについて</p><p style="font-size:12px;color:#666688;line-height:1.9;margin:0;">ジョエル・グリーンブラットが著書「株デビューする前に知っておくべき「魔法の公式」」で提唱した投資手法を日本株で実践するツールです。ROC（投下資本利益率）と益利回り（EBIT/EV）の2指標で銘柄をスコアリングし、割安かつ高収益な優良株を発掘します。長期的な超過リターンが期待できるバリュー投資の代表的手法として、世界中の投資家に活用されています。</p></div>
+    </div>
+<div class="container">
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('single', this)">単体評価</button>
+    <button class="tab" onclick="switchTab('multi', this)">複数銘柄ランキング</button>
+  </div>
+
+  <!-- ===== 単体評価タブ ===== -->
+  <div id="tab-single" class="tab-content active">
+
+    <div class="input-card">
+      <div class="input-card-title">銘柄情報を入力</div>
+      <div class="input-grid">
+        <div class="field">
+          <label>銘柄名・コード（任意）</label>
+          <input type="text" id="s-name" placeholder="例：トヨタ / 7203">
+        </div>
+        <div class="field">
+          <label>　</label>
+          <div style="display:flex;gap:8px;">
+            <button class="calc-btn" onclick="calcSingle()" style="flex:1;">評価する</button>
+            <button class="reset-btn" onclick="resetSingle()">リセット</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>EBIT（営業利益、百万円）</label>
+          <input type="number" id="s-ebit" placeholder="例：500000" min="0" step="1000">
+          <span class="hint">損益計算書の営業利益を入力</span>
+        </div>
+        <div class="field">
+          <label>EV（企業価値、百万円）</label>
+          <input type="number" id="s-ev" placeholder="例：3000000" min="1" step="1000">
+          <span class="hint">時価総額＋有利子負債－現金預金</span>
+        </div>
+        <div class="field">
+          <label>有形固定資産（百万円）</label>
+          <input type="number" id="s-ppe" placeholder="例：800000" min="0" step="1000">
+          <span class="hint">貸借対照表の有形固定資産合計</span>
+        </div>
+        <div class="field">
+          <label>正味運転資本（百万円）</label>
+          <input type="number" id="s-nwc" placeholder="例：200000" min="0" step="1000">
+          <span class="hint">流動資産－流動負債（マイナス可）</span>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;padding:12px 14px;background:var(--surface2);border-radius:var(--radius);font-size:12px;color:var(--text2);line-height:1.9;">
+        <strong style="color:var(--text);">計算式</strong><br>
+        ROC（資本利益率）＝ EBIT ÷（有形固定資産 ＋ 正味運転資本）× 100<br>
+        益利回り（EY）＝ EBIT ÷ EV × 100
+      </div>
+    </div>
+
+    <!-- 単体結果 -->
+    <div id="single-result-area" style="display:none;">
+      <div class="single-result">
+        <div class="metric-card">
+          <div class="label">ROC（資本利益率）</div>
+          <div class="value" id="s-roc-val">—%</div>
+          <div class="bar"><div class="bar-fill" id="s-roc-bar" style="width:0%;background:var(--blue);"></div></div>
+          <div style="font-size:11px;color:var(--text3);margin-top:6px;" id="s-roc-judge">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="label">益利回り（EY）</div>
+          <div class="value" id="s-ey-val">—%</div>
+          <div class="bar"><div class="bar-fill" id="s-ey-bar" style="width:0%;background:var(--green);"></div></div>
+          <div style="font-size:11px;color:var(--text3);margin-top:6px;" id="s-ey-judge">—</div>
+        </div>
+      </div>
+      <div id="single-verdict" style="margin-top:14px;padding:16px 18px;border-radius:var(--radius-lg);border:1px solid var(--border);background:var(--surface);">
+        <div style="font-size:16px;font-weight:700;margin-bottom:6px;" id="s-verdict-text">—</div>
+        <div style="font-size:13px;color:var(--text2);" id="s-verdict-desc">—</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== 複数銘柄タブ ===== -->
+  <div id="tab-multi" class="tab-content">
+
+    <div id="stocks-container"></div>
+
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+      <button class="add-btn" onclick="addStock()">＋ 銘柄を追加</button>
+      <button class="calc-btn" onclick="calcMulti()">ランキングを算出</button>
+      <button class="reset-btn" onclick="resetMulti()">全リセット</button>
+    </div>
+
+    <div id="multi-result-area" style="display:none;">
+      <div class="result-section">
+        <h2>魔法の公式ランキング結果</h2>
+        <div style="overflow-x:auto;">
+          <table class="result-table" id="result-table">
+            <thead>
+              <tr>
+                <th>順位</th>
+                <th>銘柄</th>
+                <th class="num">ROC（%）</th>
+                <th class="num">ROCランク</th>
+                <th class="num">EY（%）</th>
+                <th class="num">EYランク</th>
+                <th class="num">合計ランク</th>
+                <th>判定</th>
+              </tr>
+            </thead>
+            <tbody id="result-body"></tbody>
+          </table>
+        </div>
+        <p style="font-size:12px;color:var(--text3);margin-top:10px;">合計ランク＝ROCランク＋EYランク。数値が小さいほど優良。</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 解説 -->
+  <div class="explanation">
+    <h2>魔法の公式とは？ — グリーンブラットの投資戦略</h2>
+    <div class="exp-grid" style="margin-bottom:16px;">
+      <div class="exp-item">
+        <div class="exp-title">ROC（Return on Capital）資本利益率</div>
+        <div class="exp-formula">ROC = EBIT ÷（有形固定資産 ＋ 正味運転資本）</div>
+        <div class="exp-text">事業に投下した資本に対してどれだけ効率よく利益を生み出しているかを示す指標。ROEと異なり負債の影響を受けにくい。高いほど「優良な事業」。</div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-title">EY（Earnings Yield）益利回り</div>
+        <div class="exp-formula">EY = EBIT ÷ EV（企業価値）</div>
+        <div class="exp-text">株価に対して事業がどれだけ割安かを示す指標。PERの逆数に近いが、負債も考慮したEVを使う点が特徴。高いほど「割安な株価」。</div>
+      </div>
+    </div>
+    <div style="background:var(--surface2);border-radius:var(--radius);padding:16px 18px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px;">魔法の公式の使い方（グリーンブラット流）</div>
+      <ul class="step-list">
+        <li><span class="step-num">1</span>時価総額50億円以上の銘柄をスクリーニング（金融・公益除く）</li>
+        <li><span class="step-num">2</span>対象銘柄をROCの高い順にランキング</li>
+        <li><span class="step-num">3</span>同じ銘柄をEY（益利回り）の高い順にランキング</li>
+        <li><span class="step-num">4</span>2つのランキングを合計し、合計が小さい銘柄ほど優良</li>
+        <li><span class="step-num">5</span>上位20〜30銘柄に分散投資し、1年保有後に入れ替え</li>
+      </ul>
+    </div>
+    <p style="font-size:12px;color:var(--text3);margin-top:14px;">※ 本ツールの評価は参考値です。実際の投資判断はご自身の責任で行ってください。EVの計算には時価総額・有利子負債・現金預金が必要です。各社の決算短信・IRページからご確認ください。</p>
+  </div>
+
+  <div class="ad-mid">
+    <!-- Google AdSense 広告枠② -->
+    広告枠②
+  </div>
+
+</div>
+
+<div class="ad-slot">
+  <!-- Google AdSense 広告枠③ -->
+  広告枠③
+</div>
+
+<footer>
+  <p>本ツールの評価は参考値です。投資判断はご自身の責任で行ってください。</p>
+</footer>
+
+<script>
+// ===== タブ切替 =====
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ===== 単体評価 =====
+function calcSingle() {
+  const ebit = parseFloat(document.getElementById('s-ebit').value);
+  const ev   = parseFloat(document.getElementById('s-ev').value);
+  const ppe  = parseFloat(document.getElementById('s-ppe').value);
+  const nwc  = parseFloat(document.getElementById('s-nwc').value);
+
+  if (isNaN(ebit) || isNaN(ev) || isNaN(ppe) || isNaN(nwc)) {
+    alert('EBIT・EV・有形固定資産・正味運転資本の4項目を入力してください。');
+    return;
+  }
+  if (ev <= 0) { alert('EVは0より大きい値を入力してください。'); return; }
+  const capital = ppe + nwc;
+  if (capital <= 0) { alert('有形固定資産＋正味運転資本が0以下です。値を確認してください。'); return; }
+
+  const roc = (ebit / capital) * 100;
+  const ey  = (ebit / ev) * 100;
+
+  document.getElementById('s-roc-val').textContent = roc.toFixed(2) + '%';
+  document.getElementById('s-ey-val').textContent  = ey.toFixed(2) + '%';
+
+  // バー（ROCは50%超え=最大、EYは20%超え=最大）
+  document.getElementById('s-roc-bar').style.width = Math.min(roc / 50 * 100, 100) + '%';
+  document.getElementById('s-roc-bar').style.background = roc >= 25 ? 'var(--green)' : roc >= 12 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('s-ey-bar').style.width  = Math.min(ey / 20 * 100, 100) + '%';
+  document.getElementById('s-ey-bar').style.background = ey >= 8 ? 'var(--green)' : ey >= 5 ? 'var(--amber)' : 'var(--red)';
+
+  // 個別判定
+  const rocJudge = roc >= 25 ? '高い（優良事業）' : roc >= 12 ? '普通' : '低い（事業効率に課題）';
+  const eyJudge  = ey >= 8  ? '高い（割安）'     : ey >= 5  ? '普通' : '低い（割高気味）';
+  document.getElementById('s-roc-judge').textContent = rocJudge;
+  document.getElementById('s-ey-judge').textContent  = eyJudge;
+
+  // 総合
+  const verdictEl = document.getElementById('s-verdict-text');
+  const descEl    = document.getElementById('s-verdict-desc');
+  const verdict   = document.getElementById('single-verdict');
+
+  if (roc >= 25 && ey >= 8) {
+    verdictEl.textContent = '★ 魔法の公式の理想的な候補';
+    verdictEl.style.color = 'var(--green)';
+    descEl.textContent = 'ROC・益利回りともに高水準です。優良な事業を割安な価格で買える可能性があります。複数銘柄と比較してランキングを確認してください。';
+    verdict.style.borderColor = 'rgba(30,107,60,0.3)';
+    verdict.style.background = 'var(--green-l)';
+  } else if (roc >= 12 && ey >= 5) {
+    verdictEl.textContent = '◎ 条件をある程度満たす銘柄';
+    verdictEl.style.color = 'var(--amber)';
+    descEl.textContent = 'ROC・益利回りともに平均的な水準です。他の銘柄と比較ランキングを行い、相対的な位置を確認してください。';
+    verdict.style.borderColor = 'rgba(122,77,10,0.2)';
+    verdict.style.background = 'var(--amber-l)';
+  } else if (roc >= 25 || ey >= 8) {
+    verdictEl.textContent = '○ 片方の条件は満たす';
+    verdictEl.style.color = 'var(--amber)';
+    descEl.textContent = (roc >= 25 ? 'ROCは高いですが益利回りが低い（割高気味）。' : '益利回りは高いですが事業効率が低い。') + '両方の条件を満たす銘柄と比較することをおすすめします。';
+    verdict.style.borderColor = 'rgba(122,77,10,0.2)';
+    verdict.style.background = 'var(--amber-l)';
+  } else {
+    verdictEl.textContent = '✕ 魔法の公式の基準を下回る';
+    verdictEl.style.color = 'var(--red)';
+    descEl.textContent = 'ROC・益利回りともに低水準です。より優良な事業をより割安な価格で買える銘柄を探してください。';
+    verdict.style.borderColor = 'rgba(153,32,32,0.2)';
+    verdict.style.background = 'var(--red-l)';
+  }
+
+  document.getElementById('single-result-area').style.display = 'block';
+}
+
+function resetSingle() {
+  ['s-name','s-ebit','s-ev','s-ppe','s-nwc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('single-result-area').style.display = 'none';
+}
+
+// ===== 複数銘柄 =====
+let stockCount = 0;
+
+function addStock() {
+  stockCount++;
+  const id = stockCount;
+  const container = document.getElementById('stocks-container');
+  const div = document.createElement('div');
+  div.className = 'input-card';
+  div.id = 'stock-' + id;
+  div.innerHTML = `
+    <div class="input-card-title">
+      <span>銘柄 ${id}</span>
+      <button class="remove-btn" onclick="removeStock(${id})">削除</button>
+    </div>
+    <div class="input-grid">
+      <div class="field">
+        <label>銘柄名・コード</label>
+        <input type="text" id="m-name-${id}" placeholder="例：トヨタ / 7203">
+      </div>
+      <div class="field"><label>　</label><div></div></div>
+      <div class="field">
+        <label>EBIT（百万円）</label>
+        <input type="number" id="m-ebit-${id}" placeholder="例：500000" min="0" step="1000">
+      </div>
+      <div class="field">
+        <label>EV（百万円）</label>
+        <input type="number" id="m-ev-${id}" placeholder="例：3000000" min="1" step="1000">
+      </div>
+      <div class="field">
+        <label>有形固定資産（百万円）</label>
+        <input type="number" id="m-ppe-${id}" placeholder="例：800000" min="0" step="1000">
+      </div>
+      <div class="field">
+        <label>正味運転資本（百万円）</label>
+        <input type="number" id="m-nwc-${id}" placeholder="例：200000" step="1000">
+      </div>
+    </div>`;
+  container.appendChild(div);
+}
+
+function removeStock(id) {
+  const el = document.getElementById('stock-' + id);
+  if (el) el.remove();
+}
+
+function calcMulti() {
+  const stocks = [];
+  const cards = document.querySelectorAll('#stocks-container .input-card');
+  cards.forEach(card => {
+    const id = card.id.replace('stock-', '');
+    const name = document.getElementById('m-name-' + id)?.value || '銘柄' + id;
+    const ebit = parseFloat(document.getElementById('m-ebit-' + id)?.value);
+    const ev   = parseFloat(document.getElementById('m-ev-' + id)?.value);
+    const ppe  = parseFloat(document.getElementById('m-ppe-' + id)?.value);
+    const nwc  = parseFloat(document.getElementById('m-nwc-' + id)?.value);
+    if (isNaN(ebit) || isNaN(ev) || isNaN(ppe) || isNaN(nwc) || ev <= 0) return;
+    const capital = ppe + nwc;
+    if (capital <= 0) return;
+    const roc = (ebit / capital) * 100;
+    const ey  = (ebit / ev) * 100;
+    stocks.push({ name, roc, ey });
+  });
+
+  if (stocks.length < 2) {
+    alert('2銘柄以上の有効なデータを入力してください。');
+    return;
+  }
+
+  // ROCランク（高い順）
+  const rocSorted = [...stocks].sort((a, b) => b.roc - a.roc);
+  stocks.forEach(s => { s.rocRank = rocSorted.indexOf(s) + 1; });
+
+  // EYランク（高い順）
+  const eySorted = [...stocks].sort((a, b) => b.ey - a.ey);
+  stocks.forEach(s => { s.eyRank = eySorted.indexOf(s) + 1; });
+
+  // 合計ランク
+  stocks.forEach(s => { s.totalRank = s.rocRank + s.eyRank; });
+  stocks.sort((a, b) => a.totalRank - b.totalRank);
+
+  // テーブル描画
+  const tbody = document.getElementById('result-body');
+  tbody.innerHTML = '';
+  stocks.forEach((s, i) => {
+    const rank = i + 1;
+    const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
+    let chip = '';
+    const topPct = rank / stocks.length;
+    if (topPct <= 0.33) chip = '<span class="score-chip score-buy">買い候補</span>';
+    else if (topPct <= 0.66) chip = '<span class="score-chip score-watch">要検討</span>';
+    else chip = '<span class="score-chip score-pass">優先度低</span>';
+
+    tbody.innerHTML += `<tr>
+      <td><span class="rank-badge ${rankClass}">${rank}</span></td>
+      <td style="font-weight:700;">${s.name}</td>
+      <td class="num">${s.roc.toFixed(1)}</td>
+      <td class="num">${s.rocRank}</td>
+      <td class="num">${s.ey.toFixed(1)}</td>
+      <td class="num">${s.eyRank}</td>
+      <td class="num" style="font-weight:900;font-family:'Lato',sans-serif;">${s.totalRank}</td>
+      <td>${chip}</td>
+    </tr>`;
+  });
+
+  document.getElementById('multi-result-area').style.display = 'block';
+  document.getElementById('result-table').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function resetMulti() {
+  document.getElementById('stocks-container').innerHTML = '';
+  document.getElementById('multi-result-area').style.display = 'none';
+  stockCount = 0;
+}
+
+// 初期状態：複数銘柄タブに3銘柄追加
+addStock(); addStock(); addStock();
+</script>
+</body>
+</html>

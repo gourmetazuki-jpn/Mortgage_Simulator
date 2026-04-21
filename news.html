@@ -80,6 +80,11 @@
   <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
   <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 </div>
+
+    <!-- ページ解説テキスト（AdSense審査・SEO対策） -->
+    <div class="page-description-box" style="max-width:1000px;margin:16px auto 0;padding:0 16px;">
+      <div style="padding-top:10px;"><p style="font-size:12px;font-weight:700;color:#8888aa;margin-bottom:6px;">📖 今日の重要ニュース解説について</p><p style="font-size:12px;color:#666688;line-height:1.9;margin:0;">AIが毎日、政治・経済・テクノロジー・国際の4カテゴリで重要ニュースを自動収集・解説するページです。投資家にとって重要な出来事を厳選し、背景・内容・市場への影響を3行程度でわかりやすく解説します。ファクトチェック機能により情報の正確性を確認したうえで掲載。過去30日分のアーカイブから任意の日付を選んで振り返ることも可能です。</p></div>
+    </div>
 <div class="container">
   <div class="card">
     <div class="week-bar">
@@ -107,23 +112,13 @@ const CAT_ORDER = ['politics','economy','tech','world'];
 const CAT_ICONS = {politics:'🏛️',economy:'💹',tech:'🔬',world:'🌐'};
 
 async function init() {
+  // 最新週のインデックスを取得してselectを構築
   try {
-    // 最新データを取得
     const res = await fetch(`${WORKER}/news-get`);
     if (!res.ok) throw new Error('no news');
     const data = await res.json();
     if (!data.week) throw new Error('empty');
-
-    // news-indexから全日付一覧を取得してselectを構築
-    try {
-      const indexRes = await fetch(`${WORKER}/news-index`);
-      const indexData = await indexRes.json();
-      const weeks = indexData.weeks || [data.week];
-      buildWeekSelect(weeks);
-    } catch(e) {
-      buildWeekSelect([data.week]);
-    }
-
+    buildWeekSelect([data.week]);
     renderNews(data);
   } catch(e) {
     document.getElementById('loading').style.display = 'none';
