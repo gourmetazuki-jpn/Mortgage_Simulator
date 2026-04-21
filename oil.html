@@ -377,7 +377,7 @@ function switchTab(tab) {
 async function loadTab(tab) {
   loaded[tab] = true;
   try {
-    const dayKey = new Date().toISOString().split('T')[0]; // 1日単位
+    const dayKey = new Date().toISOString().split('T')[0];
     const res = await fetch(`${WORKER}/oil?type=${tab}&_=${dayKey}`, { cache: 'no-store' });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
@@ -385,7 +385,8 @@ async function loadTab(tab) {
     if (tab === 'production') renderProduction(data);
     if (tab === 'stocks') renderStocks(data);
   } catch(e) {
-    document.getElementById(tab + '-loading').textContent = 'データ取得エラー: ' + e.message;
+    const loadEl = document.getElementById(tab + '-loading');
+    if (loadEl) loadEl.innerHTML = `<div style="color:#ff4455;font-size:12px;">エラー: ${e.message}<br><button onclick="loaded['${tab}']=false;loadTab('${tab}')" style="margin-top:8px;padding:4px 12px;background:#4488ff;color:#fff;border:none;border-radius:6px;cursor:pointer;">再試行</button></div>`;
   }
 }
 
