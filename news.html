@@ -107,13 +107,23 @@ const CAT_ORDER = ['politics','economy','tech','world'];
 const CAT_ICONS = {politics:'🏛️',economy:'💹',tech:'🔬',world:'🌐'};
 
 async function init() {
-  // 最新週のインデックスを取得してselectを構築
   try {
+    // 最新データを取得
     const res = await fetch(`${WORKER}/news-get`);
     if (!res.ok) throw new Error('no news');
     const data = await res.json();
     if (!data.week) throw new Error('empty');
-    buildWeekSelect([data.week]);
+
+    // news-indexから全日付一覧を取得してselectを構築
+    try {
+      const indexRes = await fetch(`${WORKER}/news-index`);
+      const indexData = await indexRes.json();
+      const weeks = indexData.weeks || [data.week];
+      buildWeekSelect(weeks);
+    } catch(e) {
+      buildWeekSelect([data.week]);
+    }
+
     renderNews(data);
   } catch(e) {
     document.getElementById('loading').style.display = 'none';
