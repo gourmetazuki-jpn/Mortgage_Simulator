@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="google-adsense-account" content="ca-pub-4271655790847344">
+  <link rel="icon" type="image/png" href="azuki-icon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>業界戦国マップ｜経済の堀・競争優位性を可視化 | アズキぷらす</title>
+  <meta name="description" content="日米主要企業の経済の堀（ネットワーク効果・ブランド・スイッチングコスト等）を業界別に可視化。競争優位性の強さをマップ形式で比較。株式投資の銘柄選定に。">
+  <meta name="keywords" content="経済の堀,競争優位性,ネットワーク効果,ブランド,スイッチングコスト,業界分析,株式投資,アズキぷらす">
+  <link rel="canonical" href="https://azuki-plus.com/moat.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="業界戦国マップ｜経済の堀・競争優位性を可視化 | アズキぷらす">
+  <meta property="og:url" content="https://azuki-plus.com/moat.html">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4271655790847344" crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#0c0c14;--s:#13131f;--s2:#1c1c2e;--b:rgba(255,255,255,.07);
+      --t:#e8e8f4;--t2:#8888aa;--t3:#444466;
+      --gold:#f5a623;--blue:#4488ff;--green:#00cc66;--red:#ff4455;--purple:#aa66ff;
+    }
+    body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--t);font-size:14px;line-height:1.7;min-height:100vh;}
+    header{background:linear-gradient(135deg,#0c0c14,#1a1a2e);border-bottom:1px solid var(--b);padding:18px 20px;text-align:center;}
+    header .back a{font-size:12px;color:var(--t3);text-decoration:none;}
+    header h1{font-size:clamp(16px,4vw,22px);font-weight:700;margin:6px 0 4px;}
+    header p{font-size:12px;color:var(--t2);}
+    .breadcrumb{background:var(--s);border-bottom:1px solid var(--b);padding:8px 20px;font-size:11px;color:var(--t3);}
+    .breadcrumb a{color:var(--t3);text-decoration:none;}
+    .ad-slot{background:var(--s);border-bottom:1px solid var(--b);padding:10px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;}
+    .container{max-width:1100px;margin:0 auto;padding:20px 16px 60px;}
+
+    /* フィルター */
+    .filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;align-items:center;}
+    .filter-label{font-size:11px;color:var(--t3);margin-right:4px;}
+    .filter-btn{padding:5px 12px;border-radius:20px;font-size:11px;font-family:inherit;border:1px solid var(--b);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s;}
+    .filter-btn.active{color:#fff;border-color:transparent;}
+    .filter-btn[data-cat="all"].active{background:#4488ff;}
+    .filter-btn[data-cat="テクノロジー"].active{background:#4488ff;}
+    .filter-btn[data-cat="金融"].active{background:#00cc66;}
+    .filter-btn[data-cat="ヘルスケア"].active{background:#ff4455;}
+    .filter-btn[data-cat="消費財"].active{background:#f5a623;}
+    .filter-btn[data-cat="資本財"].active{background:#aa66ff;}
+    .filter-btn[data-cat="エネルギー"].active{background:#ff8844;}
+    .filter-btn[data-cat="素材"].active{background:#66bbff;}
+    .filter-btn[data-cat="通信"].active{background:#ff66aa;}
+
+    /* 地図グリッド */
+    .map-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;}
+
+    /* 業界カード */
+    .industry-card{background:var(--s);border:1px solid var(--b);border-radius:14px;overflow:hidden;transition:transform .15s,box-shadow .15s;}
+    .industry-card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3);}
+    .industry-header{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b);}
+    .industry-name{font-size:14px;font-weight:700;}
+    .industry-badges{display:flex;gap:6px;align-items:center;}
+    .rivalry-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;}
+    .rivalry-高{background:rgba(255,68,85,.2);color:#ff4455;}
+    .rivalry-中{background:rgba(255,170,0,.2);color:#ffaa00;}
+    .rivalry-低{background:rgba(0,204,102,.2);color:#00cc66;}
+    .disrupt-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;}
+    .disrupt-高{background:rgba(255,68,85,.15);color:#ff8844;}
+    .disrupt-中{background:rgba(170,102,255,.15);color:#aa66ff;}
+    .disrupt-低{background:rgba(68,136,255,.15);color:#4488ff;}
+
+    /* 企業リスト */
+    .company-list{padding:10px 12px;display:flex;flex-direction:column;gap:10px;}
+    .company-item{background:var(--s2);border-radius:10px;padding:10px 12px;}
+    .company-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+    .company-flag{font-size:14px;}
+    .company-name{font-size:13px;font-weight:700;flex:1;}
+    .company-ticker{font-size:10px;color:var(--t3);font-family:"Lato",sans-serif;}
+    .moat-strength{display:flex;gap:2px;}
+    .moat-dot{width:8px;height:8px;border-radius:50%;}
+    .moat-dot.filled{background:var(--gold);}
+    .moat-dot.empty{background:var(--b);}
+    .moat-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px;}
+    .moat-tag{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;white-space:nowrap;}
+    .tag-ネットワーク効果{background:rgba(68,136,255,.2);color:#4488ff;}
+    .tag-ブランド{background:rgba(245,166,35,.2);color:#f5a623;}
+    .tag-スイッチングコスト{background:rgba(170,102,255,.2);color:#aa66ff;}
+    .tag-コスト優位{background:rgba(0,204,102,.2);color:#00cc66;}
+    .tag-規制の壁{background:rgba(255,68,85,.2);color:#ff4455;}
+    .tag-無形資産{background:rgba(255,136,68,.2);color:#ff8844;}
+    .tag-効率的規模{background:rgba(102,187,255,.2);color:#66bbff;}
+    .company-desc{font-size:11px;color:var(--t2);line-height:1.5;}
+
+    /* カテゴリ色 */
+    .cat-テクノロジー .industry-header{border-left:3px solid #4488ff;}
+    .cat-金融 .industry-header{border-left:3px solid #00cc66;}
+    .cat-ヘルスケア .industry-header{border-left:3px solid #ff4455;}
+    .cat-消費財 .industry-header{border-left:3px solid #f5a623;}
+    .cat-資本財 .industry-header{border-left:3px solid #aa66ff;}
+    .cat-エネルギー .industry-header{border-left:3px solid #ff8844;}
+    .cat-素材 .industry-header{border-left:3px solid #66bbff;}
+    .cat-通信 .industry-header{border-left:3px solid #ff66aa;}
+
+    /* 堀の凡例 */
+    .legend-card{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:16px 20px;margin-bottom:20px;}
+    .legend-title{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:12px;}
+    .legend-grid{display:flex;flex-wrap:wrap;gap:8px;}
+
+    .loading-wrap{text-align:center;padding:60px 20px;color:var(--t2);}
+    .spinner{width:36px;height:36px;border:3px solid var(--b);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .notice{font-size:11px;color:var(--t3);line-height:1.7;padding:10px 14px;background:var(--s2);border-radius:8px;margin-top:16px;}
+    .ad-mid{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:12px;text-align:center;min-height:90px;display:flex;align-items:center;justify-content:center;margin:20px 0;}
+    footer{text-align:center;font-size:12px;color:var(--t3);padding:20px;border-top:1px solid var(--b);}
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="back"><a href="index.html">← アズキぷらす</a></p>
+  <h1>⚔️ 業界戦国マップ</h1>
+  <p>日米主要企業の経済の堀・競争優位性を可視化</p>
+</header>
+
+<nav class="breadcrumb">
+  <a href="index.html">アズキぷらす</a> › 業界戦国マップ
+</nav>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<div style="max-width:1100px;margin:16px auto 0;padding:0 16px;">
+  <div style="padding-top:10px;"><p style="font-size:12px;font-weight:700;color:#8888aa;margin-bottom:6px;">📖 経済の堀（モート）とは</p><p style="font-size:12px;color:#666688;line-height:1.9;margin:0;">経済の堀（モート）とは、ウォーレン・バフェットが提唱した概念で、競合他社が簡単には侵食できない持続的な競争優位性のことです。ネットワーク効果・ブランド力・スイッチングコスト・コスト優位・規制の壁などがその代表例です。堀の深い企業は長期的に高い利益率を維持しやすく、バリュー投資・長期投資の観点から注目される指標です。本ページではAIが日米主要企業の堀を業界別に分析・可視化しています。</p></div>
+</div>
+
+<div class="container">
+
+  <!-- 堀の凡例 -->
+  <div class="legend-card">
+    <div class="legend-title">経済の堀の種類</div>
+    <div class="legend-grid">
+      <span class="moat-tag tag-ネットワーク効果">🌐 ネットワーク効果</span>
+      <span class="moat-tag tag-ブランド">✨ ブランド</span>
+      <span class="moat-tag tag-スイッチングコスト">🔒 スイッチングコスト</span>
+      <span class="moat-tag tag-コスト優位">💰 コスト優位</span>
+      <span class="moat-tag tag-規制の壁">🏛️ 規制の壁</span>
+      <span class="moat-tag tag-無形資産">💡 無形資産</span>
+      <span class="moat-tag tag-効率的規模">📐 効率的規模</span>
+    </div>
+    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--t3);">
+      <span>堀の強さ：</span>
+      <span style="display:flex;gap:2px;">
+        <span class="moat-dot filled" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--gold);"></span>
+        <span class="moat-dot filled" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--gold);"></span>
+        <span class="moat-dot filled" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--gold);"></span>
+        <span class="moat-dot empty" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:rgba(255,255,255,.07);"></span>
+        <span class="moat-dot empty" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:rgba(255,255,255,.07);"></span>
+      </span>
+      <span>← 弱い　　強い →</span>
+      <span style="display:flex;gap:2px;margin-left:4px;">
+        <span class="moat-dot filled" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--gold);"></span>
+        <span class="moat-dot filled" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--gold);"></span>
+        <span class="moat-dot filled" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--gold);"></span>
+        <span class="moat-dot filled" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--gold);"></span>
+        <span class="moat-dot filled" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--gold);"></span>
+      </span>
+    </div>
+  </div>
+
+  <!-- フィルター -->
+  <div class="filter-bar">
+    <span class="filter-label">業界：</span>
+    <button class="filter-btn active" data-cat="all" onclick="filterCat('all')">すべて</button>
+    <button class="filter-btn" data-cat="テクノロジー" onclick="filterCat('テクノロジー')">テクノロジー</button>
+    <button class="filter-btn" data-cat="金融" onclick="filterCat('金融')">金融</button>
+    <button class="filter-btn" data-cat="ヘルスケア" onclick="filterCat('ヘルスケア')">ヘルスケア</button>
+    <button class="filter-btn" data-cat="消費財" onclick="filterCat('消費財')">消費財</button>
+    <button class="filter-btn" data-cat="資本財" onclick="filterCat('資本財')">資本財</button>
+    <button class="filter-btn" data-cat="エネルギー" onclick="filterCat('エネルギー')">エネルギー</button>
+  </div>
+
+  <!-- ローディング -->
+  <div class="loading-wrap" id="loading">
+    <div class="spinner"></div>
+    <div style="font-size:13px;">AIが業界データを分析中...</div>
+    <div style="font-size:11px;margin-top:6px;color:var(--t3);">初回は30秒ほどかかります</div>
+  </div>
+
+  <!-- マップグリッド -->
+  <div class="map-grid" id="map-grid" style="display:none;"></div>
+
+  <div class="ad-mid">
+    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+  <div class="notice">
+    ⚠️ このページはAIによる推定データです。投資判断の根拠にはなりません。データは週1回更新されます。
+  </div>
+</div>
+
+<div class="ad-slot">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4271655790847344" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<footer>© アズキぷらす | 株式投資・決算解説 YouTubeチャンネル | <a href="privacy.html" style="color:#444466;">プライバシーポリシー</a></footer>
+
+<script>
+const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
+let allIndustries = [];
+let currentCat = 'all';
+
+function filterCat(cat) {
+  currentCat = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.cat === cat);
+  });
+  renderGrid();
+}
+
+function renderGrid() {
+  const grid = document.getElementById('map-grid');
+  const filtered = currentCat === 'all'
+    ? allIndustries
+    : allIndustries.filter(ind => ind.category === currentCat);
+
+  grid.innerHTML = filtered.map(ind => {
+    const companies = (ind.companies || []).map(c => {
+      const flag = c.country === 'JP' ? '🇯🇵' : c.country === 'US' ? '🇺🇸' : '🌐';
+      const strength = Math.min(5, Math.max(1, parseInt(c.moat_strength) || 3));
+      const dots = Array.from({length:5}, (_,i) =>
+        `<span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:${i < strength ? 'var(--gold)' : 'rgba(255,255,255,.07)'};"></span>`
+      ).join('');
+      const tags = (c.moats || []).map(m =>
+        `<span class="moat-tag tag-${m}">${m}</span>`
+      ).join('');
+      return `
+        <div class="company-item">
+          <div class="company-top">
+            <span class="company-flag">${flag}</span>
+            <span class="company-name">${c.name}</span>
+            <span class="company-ticker">${c.ticker || ''}</span>
+            <span class="moat-strength" style="display:flex;gap:2px;">${dots}</span>
+          </div>
+          <div class="moat-tags">${tags}</div>
+          <div class="company-desc">${c.description || ''}</div>
+        </div>`;
+    }).join('');
+
+    const cat = ind.category || 'テクノロジー';
+    return `
+      <div class="industry-card cat-${cat}">
+        <div class="industry-header">
+          <span class="industry-name">${ind.name}</span>
+          <span class="industry-badges">
+            <span class="rivalry-badge rivalry-${ind.rivalry || '中'}">競争${ind.rivalry || '中'}</span>
+            <span class="disrupt-badge disrupt-${ind.disruption_risk || '中'}">DX${ind.disruption_risk || '中'}</span>
+          </span>
+        </div>
+        <div class="company-list">${companies}</div>
+      </div>`;
+  }).join('');
+}
+
+async function load() {
+  try {
+    const res = await fetch(`${WORKER}/moat`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    allIndustries = data.industries || [];
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('map-grid').style.display = 'grid';
+    renderGrid();
+  } catch(e) {
+    document.getElementById('loading').innerHTML =
+      `<div style="color:#ff4455;font-size:13px;">エラー: ${e.message}<br>
+      <button onclick="load()" style="margin-top:10px;padding:6px 16px;background:#4488ff;color:#fff;border:none;border-radius:6px;cursor:pointer;">再試行</button></div>`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>
