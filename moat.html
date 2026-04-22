@@ -88,7 +88,13 @@
     .tag-効率的規模{background:rgba(102,187,255,.2);color:#66bbff;}
     .company-desc{font-size:11px;color:var(--t2);line-height:1.5;}
 
-    /* カテゴリ色 */
+    .filter-btn[data-scope="all"].active{background:#4488ff;}
+    .filter-btn[data-scope="global"].active{background:#4488ff;}
+    .filter-btn[data-scope="japan"].active{background:#ff4455;}
+    /* スコープバッジ */
+    .scope-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;margin-left:6px;}
+    .scope-global{background:rgba(68,136,255,.2);color:#4488ff;}
+    .scope-japan{background:rgba(255,68,85,.2);color:#ff4455;}
     .cat-テクノロジー .industry-header{border-left:3px solid #4488ff;}
     .cat-金融 .industry-header{border-left:3px solid #00cc66;}
     .cat-ヘルスケア .industry-header{border-left:3px solid #ff4455;}
@@ -168,6 +174,12 @@
 
   <!-- フィルター -->
   <div class="filter-bar">
+    <span class="filter-label">範囲：</span>
+    <button class="filter-btn active" data-scope="all" onclick="filterScope('all')">すべて</button>
+    <button class="filter-btn" data-scope="global" onclick="filterScope('global')">🌐 グローバル</button>
+    <button class="filter-btn" data-scope="japan" onclick="filterScope('japan')">🇯🇵 日本</button>
+  </div>
+  <div class="filter-bar" style="margin-top:-10px;">
     <span class="filter-label">業界：</span>
     <button class="filter-btn active" data-cat="all" onclick="filterCat('all')">すべて</button>
     <button class="filter-btn" data-cat="テクノロジー" onclick="filterCat('テクノロジー')">テクノロジー</button>
@@ -176,13 +188,15 @@
     <button class="filter-btn" data-cat="消費財" onclick="filterCat('消費財')">消費財</button>
     <button class="filter-btn" data-cat="資本財" onclick="filterCat('資本財')">資本財</button>
     <button class="filter-btn" data-cat="エネルギー" onclick="filterCat('エネルギー')">エネルギー</button>
+    <button class="filter-btn" data-cat="素材" onclick="filterCat('素材')">素材</button>
+    <button class="filter-btn" data-cat="メディア" onclick="filterCat('メディア')">メディア</button>
   </div>
 
   <!-- ローディング -->
   <div class="loading-wrap" id="loading">
     <div class="spinner"></div>
-    <div style="font-size:13px;">AIが業界データを分析中...</div>
-    <div style="font-size:11px;margin-top:6px;color:var(--t3);">初回は30秒ほどかかります</div>
+    <div style="font-size:13px;">AIが24業界のデータを並列分析中...</div>
+    <div style="font-size:11px;margin-top:6px;color:var(--t3);">グローバル12業界・日本12業界を取得しています（初回は30〜60秒かかります）</div>
   </div>
 
   <!-- マップグリッド -->
@@ -209,10 +223,19 @@
 const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
 let allIndustries = [];
 let currentCat = 'all';
+let currentScope = 'all';
+
+function filterScope(scope) {
+  currentScope = scope;
+  document.querySelectorAll('[data-scope]').forEach(b => {
+    b.classList.toggle('active', b.dataset.scope === scope);
+  });
+  renderGrid();
+}
 
 function filterCat(cat) {
   currentCat = cat;
-  document.querySelectorAll('.filter-btn').forEach(b => {
+  document.querySelectorAll('[data-cat]').forEach(b => {
     b.classList.toggle('active', b.dataset.cat === cat);
   });
   renderGrid();
@@ -220,13 +243,20 @@ function filterCat(cat) {
 
 function renderGrid() {
   const grid = document.getElementById('map-grid');
-  const filtered = currentCat === 'all'
-    ? allIndustries
-    : allIndustries.filter(ind => ind.category === currentCat);
+  let filtered = allIndustries;
+  if (currentScope !== 'all') filtered = filtered.filter(ind => ind.scope === currentScope);
+  if (currentCat !== 'all') filtered = filtered.filter(ind => ind.category === currentCat);
 
   grid.innerHTML = filtered.map(ind => {
+    const scopeBadge = ind.scope === 'global'
+      ? '<span class="scope-badge scope-global">🌐 グローバル</span>'
+      : ind.scope === 'japan'
+      ? '<span class="scope-badge scope-japan">🇯🇵 日本</span>'
+      : '';
+
     const companies = (ind.companies || []).map(c => {
-      const flag = c.country === 'JP' ? '🇯🇵' : c.country === 'US' ? '🇺🇸' : '🌐';
+      const flagMap = {JP:'🇯🇵', US:'🇺🇸', TW:'🇹🇼', KR:'🇰🇷', CN:'🇨🇳', EU:'🇪🇺'};
+      const flag = flagMap[c.country] || '🌐';
       const strength = Math.min(5, Math.max(1, parseInt(c.moat_strength) || 3));
       const dots = Array.from({length:5}, (_,i) =>
         `<span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:${i < strength ? 'var(--gold)' : 'rgba(255,255,255,.07)'};"></span>`
@@ -251,7 +281,7 @@ function renderGrid() {
     return `
       <div class="industry-card cat-${cat}">
         <div class="industry-header">
-          <span class="industry-name">${ind.name}</span>
+          <span class="industry-name">${ind.name}${scopeBadge}</span>
           <span class="industry-badges">
             <span class="rivalry-badge rivalry-${ind.rivalry || '中'}">競争${ind.rivalry || '中'}</span>
             <span class="disrupt-badge disrupt-${ind.disruption_risk || '中'}">DX${ind.disruption_risk || '中'}</span>
@@ -260,6 +290,10 @@ function renderGrid() {
         <div class="company-list">${companies}</div>
       </div>`;
   }).join('');
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div style="color:var(--t3);font-size:13px;padding:20px;">該当する業界がありません</div>';
+  }
 }
 
 async function load() {
