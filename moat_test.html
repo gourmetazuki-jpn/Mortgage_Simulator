@@ -1,11 +1,27 @@
 <!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head>
 <body>
-<p>Gemini生レスポンス（/moat-debug）:</p>
-<pre id="d" style="font-size:11px;white-space:pre-wrap;word-break:break-all;">取得中...</pre>
+<p>global nocache:</p>
+<pre id="g">取得中...</pre>
+<p>japan nocache:</p>
+<pre id="j">取得中...</pre>
 <script>
-fetch('https://anthropic-proxy.gourmetazuki.workers.dev/moat-debug')
-  .then(r=>r.text())
-  .then(t=>{ document.getElementById('d').textContent = t; });
+fetch('https://anthropic-proxy.gourmetazuki.workers.dev/moat?scope=global&nocache=1')
+  .then(r=>r.json())
+  .then(d=>{
+    const ind = d.industries||[];
+    document.getElementById('g').textContent =
+      '件数:' + ind.length + '\n' +
+      ind.map(i=>i.name+'('+(i.companies||[]).length+'社)').join('\n');
+  }).catch(e=>{ document.getElementById('g').textContent='ERR:'+e; });
+
+fetch('https://anthropic-proxy.gourmetazuki.workers.dev/moat?scope=japan&nocache=1')
+  .then(r=>r.json())
+  .then(d=>{
+    const ind = d.industries||[];
+    document.getElementById('j').textContent =
+      '件数:' + ind.length + '\n' +
+      ind.map(i=>i.name+'('+(i.companies||[]).length+'社)').join('\n');
+  }).catch(e=>{ document.getElementById('j').textContent='ERR:'+e; });
 </script>
 </body></html>
