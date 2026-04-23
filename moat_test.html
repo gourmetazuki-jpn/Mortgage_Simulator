@@ -2,14 +2,15 @@
 <html>
 <head><meta charset="UTF-8"></head>
 <body>
-<pre id="p1">取得中...</pre>
+<p>global raw (先頭300文字):</p>
+<pre id="g">取得中...</pre>
+<p>japan raw (先頭300文字):</p>
+<pre id="j">取得中...</pre>
 <script>
-fetch('https://anthropic-proxy.gourmetazuki.workers.dev/moat')
-  .then(r => r.text())
-  .then(t => {
-    document.getElementById('p1').textContent = t.slice(0, 500);
-  })
-  .catch(e => { document.getElementById('p1').textContent = 'エラー: ' + e.message; });
+fetch('https://anthropic-proxy.gourmetazuki.workers.dev/moat?scope=global&nocache=1')
+  .then(r=>r.text()).then(t=>{ document.getElementById('g').textContent = t.slice(0,300); });
+fetch('https://anthropic-proxy.gourmetazuki.workers.dev/moat?scope=japan&nocache=1')
+  .then(r=>r.text()).then(t=>{ document.getElementById('j').textContent = t.slice(0,300); });
 </script>
 </body>
 </html>
