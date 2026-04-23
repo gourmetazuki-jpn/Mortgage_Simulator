@@ -195,8 +195,8 @@
   <!-- ローディング -->
   <div class="loading-wrap" id="loading">
     <div class="spinner"></div>
-    <div style="font-size:13px;">AIが24業界のデータを並列分析中...</div>
-    <div style="font-size:11px;margin-top:6px;color:var(--t3);">グローバル12業界・日本12業界を取得しています（初回は30〜60秒かかります）</div>
+    <div style="font-size:13px;">AIが業界データを分析中...</div>
+    <div style="font-size:11px;margin-top:6px;color:var(--t3);">グローバル・日本を並列取得中（初回は30秒ほどかかります）</div>
   </div>
 
   <!-- マップグリッド -->
@@ -298,11 +298,16 @@ function renderGrid() {
 
 async function load() {
   try {
-    const res = await fetch(`${WORKER}/moat`);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    allIndustries = data.industries || [];
+    // グローバルと日本を並列で取得（それぞれ独立したリクエスト）
+    const [r1, r2] = await Promise.all([
+      fetch(`${WORKER}/moat?scope=global`),
+      fetch(`${WORKER}/moat?scope=japan`),
+    ]);
+    const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
+    allIndustries = [...(d1.industries||[]), ...(d2.industries||[])];
+
+    if (allIndustries.length === 0) throw new Error('データが取得できませんでした');
+
     document.getElementById('loading').style.display = 'none';
     document.getElementById('map-grid').style.display = 'grid';
     renderGrid();
