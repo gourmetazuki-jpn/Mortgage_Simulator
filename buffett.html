@@ -145,7 +145,7 @@
   <div class="loading-wrap" id="loading">
     <div class="spinner"></div>
     <div style="font-size:13px;" id="load-status">J-Quantsから財務データ取得中...</div>
-    <div style="font-size:11px;margin-top:6px;color:var(--t3);">プライム市場銘柄を分析しています（初回は60秒程度かかります）</div>
+    <div style="font-size:11px;margin-top:6px;color:var(--t3);">TOPIX500銘柄を20件ずつ分析しています（ページあたり20〜30秒）</div>
   </div>
 
   <!-- 結果テーブル -->
@@ -299,10 +299,11 @@ function renderTable() {
 
 function renderPagination(hasMore) {
   const el = document.getElementById('pagination');
-  const pages = Math.ceil(totalStocks / 50);
+  const pageSize = 20;
+  const pages = Math.ceil(totalStocks / pageSize);
   el.innerHTML = `
     <button class="page-btn" onclick="loadPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>← 前</button>
-    <span class="page-info">${currentPage + 1} / ${pages}ページ（${totalStocks}銘柄中 ${currentPage * 50 + 1}〜${Math.min((currentPage + 1) * 50, totalStocks)}番）</span>
+    <span class="page-info">${currentPage + 1} / ${pages}ページ（${totalStocks}銘柄中 ${currentPage * pageSize + 1}〜${Math.min((currentPage + 1) * pageSize, totalStocks)}番）</span>
     <button class="page-btn" onclick="loadPage(${currentPage + 1})" ${!hasMore ? 'disabled' : ''}>次 →</button>
   `;
 }
