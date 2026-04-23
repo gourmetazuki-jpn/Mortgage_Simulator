@@ -2,17 +2,12 @@
 <html>
 <head><meta charset="UTF-8"></head>
 <body>
-<p id="p1">取得中...</p>
+<pre id="p1">取得中...</pre>
 <script>
 fetch('https://anthropic-proxy.gourmetazuki.workers.dev/moat')
-  .then(r => r.json())
-  .then(d => {
-    const industries = d.industries || [];
-    document.getElementById('p1').textContent =
-      '件数: ' + industries.length +
-      ' / error: ' + (d.error || 'none') +
-      ' / 最初の業界: ' + (industries[0]?.name || 'なし') +
-      ' / scope例: ' + (industries[0]?.scope || 'なし');
+  .then(r => r.text())
+  .then(t => {
+    document.getElementById('p1').textContent = t.slice(0, 500);
   })
   .catch(e => { document.getElementById('p1').textContent = 'エラー: ' + e.message; });
 </script>
