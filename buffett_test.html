@@ -1,11 +1,30 @@
 <!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head>
 <body>
-<pre id="p" style="font-size:11px;white-space:pre-wrap;">取得中...</pre>
+<pre id="p" style="font-size:11px;white-space:pre-wrap;">取得中...（30〜60秒かかります）</pre>
 <script>
-fetch('https://anthropic-proxy.gourmetazuki.workers.dev/screener-debug')
-  .then(r=>r.text())
-  .then(t => document.getElementById('p').textContent = t.slice(0, 3000))
+fetch('https://anthropic-proxy.gourmetazuki.workers.dev/screener-buffett?page=0')
+  .then(r=>r.json())
+  .then(d=>{
+    if (d.error) { document.getElementById('p').textContent = 'ERROR: ' + d.error; return; }
+    const stocks = d.stocks || [];
+    const lines = [];
+    lines.push('TOPIX500銘柄数: ' + d.totalStocks);
+    lines.push('取得銘柄数: ' + stocks.length);
+    lines.push('hasMore: ' + d.hasMore);
+    lines.push('');
+    lines.push('グレード別:');
+    lines.push('  A: ' + stocks.filter(s=>s.grade==='A').length);
+    lines.push('  B: ' + stocks.filter(s=>s.grade==='B').length);
+    lines.push('  C: ' + stocks.filter(s=>s.grade==='C').length);
+    lines.push('  D: ' + stocks.filter(s=>s.grade==='D').length);
+    lines.push('');
+    lines.push('上位10銘柄（スコア順）:');
+    stocks.slice(0,10).forEach(s => {
+      lines.push(`${s.code} ${s.name} / ${s.grade}(${s.score}/7) PER:${s.per?.toFixed(1)} PBR:${s.pbr?.toFixed(2)} ROE:${s.roe?.toFixed(1)}% 自己資本:${s.eqAR}% 営利率:${s.opMargin?.toFixed(1)}%`);
+    });
+    document.getElementById('p').textContent = lines.join('\n');
+  })
   .catch(e => document.getElementById('p').textContent = 'ERR: ' + e.message);
 </script>
 </body></html>
