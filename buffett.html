@@ -135,6 +135,11 @@
 
   <!-- フィルター -->
   <div class="filter-bar">
+    <span class="filter-label">表示：</span>
+    <button class="filter-btn active" data-view="all" onclick="switchView('all')">全銘柄スキャン</button>
+    <button class="filter-btn" data-view="top" onclick="switchView('top')">⭐ 優良銘柄まとめ</button>
+  </div>
+  <div class="filter-bar" id="grade-filter" style="margin-top:-10px;">
     <span class="filter-label">グレード：</span>
     <button class="filter-btn active" data-grade="all" onclick="filterGrade('all')">すべて</button>
     <button class="filter-btn" data-grade="A" onclick="filterGrade('A')">A評価のみ</button>
@@ -222,6 +227,55 @@ let currentGrade = 'all';
 let currentPage = 0;
 let totalStocks = 0;
 let priceChart, rsiChart, macdChart;
+
+let currentView = 'all';
+
+async function switchView(view) {
+  currentView = view;
+  document.querySelectorAll('[data-view]').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === view);
+  });
+  if (view === 'top') {
+    document.getElementById('grade-filter').style.display = 'none';
+    document.getElementById('pagination').style.display = 'none';
+    await loadTop();
+  } else {
+    document.getElementById('grade-filter').style.display = 'flex';
+    document.getElementById('pagination').style.display = 'flex';
+    loadPage(0);
+  }
+}
+
+async function loadTop() {
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('results-wrap').style.display = 'none';
+  document.getElementById('load-status').textContent = '優良銘柄サマリーを取得中...';
+
+  try {
+    const res = await fetch(`${WORKER}/screener-buffett-top`);
+    const data = await res.json();
+
+    if (!data.stocks || data.stocks.length === 0) {
+      document.getElementById('loading').innerHTML =
+        `<div style="color:var(--t2);font-size:13px;padding:20px;">
+          ${data.message || '優良銘柄サマリーはまだ集計されていません。'}
+          <br><br>
+          <span style="font-size:11px;color:var(--t3);">毎日自動集計されます。「全銘柄スキャン」で個別に確認できます。</span>
+        </div>`;
+      return;
+    }
+
+    allStocks = data.stocks;
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('results-wrap').style.display = 'block';
+    renderTable();
+    document.getElementById('pagination').innerHTML =
+      `<span class="page-info">✨ ${data.stocks.length}銘柄 / 最終更新: ${data.updated ? new Date(data.updated).toLocaleString('ja-JP') : '未集計'}</span>`;
+  } catch(e) {
+    document.getElementById('loading').innerHTML =
+      `<div style="color:#ff4455;">エラー: ${e.message}</div>`;
+  }
+}
 
 async function loadPage(page) {
   document.getElementById('loading').style.display = 'block';
