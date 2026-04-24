@@ -145,6 +145,14 @@
     <button class="filter-btn" data-grade="A" onclick="filterGrade('A')">A評価のみ</button>
     <button class="filter-btn" data-grade="AB" onclick="filterGrade('AB')">A・B評価</button>
   </div>
+  <div class="filter-bar" style="margin-top:-10px;">
+    <span class="filter-label">並び替え：</span>
+    <button class="filter-btn active" data-sort="score" onclick="sortBy('score')">スコア順</button>
+    <button class="filter-btn" data-sort="per" onclick="sortBy('per')">PER低い順</button>
+    <button class="filter-btn" data-sort="pbr" onclick="sortBy('pbr')">PBR低い順</button>
+    <button class="filter-btn" data-sort="roe" onclick="sortBy('roe')">ROE高い順</button>
+    <button class="filter-btn" data-sort="opMargin" onclick="sortBy('opMargin')">営業利益率高い順</button>
+  </div>
 
   <!-- ローディング -->
   <div class="loading-wrap" id="loading">
@@ -226,7 +234,16 @@ let allStocks = [];
 let currentGrade = 'all';
 let currentPage = 0;
 let totalStocks = 0;
+let currentSort = 'score';
 let priceChart, rsiChart, macdChart;
+
+function sortBy(key) {
+  currentSort = key;
+  document.querySelectorAll('[data-sort]').forEach(b => {
+    b.classList.toggle('active', b.dataset.sort === key);
+  });
+  renderTable();
+}
 
 let currentView = 'all';
 
@@ -312,9 +329,22 @@ function filterGrade(grade) {
 }
 
 function renderTable() {
-  let filtered = allStocks;
+  let filtered = allStocks.slice();
   if (currentGrade === 'A') filtered = filtered.filter(s => s.grade === 'A');
   else if (currentGrade === 'AB') filtered = filtered.filter(s => s.grade === 'A' || s.grade === 'B');
+
+  // ソート
+  if (currentSort === 'score') {
+    filtered.sort((a,b) => b.score - a.score);
+  } else if (currentSort === 'per') {
+    filtered.sort((a,b) => (a.per ?? 9999) - (b.per ?? 9999));
+  } else if (currentSort === 'pbr') {
+    filtered.sort((a,b) => (a.pbr ?? 9999) - (b.pbr ?? 9999));
+  } else if (currentSort === 'roe') {
+    filtered.sort((a,b) => (b.roe ?? -9999) - (a.roe ?? -9999));
+  } else if (currentSort === 'opMargin') {
+    filtered.sort((a,b) => (b.opMargin ?? -9999) - (a.opMargin ?? -9999));
+  }
 
   const body = document.getElementById('results-body');
   if (filtered.length === 0) {
