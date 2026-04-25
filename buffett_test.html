@@ -1,27 +1,11 @@
 <!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head>
 <body>
-<h3>連続でマスター取得テスト（5回）</h3>
+<h3>fins/summary 連続呼び出しテスト</h3>
 <pre id="p" style="font-size:11px;white-space:pre-wrap;">取得中...</pre>
 <script>
-async function test() {
-  const lines = [];
-  for (let i = 0; i < 5; i++) {
-    const t0 = Date.now();
-    try {
-      const buster = Date.now();
-      const res = await fetch(`https://anthropic-proxy.gourmetazuki.workers.dev/screener-buffett?page=${i}&refresh=1&_=${buster}`, {cache:'no-store'});
-      const d = await res.json();
-      const t = ((Date.now()-t0)/1000).toFixed(1);
-      lines.push(`page${i}: status=${res.status} 銘柄数=${(d.stocks||[]).length} 総数=${d.totalStocks||'なし'} ${t}秒`);
-      lines.push('  error:' + (d.error || 'なし'));
-    } catch(e) {
-      lines.push(`page${i}: ERR ${e.message}`);
-    }
-    document.getElementById('p').textContent = lines.join('\n');
-    await new Promise(r => setTimeout(r, 5000));
-  }
-}
-test();
+fetch('https://anthropic-proxy.gourmetazuki.workers.dev/screener-fins-test')
+  .then(r=>r.text())
+  .then(t => document.getElementById('p').textContent = t.slice(0, 4000));
 </script>
 </body></html>
