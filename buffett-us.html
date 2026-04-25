@@ -450,7 +450,7 @@ async function showDetail(code, name) {
   if (macdChart) macdChart.destroy();
 
   try {
-    const res = await fetch(`${WORKER}/screener-chart?code=${code}`);
+    const res = await fetch(`${WORKER}/screener-chart?code=${code}&market=us`);
     const data = await res.json();
     const prices = (data.prices || []).map(p => p.close);
     const labels = (data.prices || []).map(p => p.date);
