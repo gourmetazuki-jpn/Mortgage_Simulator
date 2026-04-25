@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head>
 <body style="font-family:sans-serif;padding:20px;">
-<h2>CANSLIMデータソーステスト（AAPL）</h2>
-<p>4つのAPIソースを順番にテストします（FMP不使用）</p>
-<pre id="p" style="font-size:11px;white-space:pre-wrap;background:#f5f5f5;padding:12px;border-radius:6px;">取得中...（30秒程度）</pre>
+<h2>CANSLIM CIKマッピング＋EPS取得テスト</h2>
+<p>40銘柄のCIK取得 + 先頭3銘柄のEPS実データ取得テスト</p>
+<pre id="p" style="font-size:11px;white-space:pre-wrap;background:#f5f5f5;padding:12px;border-radius:6px;max-height:80vh;overflow-y:auto;">取得中...（30秒程度）</pre>
 <script>
-fetch('https://anthropic-proxy.gourmetazuki.workers.dev/canslim-test?ticker=AAPL&cik=320193')
+fetch('https://anthropic-proxy.gourmetazuki.workers.dev/canslim-cik-test')
   .then(r=>r.text())
-  .then(t => document.getElementById('p').textContent = t.slice(0, 6000))
+  .then(t => document.getElementById('p').textContent = t.slice(0, 8000))
   .catch(e => document.getElementById('p').textContent = 'ERR: ' + e.message);
 </script>
 </body></html>
