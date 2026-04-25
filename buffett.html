@@ -383,7 +383,7 @@ function renderTable() {
 
 function renderPagination(hasMore) {
   const el = document.getElementById('pagination');
-  const pageSize = 15;
+  const pageSize = 5;
   const pages = Math.ceil(totalStocks / pageSize);
   el.innerHTML = `
     <button class="page-btn" onclick="loadPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>← 前</button>

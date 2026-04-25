@@ -2,13 +2,14 @@
 <html><head><meta charset="UTF-8"><title>バフェットサマリー手動集計</title></head>
 <body style="font-family:sans-serif;padding:20px;background:#0c0c14;color:#e8e8f4;">
 <h2>バフェット流サマリー - 手動集計</h2>
-<p>全25ページを順次処理します。完了まで15〜20分かかります。<br>タブを閉じないでください。</p>
+<p>全100ページ（5銘柄ずつ）を順次処理します。完了まで30〜45分かかります。<br>タブを閉じないでください。J-Quantsのレート制限を考慮して各ページ間に5秒待機します。</p>
 <button id="start" onclick="startBatch()" style="padding:10px 20px;background:#4488ff;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;">集計開始</button>
 <pre id="log" style="font-size:11px;background:#13131f;padding:12px;border-radius:6px;margin-top:16px;max-height:500px;overflow-y:auto;"></pre>
 
 <script>
 const WORKER = 'https://anthropic-proxy.gourmetazuki.workers.dev';
 const log = document.getElementById('log');
+const TOTAL_PAGES = 100;
 
 function addLog(msg) {
   log.textContent += msg + '\n';
@@ -22,9 +23,9 @@ async function startBatch() {
   const allGoodStocks = [];
   const seenCodes = new Set();
 
-  for (let page = 0; page < 25; page++) {
+  for (let page = 0; page < TOTAL_PAGES; page++) {
     try {
-      addLog(`[${page+1}/25] ページ ${page} 取得中...`);
+      addLog(`[${page+1}/${TOTAL_PAGES}] ページ ${page} 取得中...`);
       const t0 = Date.now();
       const buster = Date.now();
       const res = await fetch(`${WORKER}/screener-buffett?page=${page}&refresh=1&_=${buster}`, {cache:'no-store'});
@@ -43,12 +44,12 @@ async function startBatch() {
             allGoodStocks.push(s);
           }
         });
-        addLog(`  ✓ ${stocks.length}銘柄取得 / 優良${good.length}銘柄 / 累計${allGoodStocks.length}銘柄 / TOPIX500総数:${total}（${elapsed}秒）`);
+        addLog(`  ✓ ${stocks.length}銘柄 / 優良${good.length} / 累計${allGoodStocks.length} / 総数:${total}（${elapsed}秒）`);
       }
     } catch(e) {
       addLog(`  ✗ エラー: ${e.message}`);
     }
-    await new Promise(r => setTimeout(r, 3000));
+    await new Promise(r => setTimeout(r, 5000));
   }
 
   addLog('');
