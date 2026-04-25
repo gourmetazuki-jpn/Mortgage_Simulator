@@ -6,8 +6,8 @@
   <link rel="icon" type="image/png" href="azuki-icon.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CANSLIM米国株スクリーナー｜オニール式成長株発掘 | アズキぷらす</title>
-  <meta name="description" content="ウォーレン・バフェット流の7条件（ROE15%以上・自己資本比率50%以上・PER15倍以下・PBR1.5倍以下・営業利益率10%以上・連続増益・EPS成長）で米国S&P500銘柄を自動スクリーニング。チャート分析で買い時も判定。">
-  <meta name="keywords" content="バフェット,割安株,スクリーナー,日本株,CANSLIM,オニール,成長株,米国株,52週高値,RS Rating,EPS成長,NVIDIA,モメンタム投資,アズキぷらす">
+  <meta name="description" content="ウィリアム・オニールのCANSLIM投資手法（C: EPS成長、A: 年間成長、N: 新高値、S: 需給、L: 業界リーダー、I: 機関投資家、M: 市場方向性）で米国成長株40銘柄を自動スクリーニング。">
+  <meta name="keywords" content="CANSLIM,オニール,成長株,米国株,52週高値,RS Rating,EPS成長,NVIDIA,モメンタム投資,アズキぷらす">
   <link rel="canonical" href="https://azuki-plus.com/canslim-us.html">
   <meta property="og:type" content="website">
   <meta property="og:title" content="CANSLIM米国株スクリーナー｜オニール式成長株発掘">
@@ -54,6 +54,10 @@
     .grade-D{background:var(--gradeD);color:#fff;}
     .check-row{display:flex;gap:2px;}
     .check-dot{width:8px;height:8px;border-radius:50%;}
+    .canslim-row{display:flex;gap:3px;flex-wrap:nowrap;}
+    .canslim-badge{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;font-family:"Lato",sans-serif;font-size:10px;font-weight:900;cursor:help;}
+    .badge-pass{background:rgba(0,204,102,.85);color:#fff;}
+    .badge-fail{background:rgba(255,255,255,.05);color:var(--t3);border:1px solid var(--b);}
     .pass{background:var(--green);}
     .fail{background:var(--t3);}
     .stock-code{font-family:"Lato",sans-serif;font-size:11px;color:var(--t3);}
@@ -120,18 +124,27 @@
 </div>
 
 <div style="max-width:1100px;margin:16px auto 0;padding:0 16px;">
-  <div style="padding-top:10px;"><p style="font-size:12px;font-weight:700;color:#8888aa;margin-bottom:6px;">📖 バフェット流7条件とは</p><p style="font-size:12px;color:#666688;line-height:1.9;margin:0;">ウォーレン・バフェットは「Wonderful Company at a Fair Price（素晴らしい会社を適正価格で）」を投資哲学としています。本ツールはその考えに基づき、①ROE 15%以上（高収益性）、②自己資本比率 50%以上（財務健全性）、③PER 15倍以下（割安）、④PBR 1.5倍以下（割安）、⑤営業利益率 10%以上（参入障壁）、⑥3期連続増益（予測可能性）、⑦EPS成長率プラス、の7条件でS&P500銘柄を自動スクリーニングします。全7条件クリアがA評価、5〜6がB、3〜4がC評価です。</p></div>
+  <div style="padding-top:10px;"><p style="font-size:12px;font-weight:700;color:#8888aa;margin-bottom:6px;">📖 CANSLIM 7条件とは</p><p style="font-size:12px;color:#666688;line-height:1.9;margin:0;">ウィリアム・オニール（CAN SLIM Investing System）の成長株投資手法を米国市場に適用したスクリーナーです。①C: 四半期EPS成長（純利益率15%以上を代理指標）、②A: 年間EPS成長（ROE 20%以上）、③N: 新高値（52週高値の85%以上）、④S: 需給（短期モメンタム = 株価 > 50日線）、⑤L: 業界リーダー（候補内上位30%）、⑥I: 機関投資家保有（ROE 25%以上を代理）、⑦M: 市場全体の方向性（S&P500 > 200日線）。バフェット流が「割安なバリュー株」を狙うのに対し、CANSLIMは「強いモメンタムを持つ成長株」を狙います。全7条件クリアがA評価です。</p></div>
 </div>
 
 <div class="container">
 
   <!-- 評価凡例 -->
-  <div style="background:var(--s);border:1px solid var(--b);border-radius:10px;padding:12px 16px;margin-bottom:16px;">
-    <div style="font-size:11px;color:var(--t3);margin-bottom:8px;">評価基準</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:12px;">
-      <span><span class="grade-badge grade-A">A</span> 7条件クリア</span>
-      <span><span class="grade-badge grade-B">B</span> 5〜6条件</span>
-      <span><span class="grade-badge grade-C">C</span> 3〜4条件</span>
+  <div style="background:var(--s);border:1px solid var(--b);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+    <div style="font-size:11px;color:var(--t3);margin-bottom:10px;font-weight:700;letter-spacing:.05em;">CANSLIM 7条件の判定基準</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;font-size:11px;line-height:1.5;">
+      <div><span class="canslim-badge badge-pass">C</span> <strong>四半期EPS成長</strong>：純利益率15%以上</div>
+      <div><span class="canslim-badge badge-pass">A</span> <strong>年間EPS成長</strong>：ROE 20%以上</div>
+      <div><span class="canslim-badge badge-pass">N</span> <strong>新高値</strong>：52週高値の85%以上</div>
+      <div><span class="canslim-badge badge-pass">S</span> <strong>需給</strong>：株価 &gt; 50日線</div>
+      <div><span class="canslim-badge badge-pass">L</span> <strong>業界リーダー</strong>：候補内上位30%</div>
+      <div><span class="canslim-badge badge-pass">I</span> <strong>機関投資家保有</strong>：ROE 25%以上</div>
+      <div><span class="canslim-badge badge-pass">M</span> <strong>市場の方向性</strong>：SPY &gt; 200日線</div>
+    </div>
+    <div style="border-top:1px solid var(--b);margin-top:12px;padding-top:10px;font-size:11px;color:var(--t3);">
+      <span style="margin-right:14px;"><span class="grade-badge grade-A">A</span> 7条件クリア</span>
+      <span style="margin-right:14px;"><span class="grade-badge grade-B">B</span> 5〜6条件</span>
+      <span style="margin-right:14px;"><span class="grade-badge grade-C">C</span> 3〜4条件</span>
       <span><span class="grade-badge grade-D">D</span> 2条件以下</span>
     </div>
   </div>
@@ -169,12 +182,12 @@
             <th>銘柄</th>
             <th class="col-hide">業種</th>
             <th style="text-align:right;">株価</th>
-            <th style="text-align:right;">高値比</th>
-            <th style="text-align:right;">RSランク</th>
-            <th style="text-align:right;">ROE</th>
-            <th style="text-align:right;" class="col-hide">利益率</th>
+            <th style="text-align:right;" title="N条件: 52週高値の何%か">高値比<br><span style="color:var(--green);font-size:9px;">N条件</span></th>
+            <th style="text-align:right;" title="L条件: 候補内の1年リターン順位">RSランク<br><span style="color:var(--green);font-size:9px;">L条件</span></th>
+            <th style="text-align:right;" title="A・I条件: ROE">ROE<br><span style="color:var(--green);font-size:9px;">A・I条件</span></th>
+            <th style="text-align:right;" class="col-hide" title="C条件: 純利益率">利益率<br><span style="color:var(--green);font-size:9px;">C条件</span></th>
             <th style="text-align:right;" class="col-hide">PER</th>
-            <th class="col-hide">条件</th>
+            <th class="col-hide">条件達成</th>
           </tr>
         </thead>
         <tbody id="results-body"></tbody>
@@ -310,7 +323,7 @@ async function loadPage(page) {
     `ページ ${page + 1} のデータ取得中...（約30秒）`;
 
   try {
-    const res = await fetch(`${WORKER}/screener-buffett?page=${page}`);
+    const res = await fetch(`${WORKER}/screener-canslim-us?page=${page}`);
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 
@@ -363,8 +376,18 @@ function renderTable() {
 
   body.innerHTML = filtered.map(s => {
     const checks = s.checks || {};
-    const checkDots = ['C_quarterlyGrowth','A_annualGrowth','N_newHigh','S_supply','L_leader','I_institutional','M_market']
-      .map(k => `<div class="check-dot ${checks[k] ? 'pass' : 'fail'}"></div>`).join('');
+    const conditionKeys = [
+      ['C_quarterlyGrowth', 'C', '四半期EPS成長（純利益率15%以上）'],
+      ['A_annualGrowth',    'A', '年間EPS成長（ROE 20%以上）'],
+      ['N_newHigh',         'N', '新高値（52週高値の85%以上）'],
+      ['S_supply',          'S', '需給（株価 > 50日線）'],
+      ['L_leader',          'L', '業界リーダー（候補内上位30%）'],
+      ['I_institutional',   'I', '機関投資家保有（ROE 25%以上）'],
+      ['M_market',          'M', '市場の方向性（SPY > 200日線）'],
+    ];
+    const checkBadges = conditionKeys.map(([k, letter, tip]) =>
+      `<span class="canslim-badge ${checks[k] ? 'badge-pass' : 'badge-fail'}" title="${tip}">${letter}</span>`
+    ).join('');
 
     // CSSクラスはインラインで判定
 
@@ -382,7 +405,7 @@ function renderTable() {
       <td style="text-align:right;" class="num ${s.roe >= 20 ? 'value-good' : ''}">${s.roe ? s.roe.toFixed(1) + '%' : '-'}</td>
       <td style="text-align:right;" class="col-hide num ${s.netProfitMargin >= 15 ? 'value-good' : ''}">${s.netProfitMargin ? s.netProfitMargin.toFixed(1) + '%' : '-'}</td>
       <td style="text-align:right;" class="col-hide num">${s.per ? s.per.toFixed(1) : '-'}</td>
-      <td class="col-hide"><div class="check-row">${checkDots}</div></td>
+      <td class="col-hide"><div class="canslim-row">${checkBadges}</div></td>
     </tr>`;
   }).join('');
 }
