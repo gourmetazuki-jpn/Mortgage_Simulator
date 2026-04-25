@@ -70,6 +70,9 @@
     .modal-close{background:none;border:none;color:var(--t2);font-size:24px;cursor:pointer;font-family:inherit;}
     .modal-body{padding:16px 20px;}
     .chart-wrap{position:relative;height:220px;margin-bottom:14px;}
+    .period-btn{padding:4px 10px;background:var(--s2);border:1px solid var(--b);color:var(--t2);border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer;transition:all .15s;}
+    .period-btn:hover{color:var(--t);}
+    .period-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
     .indicator-wrap{position:relative;height:100px;margin-bottom:14px;}
     .indicator-label{font-size:11px;color:var(--t3);margin-bottom:4px;letter-spacing:.04em;}
     .buy-signal{padding:12px 16px;border-radius:10px;font-size:13px;line-height:1.7;margin-top:14px;}
@@ -202,7 +205,15 @@
       <button class="modal-close" onclick="closeModal()">×</button>
     </div>
     <div class="modal-body">
-      <div class="indicator-label">📈 株価チャート（1年・25日/75日/200日移動平均）</div>
+      <div class="indicator-label">📈 株価チャート＋移動平均（25日/75日/200日）</div>
+      <div style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap;">
+        <button class="period-btn" data-period="1m" onclick="changePeriod('1m')">1ヶ月</button>
+        <button class="period-btn" data-period="3m" onclick="changePeriod('3m')">3ヶ月</button>
+        <button class="period-btn" data-period="6m" onclick="changePeriod('6m')">6ヶ月</button>
+        <button class="period-btn active" data-period="1y" onclick="changePeriod('1y')">1年</button>
+        <button class="period-btn" data-period="5y" onclick="changePeriod('5y')">5年</button>
+        <button class="period-btn" data-period="max" onclick="changePeriod('max')">全期間</button>
+      </div>
       <div class="chart-wrap"><canvas id="price-chart"></canvas></div>
 
       <div class="indicator-label">📊 RSI（14日・30以下は売られすぎ）</div>
@@ -452,30 +463,39 @@ function macd(arr) {
   return { macdLine, signalLine, histogram };
 }
 
-async function showDetail(code, name) {
-  document.getElementById('m-code').textContent = code;
-  document.getElementById('m-name').textContent = name;
-  document.getElementById('modal-overlay').classList.add('show');
+let currentDetailCode = null;
+let currentDetailPeriod = '1y';
+let currentDetailMarket = 'jp';
 
+async function changePeriod(period) {
+  if (!currentDetailCode) return;
+  currentDetailPeriod = period;
+  document.querySelectorAll('.period-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.period === period);
+  });
+  await loadChartData(currentDetailCode, currentDetailMarket, period);
+}
+
+async function loadChartData(code, market, period) {
   document.getElementById('buy-signal').innerHTML = '<div style="text-align:center;padding:20px;color:var(--t3);">チャートデータ取得中...</div>';
   if (priceChart) priceChart.destroy();
   if (rsiChart) rsiChart.destroy();
   if (macdChart) macdChart.destroy();
 
   try {
-    const res = await fetch(`${WORKER}/screener-chart?code=${code}`);
+    const res = await fetch(`${WORKER}/screener-chart?code=${code}&market=${market}&period=${period}`);
     const data = await res.json();
     const prices = (data.prices || []).map(p => p.close);
     const labels = (data.prices || []).map(p => p.date);
-    if (prices.length < 50) throw new Error('データ不足');
+    if (prices.length < 5) throw new Error('データ不足');
 
-    const sma25 = sma(prices, 25);
-    const sma75 = sma(prices, 75);
-    const sma200 = sma(prices, 200);
+    const sma25 = sma(prices, Math.min(25, Math.floor(prices.length/4)));
+    const sma75 = sma(prices, Math.min(75, Math.floor(prices.length/3)));
+    const sma200 = sma(prices, Math.min(200, Math.floor(prices.length/2)));
     const rsiArr = rsi(prices, 14);
     const macdData = macd(prices);
 
-    // チャート描画
+    // 株価チャート
     const pCtx = document.getElementById('price-chart').getContext('2d');
     priceChart = new Chart(pCtx, {
       type: 'line',
@@ -483,9 +503,9 @@ async function showDetail(code, name) {
         labels,
         datasets: [
           { label: '株価', data: prices, borderColor: '#ffd700', backgroundColor: 'rgba(255,215,0,.1)', borderWidth: 2, pointRadius: 0, tension: 0.1, fill: true },
-          { label: 'SMA25', data: sma25, borderColor: '#4488ff', borderWidth: 1.5, pointRadius: 0, tension: 0.1, borderDash:[3,3] },
-          { label: 'SMA75', data: sma75, borderColor: '#00cc66', borderWidth: 1.5, pointRadius: 0, tension: 0.1, borderDash:[5,3] },
-          { label: 'SMA200', data: sma200, borderColor: '#ff4455', borderWidth: 1.5, pointRadius: 0, tension: 0.1 },
+          { label: 'SMA短期', data: sma25, borderColor: '#4488ff', borderWidth: 1.5, pointRadius: 0, tension: 0.1, borderDash:[3,3] },
+          { label: 'SMA中期', data: sma75, borderColor: '#00cc66', borderWidth: 1.5, pointRadius: 0, tension: 0.1, borderDash:[5,3] },
+          { label: 'SMA長期', data: sma200, borderColor: '#ff4455', borderWidth: 1.5, pointRadius: 0, tension: 0.1 },
         ],
       },
       options: {
@@ -555,8 +575,8 @@ async function showDetail(code, name) {
     else if (curRsi !== null && curRsi > 70) signals.push('⚠️ RSI '+ curRsi.toFixed(1) +' → 買われすぎ');
     else if (curRsi !== null) signals.push('◯ RSI '+ curRsi.toFixed(1) +' → 中立');
 
-    if (curSma25 && curSma200 && curSma25 > curSma200) { signals.push('✅ 中期トレンド上昇（25日線 > 200日線）'); positive++; }
-    else if (curSma25 && curSma200) signals.push('⚠️ 中期トレンド下降（25日線 < 200日線）');
+    if (curSma25 && curSma200 && curSma25 > curSma200) { signals.push('✅ 中期トレンド上昇（短期SMA > 長期SMA）'); positive++; }
+    else if (curSma25 && curSma200) signals.push('⚠️ 中期トレンド下降（短期SMA < 長期SMA）');
 
     if (prevMacd !== null && prevSignal !== null && prevMacd <= prevSignal && curMacd > curSignal) { signals.push('✅ MACDゴールデンクロス発生！'); positive += 2; }
     else if (curMacd > curSignal) { signals.push('◯ MACD > シグナル（上昇基調）'); positive++; }
@@ -574,6 +594,23 @@ async function showDetail(code, name) {
     document.getElementById('buy-signal').className = 'buy-signal signal-weak';
     document.getElementById('buy-signal').textContent = 'チャート取得エラー: ' + e.message;
   }
+}
+
+async function showDetail(code, name) {
+  document.getElementById('m-code').textContent = code;
+  document.getElementById('m-name').textContent = name;
+  document.getElementById('modal-overlay').classList.add('show');
+
+  currentDetailCode = code;
+  currentDetailPeriod = '1y';
+  currentDetailMarket = 'jp';
+
+  // 期間ボタンをリセット
+  document.querySelectorAll('.period-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.period === '1y');
+  });
+
+  await loadChartData(code, currentDetailMarket, currentDetailPeriod);
 }
 
 function closeModal() {
