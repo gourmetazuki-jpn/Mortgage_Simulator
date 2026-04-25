@@ -26,7 +26,8 @@ async function startBatch() {
     try {
       addLog(`[${page+1}/25] ページ ${page} 取得中...`);
       const t0 = Date.now();
-      const res = await fetch(`${WORKER}/screener-buffett?page=${page}`);
+      const buster = Date.now();
+      const res = await fetch(`${WORKER}/screener-buffett?page=${page}&refresh=1&_=${buster}`, {cache:'no-store'});
       const data = await res.json();
       const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
 
@@ -34,6 +35,7 @@ async function startBatch() {
         addLog(`  ✗ エラー: ${data.error}（${elapsed}秒）`);
       } else {
         const stocks = data.stocks || [];
+        const total = data.totalStocks || 0;
         const good = stocks.filter(s => s.grade === 'A' || s.grade === 'B');
         good.forEach(s => {
           if (!seenCodes.has(s.code)) {
@@ -41,12 +43,12 @@ async function startBatch() {
             allGoodStocks.push(s);
           }
         });
-        addLog(`  ✓ ${stocks.length}銘柄取得 / 優良${good.length}銘柄 / 累計${allGoodStocks.length}銘柄（${elapsed}秒）`);
+        addLog(`  ✓ ${stocks.length}銘柄取得 / 優良${good.length}銘柄 / 累計${allGoodStocks.length}銘柄 / TOPIX500総数:${total}（${elapsed}秒）`);
       }
     } catch(e) {
       addLog(`  ✗ エラー: ${e.message}`);
     }
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, 3000));
   }
 
   addLog('');
