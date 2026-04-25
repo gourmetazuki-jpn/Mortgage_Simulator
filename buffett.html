@@ -135,11 +135,6 @@
 
   <!-- フィルター -->
   <div class="filter-bar">
-    <span class="filter-label">表示：</span>
-    <button class="filter-btn active" data-view="all" onclick="switchView('all')">全銘柄スキャン</button>
-    <button class="filter-btn" data-view="top" onclick="switchView('top')">⭐ 優良銘柄まとめ</button>
-  </div>
-  <div class="filter-bar" id="grade-filter" style="margin-top:-10px;">
     <span class="filter-label">グレード：</span>
     <button class="filter-btn active" data-grade="all" onclick="filterGrade('all')">すべて</button>
     <button class="filter-btn" data-grade="A" onclick="filterGrade('A')">A評価のみ</button>
@@ -266,18 +261,17 @@ async function switchView(view) {
 async function loadTop() {
   document.getElementById('loading').style.display = 'block';
   document.getElementById('results-wrap').style.display = 'none';
-  document.getElementById('load-status').textContent = '優良銘柄サマリーを取得中...';
+  document.getElementById('load-status').textContent = '蓄積データを読み込み中...';
 
   try {
-    const res = await fetch(`${WORKER}/screener-buffett-top`);
+    const res = await fetch(`${WORKER}/screener-buffett-all`);
     const data = await res.json();
 
     if (!data.stocks || data.stocks.length === 0) {
       document.getElementById('loading').innerHTML =
         `<div style="color:var(--t2);font-size:13px;padding:20px;">
-          ${data.message || '優良銘柄サマリーはまだ集計されていません。'}
-          <br><br>
-          <span style="font-size:11px;color:var(--t3);">毎日自動集計されます。「全銘柄スキャン」で個別に確認できます。</span>
+          まだデータが蓄積されていません。<br>
+          毎日10銘柄ずつ自動取得されます（${data.totalTopix500 || 500}銘柄を約${Math.ceil((data.totalTopix500 || 500) / 10)}日かけてカバー）。
         </div>`;
       return;
     }
@@ -286,8 +280,24 @@ async function loadTop() {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('results-wrap').style.display = 'block';
     renderTable();
-    document.getElementById('pagination').innerHTML =
-      `<span class="page-info">✨ ${data.stocks.length}銘柄 / 最終更新: ${data.updated ? new Date(data.updated).toLocaleString('ja-JP') : '未集計'}</span>`;
+
+    // 進捗情報を表示
+    const oldestDays = data.oldestUpdate
+      ? Math.floor((Date.now() - new Date(data.oldestUpdate).getTime()) / 86400000)
+      : 0;
+    const newestDays = data.newestUpdate
+      ? Math.floor((Date.now() - new Date(data.newestUpdate).getTime()) / 86400000)
+      : 0;
+
+    document.getElementById('pagination').innerHTML = `
+      <div style="text-align:center;font-size:11px;color:var(--t3);line-height:1.8;width:100%;">
+        📊 蓄積進捗：<strong style="color:var(--gold);">${data.totalCovered}</strong> / ${data.totalTopix500} 銘柄
+        （カバー率 <strong>${data.coveragePercent}%</strong>）<br>
+        🔄 本日の更新：<strong style="color:var(--green);">${data.updatedToday}</strong> 銘柄
+        （毎日10銘柄ずつ自動取得・全銘柄カバーまで約${Math.ceil((data.totalTopix500 - data.totalCovered) / 10)}日）<br>
+        ⏰ 最古データ：${oldestDays}日前 / 最新：${newestDays}日前
+      </div>
+    `;
   } catch(e) {
     document.getElementById('loading').innerHTML =
       `<div style="color:#ff4455;">エラー: ${e.message}</div>`;
@@ -368,6 +378,7 @@ function renderTable() {
       <td>
         <div class="stock-code">${s.code}</div>
         <div class="stock-name">${s.name}</div>
+        ${s.updated_at ? `<div style="font-size:10px;color:var(--t3);margin-top:2px;">📅 ${new Date(s.updated_at).toLocaleDateString('ja-JP')}</div>` : ''}
       </td>
       <td class="col-hide" style="font-size:11px;color:var(--t3);">${s.sector||''}</td>
       <td style="text-align:right;" class="num">${s.price ? s.price.toLocaleString() : '-'}</td>
@@ -572,7 +583,7 @@ function closeModal() {
   if (macdChart) macdChart.destroy();
 }
 
-loadPage(0);
+loadTop();
 </script>
 </body>
 </html>
