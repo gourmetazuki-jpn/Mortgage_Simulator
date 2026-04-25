@@ -1,30 +1,11 @@
 <!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head>
 <body>
-<h3>米国版テスト（FMP）</h3>
-<pre id="p" style="font-size:11px;white-space:pre-wrap;">取得中...（30秒程度）</pre>
+<h3>FMP生レスポンス（AAPL）</h3>
+<pre id="p" style="font-size:11px;white-space:pre-wrap;">取得中...</pre>
 <script>
-fetch(`https://anthropic-proxy.gourmetazuki.workers.dev/screener-buffett-us?_=${Date.now()}`, {cache:'no-store'})
+fetch('https://anthropic-proxy.gourmetazuki.workers.dev/fmp-debug?ticker=AAPL')
   .then(r=>r.text())
-  .then(t=>{
-    let d;
-    try { d = JSON.parse(t); } catch(e) { document.getElementById('p').textContent = '生レスポンス: ' + t.slice(0,500); return; }
-    if (d.error) {
-      document.getElementById('p').textContent = 'ERROR: ' + d.error + (d.detail ? '\nDETAIL: ' + d.detail : '');
-      return;
-    }
-    const stocks = d.stocks || [];
-    const lines = [];
-    lines.push('total: ' + d.total);
-    lines.push('取得銘柄数: ' + stocks.length);
-    lines.push('updated: ' + d.updated);
-    lines.push('');
-    lines.push('上位10銘柄:');
-    stocks.slice(0,10).forEach(s => {
-      lines.push(`${s.code} ${s.name} ${s.grade}(${s.score}/7) PER:${s.per?.toFixed(1)} PBR:${s.pbr?.toFixed(2)} ROE:${s.roe?.toFixed(1)}% 自己資本:${s.eqAR?.toFixed(0)}%`);
-    });
-    document.getElementById('p').textContent = lines.join('\n');
-  })
-  .catch(e => document.getElementById('p').textContent = 'ERR: ' + e.message);
+  .then(t => document.getElementById('p').textContent = t.slice(0, 4000));
 </script>
 </body></html>
