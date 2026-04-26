@@ -120,7 +120,7 @@
 </div>
 
 <div style="max-width:1100px;margin:16px auto 0;padding:0 16px;">
-  <div style="padding-top:10px;"><p style="font-size:12px;font-weight:700;color:#8888aa;margin-bottom:6px;">📖 バフェット流7条件とは</p><p style="font-size:12px;color:#666688;line-height:1.9;margin:0;">ウォーレン・バフェットは「Wonderful Company at a Fair Price（素晴らしい会社を適正価格で）」を投資哲学としています。本ツールはその考えに基づき、①ROE 15%以上（高収益性）、②自己資本比率 50%以上（財務健全性）、③PER 15倍以下（割安）、④PBR 1.5倍以下（割安）、⑤営業利益率 10%以上（参入障壁）、⑥3期連続増益（予測可能性）、⑦EPS成長率プラス、の7条件でS&P500銘柄を自動スクリーニングします。全7条件クリアがA評価、5〜6がB、3〜4がC評価です。</p></div>
+  <div style="padding-top:10px;"><p style="font-size:12px;font-weight:700;color:#8888aa;margin-bottom:6px;">📖 バフェット流7条件とは</p><p style="font-size:12px;color:#666688;line-height:1.9;margin:0;">ウォーレン・バフェットの故郷である米国市場に、彼の投資哲学を適用したスクリーナーです。①ROE 15%以上（高収益性）、②自己資本比率 50%以上（財務健全性）、③PER 15倍以下（割安）、④PBR 1.5倍以下（割安）、⑤営業利益率 10%以上（参入障壁・金融/エネルギーは対象外）、⑥3期連続増益（予測可能性）、⑦EPS成長率プラス、の7条件でS&P500主要銘柄を自動スクリーニングします。データはSEC EDGAR（米証券取引委員会）の公式XBRLデータとYahoo Financeから取得し、毎日10銘柄ずつ自動蓄積します。全7条件クリアがA評価、5〜6がB、3〜4がC評価です。</p></div>
 </div>
 
 <div class="container">
@@ -272,7 +272,7 @@ async function switchView(view) {
 async function loadTop() {
   document.getElementById('loading').style.display = 'block';
   document.getElementById('results-wrap').style.display = 'none';
-  document.getElementById('load-status').textContent = 'Yahoo Financeから米国株データ取得中...';
+  document.getElementById('load-status').textContent = '蓄積データを読み込み中...';
 
   try {
     const res = await fetch(`${WORKER}/screener-buffett-us`);
@@ -281,7 +281,10 @@ async function loadTop() {
     if (data.error) throw new Error(data.error);
     if (!data.stocks || data.stocks.length === 0) {
       document.getElementById('loading').innerHTML =
-        `<div style="color:var(--t2);font-size:13px;padding:20px;">データが取得できませんでした。再読み込みしてください。</div>`;
+        `<div style="color:var(--t2);font-size:13px;padding:20px;">
+          まだデータが蓄積されていません。<br>
+          毎日10銘柄ずつ自動取得されます（${data.totalSP500 || 144}銘柄を約${Math.ceil((data.totalSP500 || 144) / 10)}日かけてカバー）。
+        </div>`;
       return;
     }
 
@@ -290,10 +293,20 @@ async function loadTop() {
     document.getElementById('results-wrap').style.display = 'block';
     renderTable();
 
+    const oldestDays = data.oldestUpdate
+      ? Math.floor((Date.now() - new Date(data.oldestUpdate).getTime()) / 86400000)
+      : 0;
+    const newestDays = data.newestUpdate
+      ? Math.floor((Date.now() - new Date(data.newestUpdate).getTime()) / 86400000)
+      : 0;
+
     document.getElementById('pagination').innerHTML = `
       <div style="text-align:center;font-size:11px;color:var(--t3);line-height:1.8;width:100%;">
-        📊 対象：<strong style="color:var(--gold);">${data.stocks.length}</strong> / ${data.total} 銘柄（S&P500代表銘柄）<br>
-        ⏰ 最終更新：${data.updated ? new Date(data.updated).toLocaleString('ja-JP') : '-'}
+        📊 蓄積進捗：<strong style="color:var(--gold);">${data.totalCovered}</strong> / ${data.totalSP500} 銘柄
+        （カバー率 <strong>${data.coveragePercent}%</strong>）<br>
+        🔄 本日の更新：<strong style="color:var(--green);">${data.updatedToday}</strong> 銘柄
+        （毎日10銘柄ずつ自動取得・全銘柄カバーまで約${Math.ceil((data.totalSP500 - data.totalCovered) / 10)}日）<br>
+        ⏰ 最古データ：${oldestDays}日前 / 最新：${newestDays}日前
       </div>
     `;
   } catch(e) {
