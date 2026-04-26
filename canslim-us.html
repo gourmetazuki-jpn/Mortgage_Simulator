@@ -124,7 +124,7 @@
 </div>
 
 <div style="max-width:1100px;margin:16px auto 0;padding:0 16px;">
-  <div style="padding-top:10px;"><p style="font-size:12px;font-weight:700;color:#8888aa;margin-bottom:6px;">📖 CANSLIM 7条件とは</p><p style="font-size:12px;color:#666688;line-height:1.9;margin:0;">ウィリアム・オニール（CAN SLIM Investing System）の成長株投資手法を米国市場に適用したスクリーナーです。①C: 四半期EPS成長（純利益率15%以上を代理指標）、②A: 年間EPS成長（ROE 20%以上）、③N: 新高値（52週高値の85%以上）、④S: 需給（短期モメンタム = 株価 > 50日線）、⑤L: 業界リーダー（候補内上位30%）、⑥I: 機関投資家保有（ROE 25%以上を代理）、⑦M: 市場全体の方向性（S&P500 > 200日線）。バフェット流が「割安なバリュー株」を狙うのに対し、CANSLIMは「強いモメンタムを持つ成長株」を狙います。全7条件クリアがA評価です。</p></div>
+  <div style="padding-top:10px;"><p style="font-size:12px;font-weight:700;color:#8888aa;margin-bottom:6px;">📖 CANSLIM 7条件とは</p><p style="font-size:12px;color:#666688;line-height:1.9;margin:0;">ウィリアム・オニール（CAN SLIM Investing System）の成長株投資手法を米国市場に適用したスクリーナーです。①C: 四半期EPS成長率25%以上、②A: 年間EPS成長率25%以上、③N: 新高値（52週高値の85%以上）、④S: 需給（出来高 ≧ 50日平均）、⑤L: 業界リーダー（候補内上位30%）、⑥I: 機関投資家保有（ROE 25%以上を代理）、⑦M: 市場全体の方向性（SPY &gt; 200日線）。EPSデータはSEC EDGAR（米証券取引委員会）の公式XBRLデータから取得し、毎日10銘柄ずつKVに蓄積します。バフェット流が「割安なバリュー株」を狙うのに対し、CANSLIMは「強いモメンタムを持つ成長株」を狙います。全7条件クリアがA評価です。</p></div>
 </div>
 
 <div class="container">
@@ -133,10 +133,10 @@
   <div style="background:var(--s);border:1px solid var(--b);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
     <div style="font-size:11px;color:var(--t3);margin-bottom:10px;font-weight:700;letter-spacing:.05em;">CANSLIM 7条件の判定基準</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;font-size:11px;line-height:1.5;">
-      <div><span class="canslim-badge badge-pass">C</span> <strong>四半期EPS成長</strong>：純利益率15%以上</div>
-      <div><span class="canslim-badge badge-pass">A</span> <strong>年間EPS成長</strong>：ROE 20%以上</div>
+      <div><span class="canslim-badge badge-pass">C</span> <strong>四半期EPS成長</strong>：YoY 25%以上</div>
+      <div><span class="canslim-badge badge-pass">A</span> <strong>年間EPS成長</strong>：YoY 25%以上</div>
       <div><span class="canslim-badge badge-pass">N</span> <strong>新高値</strong>：52週高値の85%以上</div>
-      <div><span class="canslim-badge badge-pass">S</span> <strong>需給</strong>：株価 &gt; 50日線</div>
+      <div><span class="canslim-badge badge-pass">S</span> <strong>需給</strong>：出来高 ≧ 50日平均</div>
       <div><span class="canslim-badge badge-pass">L</span> <strong>業界リーダー</strong>：候補内上位30%</div>
       <div><span class="canslim-badge badge-pass">I</span> <strong>機関投資家保有</strong>：ROE 25%以上</div>
       <div><span class="canslim-badge badge-pass">M</span> <strong>市場の方向性</strong>：SPY &gt; 200日線</div>
@@ -159,10 +159,10 @@
   <div class="filter-bar" style="margin-top:-10px;">
     <span class="filter-label">並び替え：</span>
     <button class="filter-btn active" data-sort="score" onclick="sortBy('score')">スコア順</button>
+    <button class="filter-btn" data-sort="quarterlyEpsGrowth" onclick="sortBy('quarterlyEpsGrowth')">四半期EPS成長順</button>
+    <button class="filter-btn" data-sort="annualEpsGrowth" onclick="sortBy('annualEpsGrowth')">年間EPS成長順</button>
     <button class="filter-btn" data-sort="fromYearHighPct" onclick="sortBy('fromYearHighPct')">高値比高い順</button>
     <button class="filter-btn" data-sort="rsRank" onclick="sortBy('rsRank')">RSランク順</button>
-    <button class="filter-btn" data-sort="roe" onclick="sortBy('roe')">ROE高い順</button>
-    <button class="filter-btn" data-sort="netProfitMargin" onclick="sortBy('netProfitMargin')">利益率高い順</button>
   </div>
 
   <!-- ローディング -->
@@ -182,11 +182,11 @@
             <th>銘柄</th>
             <th class="col-hide">業種</th>
             <th style="text-align:right;">株価</th>
+            <th style="text-align:right;" title="C条件: 直近四半期EPS成長率">四半期EPS<br><span style="color:var(--green);font-size:9px;">C条件</span></th>
+            <th style="text-align:right;" title="A条件: 年間EPS成長率">年間EPS<br><span style="color:var(--green);font-size:9px;">A条件</span></th>
             <th style="text-align:right;" title="N条件: 52週高値の何%か">高値比<br><span style="color:var(--green);font-size:9px;">N条件</span></th>
-            <th style="text-align:right;" title="L条件: 候補内の1年リターン順位">RSランク<br><span style="color:var(--green);font-size:9px;">L条件</span></th>
-            <th style="text-align:right;" title="A・I条件: ROE">ROE<br><span style="color:var(--green);font-size:9px;">A・I条件</span></th>
-            <th style="text-align:right;" class="col-hide" title="C条件: 純利益率">利益率<br><span style="color:var(--green);font-size:9px;">C条件</span></th>
-            <th style="text-align:right;" class="col-hide">PER</th>
+            <th style="text-align:right;" class="col-hide" title="S条件: 直近出来高 / 50日平均">出来高比<br><span style="color:var(--green);font-size:9px;">S条件</span></th>
+            <th style="text-align:right;" class="col-hide" title="L条件: 候補内の1年リターン順位">RSランク<br><span style="color:var(--green);font-size:9px;">L条件</span></th>
             <th class="col-hide">条件達成</th>
           </tr>
         </thead>
@@ -400,11 +400,11 @@ function renderTable() {
       </td>
       <td class="col-hide" style="font-size:11px;color:var(--t3);">${s.sector||''}</td>
       <td style="text-align:right;" class="num">${s.price ? s.price.toLocaleString() : '-'}</td>
+      <td style="text-align:right;" class="num ${s.quarterlyEpsGrowth >= 25 ? 'value-good' : ''}">${s.quarterlyEpsGrowth !== null && s.quarterlyEpsGrowth !== undefined ? s.quarterlyEpsGrowth.toFixed(0) + '%' : '-'}</td>
+      <td style="text-align:right;" class="num ${s.annualEpsGrowth >= 25 ? 'value-good' : ''}">${s.annualEpsGrowth !== null && s.annualEpsGrowth !== undefined ? s.annualEpsGrowth.toFixed(0) + '%' : '-'}</td>
       <td style="text-align:right;" class="num ${s.fromYearHighPct >= 85 ? 'value-good' : ''}">${s.fromYearHighPct ? s.fromYearHighPct.toFixed(0) + '%' : '-'}</td>
-      <td style="text-align:right;" class="num ${s.rsRank && s.rsRank <= 12 ? 'value-good' : ''}">${s.rsRank ? '#' + s.rsRank : '-'}</td>
-      <td style="text-align:right;" class="num ${s.roe >= 20 ? 'value-good' : ''}">${s.roe ? s.roe.toFixed(1) + '%' : '-'}</td>
-      <td style="text-align:right;" class="col-hide num ${s.netProfitMargin >= 15 ? 'value-good' : ''}">${s.netProfitMargin ? s.netProfitMargin.toFixed(1) + '%' : '-'}</td>
-      <td style="text-align:right;" class="col-hide num">${s.per ? s.per.toFixed(1) : '-'}</td>
+      <td style="text-align:right;" class="col-hide num ${s.volumeRatio >= 1.0 ? 'value-good' : ''}">${s.volumeRatio !== null && s.volumeRatio !== undefined ? s.volumeRatio.toFixed(2) + 'x' : '-'}</td>
+      <td style="text-align:right;" class="col-hide num ${s.rsRank && s.rsRank <= 12 ? 'value-good' : ''}">${s.rsRank ? '#' + s.rsRank : '-'}</td>
       <td class="col-hide"><div class="canslim-row">${checkBadges}</div></td>
     </tr>`;
   }).join('');
