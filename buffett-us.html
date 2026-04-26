@@ -120,7 +120,7 @@
 </div>
 
 <div style="max-width:1100px;margin:16px auto 0;padding:0 16px;">
-  <div style="padding-top:10px;"><p style="font-size:12px;font-weight:700;color:#8888aa;margin-bottom:6px;">📖 バフェット流7条件とは</p><p style="font-size:12px;color:#666688;line-height:1.9;margin:0;">ウォーレン・バフェットの故郷である米国市場に、彼の投資哲学を適用したスクリーナーです。①ROE 15%以上（高収益性）、②自己資本比率 50%以上（財務健全性）、③PER 15倍以下（割安）、④PBR 1.5倍以下（割安）、⑤営業利益率 10%以上（参入障壁・金融/エネルギーは対象外）、⑥3期連続増益（予測可能性）、⑦EPS成長率プラス、の7条件でS&P500主要銘柄を自動スクリーニングします。データはSEC EDGAR（米証券取引委員会）の公式XBRLデータとYahoo Financeから取得し、毎日20銘柄ずつ自動蓄積します。全7条件クリアがA評価、5〜6がB、3〜4がC評価です。</p></div>
+  <div style="padding-top:10px;"><p style="font-size:12px;font-weight:700;color:#8888aa;margin-bottom:6px;">📖 バフェット流7条件とは</p><p style="font-size:12px;color:#666688;line-height:1.9;margin:0;">ウォーレン・バフェットの故郷である米国市場に、彼の投資哲学を適用したスクリーナーです。①ROE 15%以上（高収益性）、②自己資本比率 50%以上（財務健全性）、③PER 15倍以下（割安）、④PBR 1.5倍以下（割安）、⑤営業利益率 10%以上（参入障壁・金融/エネルギーは対象外）、⑥3期連続増益（予測可能性）、⑦EPS成長率プラス、の7条件でS&P500主要銘柄を自動スクリーニングします。データはSEC EDGAR（米証券取引委員会）の公式XBRLデータとYahoo Financeから取得し、1時間ごとに20銘柄ずつ自動蓄積します。全7条件クリアがA評価、5〜6がB、3〜4がC評価です。</p></div>
 </div>
 
 <div class="container">
@@ -283,7 +283,7 @@ async function loadTop() {
       document.getElementById('loading').innerHTML =
         `<div style="color:var(--t2);font-size:13px;padding:20px;">
           まだデータが蓄積されていません。<br>
-          毎日20銘柄ずつ自動取得されます（${data.totalSP500 || 144}銘柄を約${Math.ceil((data.totalSP500 || 144) / 20)}日かけてカバー）。
+          1時間ごとに自動取得されます（${data.totalSP500 || 144}銘柄を初日中に全カバー予定）。
         </div>`;
       return;
     }
@@ -305,7 +305,7 @@ async function loadTop() {
         📊 蓄積進捗：<strong style="color:var(--gold);">${data.totalCovered}</strong> / ${data.totalSP500} 銘柄
         （カバー率 <strong>${data.coveragePercent}%</strong>）<br>
         🔄 本日の更新：<strong style="color:var(--green);">${data.updatedToday}</strong> 銘柄
-        （毎日20銘柄ずつ自動取得・全銘柄カバーまで約${Math.ceil((data.totalSP500 - data.totalCovered) / 20)}日）<br>
+        （1時間ごとに自動取得・全銘柄カバーまで約${Math.max(1, Math.ceil((data.totalSP500 - data.totalCovered) / 20))}時間）<br>
         ⏰ 最古データ：${oldestDays}日前 / 最新：${newestDays}日前
       </div>
     `;
