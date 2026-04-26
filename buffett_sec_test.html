@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="font-family:sans-serif;padding:20px;">
+<h2>SEC EDGAR バフェット流フィールドテスト</h2>
+<p>各フィールドが取れるか、複数の代表銘柄で確認</p>
+<div style="margin:10px 0;">
+  <button onclick="loadTicker('AAPL')">AAPL</button>
+  <button onclick="loadTicker('MSFT')">MSFT</button>
+  <button onclick="loadTicker('JPM')">JPM (金融)</button>
+  <button onclick="loadTicker('XOM')">XOM (エネルギー)</button>
+  <button onclick="loadTicker('JNJ')">JNJ (ヘルスケア)</button>
+  <button onclick="loadTicker('BRK-B')">BRK-B (バークシャー)</button>
+</div>
+<pre id="p" style="font-size:11px;white-space:pre-wrap;background:#f5f5f5;padding:12px;border-radius:6px;max-height:80vh;overflow-y:auto;">銘柄ボタンを押してください</pre>
+<script>
+function loadTicker(t) {
+  document.getElementById('p').textContent = t + ' 取得中...';
+  fetch('https://anthropic-proxy.gourmetazuki.workers.dev/buffett-sec-test?ticker=' + t)
+    .then(r=>r.text())
+    .then(s => document.getElementById('p').textContent = s)
+    .catch(e => document.getElementById('p').textContent = 'ERR: ' + e.message);
+}
+loadTicker('AAPL');
+</script>
+</body></html>
