@@ -288,7 +288,7 @@ async function loadTop() {
   document.getElementById('load-status').textContent = 'Yahoo Financeから米国株データ取得中...';
 
   try {
-    const res = await fetch(`${WORKER}/screener-canslim-us`);
+    const res = await fetch(`${WORKER}/screener-canslim-us?_t=${Date.now()}`, { cache: 'no-store' });
     const data = await res.json();
 
     if (data.error) throw new Error(data.error);

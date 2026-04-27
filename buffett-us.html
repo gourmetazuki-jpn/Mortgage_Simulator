@@ -275,7 +275,7 @@ async function loadTop() {
   document.getElementById('load-status').textContent = '蓄積データを読み込み中...';
 
   try {
-    const res = await fetch(`${WORKER}/screener-buffett-us`);
+    const res = await fetch(`${WORKER}/screener-buffett-us?_t=${Date.now()}`, { cache: 'no-store' });
     const data = await res.json();
 
     if (data.error) throw new Error(data.error);
