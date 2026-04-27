@@ -124,7 +124,7 @@
 </div>
 
 <div style="max-width:1100px;margin:16px auto 0;padding:0 16px;">
-  <div style="padding-top:10px;"><p style="font-size:12px;font-weight:700;color:#8888aa;margin-bottom:6px;">📖 CANSLIM 7条件とは</p><p style="font-size:12px;color:#666688;line-height:1.9;margin:0;">ウィリアム・オニール（CAN SLIM Investing System）の成長株投資手法を米国市場に適用したスクリーナーです。①C: 四半期EPS成長率25%以上、②A: 年間EPS成長率25%以上、③N: 新高値（52週高値の85%以上）、④S: 需給（出来高 ≧ 50日平均）、⑤L: 業界リーダー（候補内上位30%）、⑥I: 機関投資家保有（ROE 25%以上を代理）、⑦M: 市場全体の方向性（SPY &gt; 200日線）。EPSデータはSEC EDGAR（米証券取引委員会）の公式XBRLデータから取得し、1時間ごとに10銘柄ずつKVに蓄積します。バフェット流が「割安なバリュー株」を狙うのに対し、CANSLIMは「強いモメンタムを持つ成長株」を狙います。全7条件クリアがA評価です。</p></div>
+  <div style="padding-top:10px;"><p style="font-size:12px;font-weight:700;color:#8888aa;margin-bottom:6px;">📖 CANSLIM 7条件とは</p><p style="font-size:12px;color:#666688;line-height:1.9;margin:0;">ウィリアム・オニール（CAN SLIM Investing System）の成長株投資手法を米国市場に適用したスクリーナーです。①C: 四半期EPS成長率25%以上、②A: 年間EPS成長率25%以上、③N: 新高値（52週高値の85%以上）、④S: 需給（出来高 ≧ 50日平均）、⑤L: 業界リーダー（候補内上位30%）、⑥I: 機関投資家保有（ROE 25%以上を代理）、⑦M: 市場全体の方向性（SPY &gt; 200日線）。EPSデータはSEC EDGAR（米証券取引委員会）の公式XBRLデータから取得し、1時間ごとに20銘柄ずつKVに蓄積します。バフェット流が「割安なバリュー株」を狙うのに対し、CANSLIMは「強いモメンタムを持つ成長株」を狙います。全7条件クリアがA評価です。</p></div>
 </div>
 
 <div class="container">
@@ -203,7 +203,7 @@
   </div>
 
   <div class="notice">
-    ⚠️ このツールはFinancial Modeling Prepのデータを使ったCANSLIMスクリーニングです。投資判断の最終責任はご自身で負ってください。財務データは直近の通期決算に基づきます。
+    ⚠️ このツールはSEC EDGARとYahoo Financeのデータを使ったCANSLIMスクリーニングです。投資判断の最終責任はご自身で負ってください。
   </div>
 </div>
 
@@ -305,8 +305,9 @@ async function loadTop() {
 
     document.getElementById('pagination').innerHTML = `
       <div style="text-align:center;font-size:11px;color:var(--t3);line-height:1.8;width:100%;">
-        📊 対象：<strong style="color:var(--gold);">${data.stocks.length}</strong> / ${data.total} 銘柄（成長株候補）<br>
-        📈 市場M条件：${data.marketUptrend === true ? '<strong style="color:var(--green);">✅ 強気相場（SPY > 200日線）</strong>' : '<strong style="color:var(--red);">⚠️ 弱気相場（SPY < 200日線）</strong>'}<br>
+        📊 蓄積進捗：<strong style="color:var(--gold);">${data.totalCovered || 0}</strong> / ${data.total} 銘柄（成長株候補）<br>
+        🔄 本日の更新：<strong style="color:var(--green);">${data.updatedToday || 0}</strong> 銘柄（1時間ごとに20銘柄ずつ自動取得）<br>
+        📈 市場M条件：${data.marketUptrend === true ? '<strong style="color:var(--green);">✅ 強気相場（SPY > 200日線）</strong>' : data.marketUptrend === false ? '<strong style="color:var(--red);">⚠️ 弱気相場（SPY < 200日線）</strong>' : '<span>判定中...</span>'}<br>
         ⏰ 最終更新：${data.updated ? new Date(data.updated).toLocaleString('ja-JP') : '-'}
       </div>
     `;
@@ -351,7 +352,8 @@ function filterGrade(grade) {
 }
 
 function renderTable() {
-  let filtered = allStocks.slice();
+  // データ未取得（hasData=false）銘柄は除外
+  let filtered = allStocks.filter(s => s.hasData !== false);
   if (currentGrade === 'A') filtered = filtered.filter(s => s.grade === 'A');
   else if (currentGrade === 'AB') filtered = filtered.filter(s => s.grade === 'A' || s.grade === 'B');
 
