@@ -155,8 +155,8 @@
   <!-- ローディング -->
   <div class="loading-wrap" id="loading">
     <div class="spinner"></div>
-    <div style="font-size:13px;" id="load-status">J-Quantsから財務データ取得中...</div>
-    <div style="font-size:11px;margin-top:6px;color:var(--t3);">TOPIX500銘柄を20件ずつ分析しています（ページあたり20〜30秒）</div>
+    <div style="font-size:13px;" id="load-status">蓄積データを読み込み中...</div>
+    <div style="font-size:11px;margin-top:6px;color:var(--t3);">3時間ごとに20銘柄ずつ自動取得・蓄積しています</div>
   </div>
 
   <!-- 結果テーブル -->
@@ -275,7 +275,7 @@ async function loadTop() {
   document.getElementById('load-status').textContent = '蓄積データを読み込み中...';
 
   try {
-    const res = await fetch(`${WORKER}/screener-buffett-all`);
+    const res = await fetch(`${WORKER}/screener-buffett-all?_t=${Date.now()}`, { cache: 'no-store' });
     const data = await res.json();
 
     if (!data.stocks || data.stocks.length === 0) {
@@ -311,7 +311,10 @@ async function loadTop() {
     `;
   } catch(e) {
     document.getElementById('loading').innerHTML =
-      `<div style="color:#ff4455;">エラー: ${e.message}</div>`;
+      `<div style="color:#ff4455;font-size:13px;">エラー: ${e.message}<br>
+       <span style="font-size:11px;color:var(--t3);">エンドポイント: /screener-buffett-all</span><br>
+       <button onclick="loadTop()" style="margin-top:10px;padding:6px 16px;background:#4488ff;color:#fff;border:none;border-radius:6px;cursor:pointer;">再試行</button>
+      </div>`;
   }
 }
 
